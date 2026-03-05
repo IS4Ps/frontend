@@ -191,5 +191,5 @@ targetSDK :
 
 minSDK : 
 
-## ⚙️Flutter 환경 서렂ㅇ
+## ⚙️Flutter 환경 설정
 버전 : 3.41.4 
