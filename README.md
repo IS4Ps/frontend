@@ -4,96 +4,88 @@
 
 ### 네이밍 룰(Naming Rules)
 
-1. **패키지 네이밍** - 항상 소문자로 작성하고 언더스코어( _ )를 사용하지 않으며, 여러 단어를 연결하는 경우 카멜 케이스를 사용합니다.
-2. 클래스 네이밍 - 대문자로 시작하는 파스칼 케이스를 사용합니다.
+1. **패키지 네이밍** - 항상 소문자로 작성하고 단어 사이는 언더스코어( _ )를 사용하는 snake_case를 사용합니다. (Dart의 표준 파일 시스템 규칙입니다.)
+2. 클래스 네이밍 - 대문자로 시작하며 단어의 첫 글자를 대문자로 작성하는 PascalCase를 사용합니다.
 
-```kotlin
-class MyClass : MyInterface {
-    ...
+```Dart
+class GameController extends ChangeNotifier {
+  ...
 }
 ```
 
-3. 메소드, 변수 네이밍 - 소문자로 시작하는 카멜 케이스를 사용합니다.
+3. 메소드, 변수 네이밍 - 소문자로 시작하며 단어 사이를 대문자로 구분하는 lowerCamelCase를 사용합니다.
 
-```kotlin
-//변수 예시
-private var myProperty: Int
+```Dart
+// 변수 예시
+int currentLevel = 1;
+String childNickname = "heewo";
 
-//메소드 예시
-fun myMethod() {
-    ...
+// 메소드 예시
+void startGame() {
+  ...
 }
 ```
 
-4. 상수 네이밍 - 대문자와 언더스코어로 구분된 어퍼 케이스를 사용합니다.
+4. 상수 네이밍 - Dart 공식 가이드에 따라 lowerCamelCase를 사용합니다. 전역 상수는 구분을 위해 k를 접두어로 붙이는 관습을 따릅니다.
 
-```kotlin
-const val MAX_COUNT = 8
-val USER_NAME_FIELD = "UserName"
+```Dart
+const kMaxGameTime = 60;
+const defaultPadding = 16.0;
 ```
 
 ### 소스코드 구성(Source code organization)
 
 클래스의 내용은 다음 순서로 작성합니다.
 
-1. 속성 선언과 초기화 블록
-2. 보조 생성자
-3. 메소드 선언
+1. 속성(Fields) 선언 (final 및 일반 변수)
+2. 생성자(Constructor)
+3. build 메소드 (Flutter 위젯인 경우)
+4. 사용자 정의 메소드 선언
+5. 내부 전용(Private) 메소드 (_로 시작)
 
-```kotlin
-//클래스 예시
-class MyClass {
+```Dart
+// 클래스 예시
+class AdhdGameWidget extends StatelessWidget {
 
-    // 속성 선언
-    private val property1: String
-    private val property2: Int
+    // 1. 속성 선언
+    final String gameId;
+    final int difficulty;
 
-    // 초기화 블록
-    init {
-        property1 = "Hello"
-        property2 = 42
+    // 2. 생성자
+    const AdhdGameWidget({
+        super.key, 
+        required this.gameId, 
+        this.difficulty = 1,
+    });
+
+    // 3. 빌드 메소드
+    @override
+    Widget build(BuildContext context) {
+        return Container(
+            child: _buildScoreBoard(), // 내부 메소드 호출
+        );
     }
 
-    // 보조 생성자
-    constructor(param1: String) { ... }
+    // 4. 기타 메소드 선언
+    void restartGame() { ... }
 
-    // 보조 생성자
-    constructor(param1: String, param2: Int) { ... }
-
-    // 메소드 선언
-    fun method1() { ... }
-
-    // 메소드 선언
-    fun method2() {
-    	InternalNestedClass()
-    	... 
+    // 5. 내부 전용 메소드
+    Widget _buildScoreBoard() {
+        return Text('Score: 0');
     }
-
-    // 내부에서 사용된 Nested classes
-    private class InternalNestedClass { ... }
-
-    // Companion object
-    companion object { ... }
-
-    // Nested classes
-    class NestedClass { ... }
-
-    // 외부에서 사용된 Nested classes 
-    class ExternalNestedClass { ... }
 }
 ```
 
 ### 형식 (Formatting)
 
-1. 들여쓰기 - 들여쓰기에는 네 개의 공백을 사용합니다.
-2. 콜론( : ) - 다음 경우에는 콜론 앞에 공백을 넣습니다.
-    - 타입과 상위 타입을 구분하는 데 사용될 때
-    - 슈퍼클래스 생성자로 위임하거나 동일한 클래스의 다른 생성자로 위임할 때
-    - "object" 키워드 뒤에 사용될 때
-    - 선언과 해당하는 타입을 구분하는 콜론 앞에는 공백을 넣지 마세요.
-    - 콜론 뒤에는 항상 공백을 넣으세요.
+1. 들여쓰기 - 들여쓰기에는 **두 개의 공백(2 spaces)**을 사용합니다. (Flutter는 위젯 트리가 깊어지기 때문에 2칸이 표준입니다.)
+2. 콜론( : ) - Dart에서는 타입 지정이나 매개변수 이름을 쓸 때 다음 규칙을 따릅니다.
+    - 선언과 해당하는 타입을 구분하는 콜론 앞에는 공백을 넣지 않습니다.
+    - 콜론 뒤에는 항상 공백을 넣습니다.
+    - Named Parameter(이름 있는 인자)를 전달할 때도 동일하게 적용합니다.
+3. 후행 쉼표(Trailing Comma) - 함수의 마지막 매개변수나 위젯 트리 끝에 반드시 쉼표(,)를 추가합니다. 이는 안드로이드 스튜디오에서 코드를 자동 정렬할 때 가독성을 획기적으로 높여줍니다.
 
-참고 자료: https://kotlinlang.org/docs/coding-conventions.html#verify-that-your-code-follows-the-style-guide,  https://effortguy.tistory.com/257
+참고 자료: https://dart.dev/effective-dart/style
 
 ## 🛠️ Branch Strategy
 
