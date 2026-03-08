@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 사용을 위해 꼭 필요
+import 'package:frontend/screens/store_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text('홈', style: TextStyle(fontSize: 24))),
     const Center(child: Text('퀘스트', style: TextStyle(fontSize: 24))),
     const Center(child: Text('프로필', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('상점', style: TextStyle(fontSize: 24))),
+    const StoreScreen(),
   ];
 
   void _onItemTapped(int index) {
