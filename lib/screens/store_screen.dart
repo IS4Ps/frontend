@@ -120,7 +120,7 @@ class _StoreScreenState extends State<StoreScreen> {
           borderRadius: BorderRadius.circular(15),
           border: isActive
               ? Border.all(color: const Color(0xFF1586E2), width: 2)
-              : null,
+              : Border.all(color: Colors.transparent, width: 2),
           boxShadow: const [
             BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4)),
           ],
@@ -143,8 +143,8 @@ class _StoreScreenState extends State<StoreScreen> {
                   ),
                   if (isEquipped)
                     Positioned(
-                      top: 8,
-                      left: 8,
+                      top: 5,
+                      left: 4,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
@@ -194,16 +194,82 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Widget _buildRewardGrid() {
-    return GridView.builder(
+    final List<Map<String, String>> rewards = [
+      {"title": "용돈 5000원", "subtitle": "현금으로 지급"},
+      {"title": "놀이공원", "subtitle": "롯데월드 가기"},
+      {"title": "게임 쿠폰", "subtitle": "한 시간 쿠폰"},
+    ];
+
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: 5, // 보상 아이템 수
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 30,
-        mainAxisSpacing: 30,
-        childAspectRatio: 0.7,
-      ),
-      itemBuilder: (context, index) => _itemCard("보상 ${index + 1}"),
+      itemCount: rewards.length,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x3F000000),
+                blurRadius: 4,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rewards[index]["title"]!,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      rewards[index]["subtitle"]!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1586E2),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: const Text(
+                  "사용",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
