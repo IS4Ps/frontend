@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 사용을 위해 꼭 필요
+import 'screens/quest/quest_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/store_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -12,10 +16,10 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0; // 현재 선택된 탭의 인덱스
 
   final List<Widget> _screens = [
-    const Center(child: Text('홈', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('퀘스트', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('프로필', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('상점', style: TextStyle(fontSize: 24))),
+    const Center(child: Text("홈 화면")),   // 0번: 홈
+    const QuestScreen(),   // 1번: 퀘스트 (오늘 만든 화면!)
+    const Center(child: Text("프로필")),// 2번: 프로필
+    const Center(child: Text("상점")),  // 3번: 상점
   ];
 
   void _onItemTapped(int index) {
