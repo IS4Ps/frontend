@@ -11,12 +11,13 @@ class QuestScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 50), // 상단 여백
+            const SizedBox(height: 50),
             _buildLevelSection(),
-            const SizedBox(height: 20), // 퍼센트와 말풍선 여백
+            const SizedBox(height: 20),
             _buildCharacterSection(context),
-            const SizedBox(height: 30), // 캐릭터랑 다음 퀘스트 여백
+            const SizedBox(height: 30),
             _buildQuestCard(context),
+            const SizedBox(height: 30), // 바텀네비 기준 여백
           ],
         ),
       ),
@@ -27,10 +28,10 @@ class QuestScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
-        // 텍스트 왼쪽 정렬
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Level 1 모험가", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+          const Text("Level 1 모험가",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(30),
@@ -44,9 +45,7 @@ class QuestScreen extends StatelessWidget {
           const SizedBox(height: 10),
           const Center(
             child: Text(
-              "70%",
-              style: TextStyle(color: Colors.black, fontSize: 22),
-            ),
+                "70%", style: TextStyle(color: Colors.black, fontSize: 22)),
           ),
         ],
       ),
@@ -55,23 +54,40 @@ class QuestScreen extends StatelessWidget {
 
   Widget _buildCharacterSection(BuildContext context) {
     return Stack(
-      alignment: Alignment.center,
       children: [
+        // 수정됨: 나중에 Spline 3D 캐릭터가 들어갈 자리
+        Padding(
+          padding: const EdgeInsets.only(top: 80),
+          child: Center(
+            child: Container(
+              width: 250,
+              height: 310,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEEEE), // 연한 회색 사각형
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Center(
+                child: Text(
+                  "캐릭터 자리",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          ),
+        ),
+
         Positioned(
           top: 0,
+          left: 30,
           child: GestureDetector(
             onTap: () {
-              // 1. SnackBar 대신 실제 SpeechBubble 화면으로 이동하도록 수정
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SpeechBubble()),
-              );
+              Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => const SpeechBubble()));
             },
-            // 2. CustomPaint를 사용하여 꼬리 달린 말풍선 모양 구현
             child: CustomPaint(
               painter: BubblePainter(),
               child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 18), // 꼬리 공간을 위한 하단 패딩
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 22),
                 child: const Text(
                   "오늘의 기분은 어때?",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
@@ -80,15 +96,11 @@ class QuestScreen extends StatelessWidget {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 50), // 말풍선 꼬리와 겹치지 않게 간격 조정
-          child: Image.asset('assets/character.png', height: 250, errorBuilder: (context, error, stackTrace) {
-            return const Icon(Icons.person, size: 250, color: Colors.grey);
-          }),
-        ),
+
+        // 스탯 박스
         Positioned(
-          right: 60,
-          bottom: 40,
+          right: 30,
+          bottom: 0,
           child: _buildStatBox(),
         ),
       ],
@@ -99,16 +111,21 @@ class QuestScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("퀘스트 상세 화면으로 이동합니다.")),
-        );
+            const SnackBar(content: Text("퀘스트 상세 화면으로 이동합니다.")));
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFFFDFDFD),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,9 +133,11 @@ class QuestScreen extends StatelessWidget {
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("다음 퀘스트", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                Text("다음 퀘스트",
+                    style: TextStyle(color: Colors.grey, fontSize: 18)),
                 SizedBox(height: 5),
-                Text("학원 다녀오기", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                Text("학원 다녀오기", style: TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold)),
               ],
             ),
             const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
@@ -130,64 +149,88 @@ class QuestScreen extends StatelessWidget {
 
   Widget _buildStatBox() {
     return Container(
-      padding: const EdgeInsets.all(8),
+      width: 104,
+      // 전체 박스 가로 가이드
+      height: 80,
+      // 전체 박스 세로 가이드
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+        color: const Color(0xFFFDFDFD),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // 막대 간격 균등 분배
         children: [
-          _buildMiniBar(Colors.redAccent),
-          const SizedBox(height: 4),
-          _buildMiniBar(Colors.greenAccent),
-          const SizedBox(height: 4),
-          _buildMiniBar(Colors.blueAccent),
+          // 나중에 API에서 0.0 ~ 1.0 사이의 값을 받아와서 넣으면 됩니다.
+          _buildMiniBar(const Color(0xFFFF7070), 0.8), // 예: 공격력 80%
+          _buildMiniBar(const Color(0xFF54C517), 0.5), // 예: 체력 50%
+          _buildMiniBar(const Color(0xFF2194FF), 0.3), // 예: 마나 30%
         ],
       ),
     );
   }
 
-  Widget _buildMiniBar(Color color) {
-    return Container(
-      width: 30,
-      height: 6,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(3),
-      ),
+  // value: 0.0 ~ 1.0 사이의 값 (막대 차오르는 정도)
+  Widget _buildMiniBar(Color color, double value) {
+    return Column(
+      children: [
+        Stack(
+          children: [
+            // 배경 회색 바 (빈 공간 표시)
+            Container(
+              width: double.infinity,
+              height: 8,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEEEE),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            // 실제 데이터가 차오르는 유색 바
+            FractionallySizedBox(
+              widthFactor: value, // 이 값이 0.8이면 80%가 차오름
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-// ### 말풍선 꼬리를 그리는 클래스 (QuestScreen 클래스 바깥에 위치) ###
 class BubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
+    final paintFill = Paint()
+      ..color = const Color(0xFFFDFDFD)
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    double radius = 15.0;
-    double tailWidth = 10.0;
-    double tailHeight = 10.0;
-    // 꼬리 위치를 이미지처럼 살짝 오른쪽(70% 지점)으로 배치
-    double tailPosition = size.width * 0.7;
+    const double radius = 15.0;
+    const double tailWidth = 10.0;
+    const double tailHeight = 10.0;
+    double tailPosition = size.width * 0.8;
 
-    // 둥근 사각형 몸통 그리기
-    path.addRRect(RRect.fromLTRBR(
-        0, 0, size.width, size.height - tailHeight, Radius.circular(radius)));
-
-    // 아래쪽 삼각형 꼬리 그리기
+    path.addRRect(RRect.fromLTRBR(0, 0, size.width, size.height - tailHeight, const Radius.circular(radius)));
     path.moveTo(tailPosition - tailWidth, size.height - tailHeight);
     path.lineTo(tailPosition, size.height);
     path.lineTo(tailPosition + tailWidth, size.height - tailHeight);
     path.close();
 
-    // 부드러운 그림자 효과 추가
-    canvas.drawShadow(path, Colors.black.withOpacity(0.2), 4.0, true);
-    canvas.drawPath(path, paint);
+    canvas.drawShadow(path, Colors.black.withOpacity(0.2), 6.0, true);
+    canvas.drawPath(path, paintFill);
   }
 
   @override
