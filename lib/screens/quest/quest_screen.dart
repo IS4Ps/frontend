@@ -76,13 +76,14 @@ class QuestScreen extends StatelessWidget {
           ),
         ),
 
+
         Positioned(
           top: 0,
           left: 30,
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => const SpeechBubble()));
+              // 팝업 호출 함수 실행
+              _showMoodPopup(context);
             },
             child: CustomPaint(
               painter: BubblePainter(),
@@ -104,6 +105,20 @@ class QuestScreen extends StatelessWidget {
           child: _buildStatBox(),
         ),
       ],
+    );
+  }
+
+  void _showMoodPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, // 바깥 영역 터치 시 닫기
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent, // 배경 투명하게
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20), // 좌우 여백
+          child: const SpeechBubble(), // 아까 만든 기분 선택 위젯
+        );
+      },
     );
   }
 
