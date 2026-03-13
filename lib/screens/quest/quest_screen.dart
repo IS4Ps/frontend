@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
 import 'speech_bubble.dart'; // 기분 선택 화면 파일 import
+import 'routine_screen.dart';
 
-class QuestScreen extends StatelessWidget {
+// 1. 화면 전환 상태를 관리
+class QuestScreen extends StatefulWidget {
   const QuestScreen({super.key});
 
   @override
+  State<QuestScreen> createState() => _QuestScreenState();
+}
+
+class _QuestScreenState extends State<QuestScreen> {
+  // 현재 루틴 화면을 보고 있는지 여부
+  bool isRoutineView = false;
+
+  @override
   Widget build(BuildContext context) {
+    if (isRoutineView) {
+      // RoutineScreen에 뒤로가기 시 실행할 함수(onBack)를 전달
+      return RoutineScreen(
+        onBack: () {
+          setState(() {
+            isRoutineView = false;
+          });
+        },
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFFDFDFD),
       body: SingleChildScrollView(
@@ -38,7 +59,7 @@ class QuestScreen extends StatelessWidget {
             child: const LinearProgressIndicator(
               value: 0.7,
               backgroundColor: Color(0xFFE3E3E3),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA2FF70)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6FF8C)),
               minHeight: 18,
             ),
           ),
@@ -55,7 +76,6 @@ class QuestScreen extends StatelessWidget {
   Widget _buildCharacterSection(BuildContext context) {
     return Stack(
       children: [
-        // 수정됨: 나중에 Spline 3D 캐릭터가 들어갈 자리
         Padding(
           padding: const EdgeInsets.only(top: 80),
           child: Center(
@@ -63,7 +83,7 @@ class QuestScreen extends StatelessWidget {
               width: 250,
               height: 310,
               decoration: BoxDecoration(
-                color: const Color(0xFFEEEEEE), // 연한 회색 사각형
+                color: const Color(0xFFEEEEEE),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Center(
@@ -75,14 +95,11 @@ class QuestScreen extends StatelessWidget {
             ),
           ),
         ),
-
-
         Positioned(
           top: 0,
           left: 30,
           child: GestureDetector(
             onTap: () {
-              // 팝업 호출 함수 실행
               _showMoodPopup(context);
             },
             child: CustomPaint(
@@ -97,8 +114,6 @@ class QuestScreen extends StatelessWidget {
             ),
           ),
         ),
-
-        // 스탯 박스
         Positioned(
           right: 30,
           bottom: 0,
@@ -111,12 +126,12 @@ class QuestScreen extends StatelessWidget {
   void _showMoodPopup(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: true, // 바깥 영역 터치 시 닫기
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.transparent, // 배경 투명하게
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20), // 좌우 여백
-          child: const SpeechBubble(), // 아까 만든 기분 선택 위젯
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: const SpeechBubble(),
         );
       },
     );
@@ -125,8 +140,10 @@ class QuestScreen extends StatelessWidget {
   Widget _buildQuestCard(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("퀘스트 상세 화면으로 이동합니다.")));
+        // 3. Navigator.push 대신 상태를 변경하여 화면을 전환
+        setState(() {
+          isRoutineView = true;
+        });
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -165,9 +182,7 @@ class QuestScreen extends StatelessWidget {
   Widget _buildStatBox() {
     return Container(
       width: 104,
-      // 전체 박스 가로 가이드
       height: 80,
-      // 전체 박스 세로 가이드
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFDFDFD),
@@ -181,24 +196,21 @@ class QuestScreen extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // 막대 간격 균등 분배
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 나중에 API에서 0.0 ~ 1.0 사이의 값을 받아와서 넣으면 됩니다.
-          _buildMiniBar(const Color(0xFFFF7070), 0.8), // 예: 공격력 80%
-          _buildMiniBar(const Color(0xFF54C517), 0.5), // 예: 체력 50%
-          _buildMiniBar(const Color(0xFF2194FF), 0.3), // 예: 마나 30%
+          _buildMiniBar(const Color(0xFFFF7070), 0.8),
+          _buildMiniBar(const Color(0xFF54C517), 0.5),
+          _buildMiniBar(const Color(0xFF2194FF), 0.3),
         ],
       ),
     );
   }
 
-  // value: 0.0 ~ 1.0 사이의 값 (막대 차오르는 정도)
   Widget _buildMiniBar(Color color, double value) {
     return Column(
       children: [
         Stack(
           children: [
-            // 배경 회색 바 (빈 공간 표시)
             Container(
               width: double.infinity,
               height: 8,
@@ -207,9 +219,8 @@ class QuestScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            // 실제 데이터가 차오르는 유색 바
             FractionallySizedBox(
-              widthFactor: value, // 이 값이 0.8이면 80%가 차오름
+              widthFactor: value,
               child: Container(
                 height: 8,
                 decoration: BoxDecoration(
