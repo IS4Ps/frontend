@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'speech_bubble.dart'; // 기분 선택 화면 파일 import
+import 'grow_screen.dart';
+import 'speech_bubble.dart';
 import 'routine_screen.dart';
 
-// 1. 화면 전환 상태를 관리
 class QuestScreen extends StatefulWidget {
   const QuestScreen({super.key});
 
@@ -11,22 +11,27 @@ class QuestScreen extends StatefulWidget {
 }
 
 class _QuestScreenState extends State<QuestScreen> {
-  // 현재 루틴 화면을 보고 있는지 여부
-  bool isRoutineView = false;
+  // 0: 메인, 1: 루틴 상세, 2: 성장 화면
+  int currentStep = 0;
 
   @override
   Widget build(BuildContext context) {
-    if (isRoutineView) {
-      // RoutineScreen에 뒤로가기 시 실행할 함수(onBack)를 전달
-      return RoutineScreen(
-        onBack: () {
-          setState(() {
-            isRoutineView = false;
-          });
-        },
+    // 2단계: 성장 화면
+    if (currentStep == 2) {
+      return GrowScreen(
+        onBack: () => setState(() => currentStep = 1),
       );
     }
 
+    // 1단계: 루틴 상세 화면
+    if (currentStep == 1) {
+      return RoutineScreen(
+        onBack: () => setState(() => currentStep = 0),
+        onGrowTap: () => setState(() => currentStep = 2),
+      );
+    }
+
+    // 0단계: 메인 퀘스트 화면
     return Scaffold(
       backgroundColor: const Color(0xFFFDFDFD),
       body: SingleChildScrollView(
@@ -37,8 +42,8 @@ class _QuestScreenState extends State<QuestScreen> {
             const SizedBox(height: 20),
             _buildCharacterSection(context),
             const SizedBox(height: 30),
-            _buildQuestCard(context),
-            const SizedBox(height: 30), // 바텀네비 기준 여백
+            _buildQuestCard(context), // 0단계에서 1단계로 전환하는 카드
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -58,8 +63,8 @@ class _QuestScreenState extends State<QuestScreen> {
             borderRadius: BorderRadius.circular(30),
             child: const LinearProgressIndicator(
               value: 0.7,
-              backgroundColor: Color(0xFFE3E3E3),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC6FF8C)),
+              backgroundColor: Color(0xFFE2E2E2),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA1FF6F)),
               minHeight: 18,
             ),
           ),
@@ -140,9 +145,8 @@ class _QuestScreenState extends State<QuestScreen> {
   Widget _buildQuestCard(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // 3. Navigator.push 대신 상태를 변경하여 화면을 전환
         setState(() {
-          isRoutineView = true;
+          currentStep = 1; // 0단계에서 1단계(루틴상세)로 변경
         });
       },
       child: Container(

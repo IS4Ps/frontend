@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/quest/routine_detail_screen.dart';
+import 'grow_screen.dart';
 
 class RoutineScreen extends StatefulWidget {
   final VoidCallback? onBack;
-  const RoutineScreen({super.key, this.onBack});
+  final VoidCallback? onGrowTap;
+  const RoutineScreen({super.key, this.onBack, this.onGrowTap});
 
   @override
   State<RoutineScreen> createState() => _RoutineScreenState();
@@ -15,7 +18,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
   // 나중에 API에서 받아올 데이터 예시
   final List<Map<String, dynamic>> subTasks = [
-    {"title": "양치하기", "isDone": true},
+    {"title": "양치하기", "isDone": false},
     {"title": "세수하기", "isDone": false},
     {"title": "옷 입기", "isDone": false},
   ];
@@ -47,7 +50,8 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
             _buildAchievementCard(),
             const SizedBox(height: 19),
-            _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B)),
+            // 호출부: 세 번째 인자로 widget.onGrowTap을 넣어줍니다.
+            _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -90,7 +94,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
             child: const LinearProgressIndicator(
               value: 0.62,
               minHeight: 18,
-              backgroundColor: Color(0xFFE3E3E3),
+              backgroundColor: Color(0xFFE2E2E2),
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
             ),
           ),
@@ -101,14 +105,14 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  Widget _buildActionButton(String text, Color color) {
+  Widget _buildActionButton(String text, Color color, VoidCallback? onTap) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: SizedBox(
         width: double.infinity,
         height: 58,
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: onTap, // QuestScreen에서 넘겨준 콜백을 실행하여 화면을 바꿉니다.
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -134,7 +138,21 @@ class _RoutineScreenState extends State<RoutineScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("등교 준비하기", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              _buildStatusLabel("퀘스트 시작하기", const Color(0xFF6389E9), Colors.white),
+              GestureDetector(
+                onTap: () {
+                  // 버튼을 누르면 세부 진행 화면으로 이동!
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RoutineDetailScreen(
+                        taskTitle: "양치하기",
+                        mainQuestTitle: "등교 준비하기",
+                      ),
+                    ),
+                  );
+                },
+                child: _buildStatusLabel("퀘스트 시작하기", const Color(0xFF6389E9), Colors.white),
+              ),
             ],
           ),
 
