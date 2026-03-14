@@ -12,13 +12,11 @@ class RoutineScreen extends StatefulWidget {
 }
 
 class _RoutineScreenState extends State<RoutineScreen> {
-  // 박스가 펼쳐져 있는지 상태를 저장하는 변수
   bool isExpanded = true;
 
-  // 추가: 현재 어떤 항목이 선택되었는지 내부적으로만 저장 (기본값 0: 양치하기)
+  // 현재 '선택된' 단 하나의 인덱스 (기본값 0: 양치하기)
   int _selectedSubTaskIndex = 0;
 
-  // 나중에 API에서 받아올 데이터 예시
   final List<Map<String, dynamic>> subTasks = [
     {"title": "양치하기", "isDone": false},
     {"title": "세수하기", "isDone": false},
@@ -34,7 +32,6 @@ class _RoutineScreenState extends State<RoutineScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 뒤로가기 버튼
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: IconButton(
@@ -49,7 +46,6 @@ class _RoutineScreenState extends State<RoutineScreen> {
               ),
             ),
             const SizedBox(height: 10),
-
             _buildAchievementCard(),
             const SizedBox(height: 19),
             _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
@@ -139,6 +135,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
               const Text("등교 준비하기", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               GestureDetector(
                 onTap: () {
+                  // 현재 선택된 '단 하나'의 타이틀을 상세 화면으로 전달
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -187,22 +184,24 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  // 색상 변경 없이 내부 로직만 수정
   Widget _buildSubTask(int index, String title, bool isDone) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          // 클릭 시 내부 인덱스만 조용히 바꿈
+          // 1. 내부적으로 사용할 인덱스 저장
           _selectedSubTaskIndex = index;
-          // 기존 완료 토글 로직 유지
-          subTasks[index]['isDone'] = !subTasks[index]['isDone'];
+
+          // 2. 핵심: 모든 태스크의 체크를 풀고, 현재 클릭한 것만 체크!
+          for (var task in subTasks) {
+            task['isDone'] = false;
+          }
+          subTasks[index]['isDone'] = true;
         });
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
-          // 색상은 기존 로직 그대로 유지 (완료면 초록색, 아니면 회색)
           color: isDone ? const Color(0xFFC6FF8C) : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(35),
         ),
@@ -239,7 +238,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
-      child: Text(text, style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.bold)),
+      child: Text(text, style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.bold)),
     );
   }
 }
