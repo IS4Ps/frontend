@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/profile/parent_link.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -213,7 +214,14 @@ class ProfileScreen extends StatelessWidget {
                     width: 290,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return const ParentLink();
+                          },
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1586E2),
                         shape: RoundedRectangleBorder(
@@ -226,7 +234,7 @@ class ProfileScreen extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
-                          fontWeight: FontWeight.w600
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
