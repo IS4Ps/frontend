@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const Center(child: Text("홈 화면")),   // 0번: 홈
     const QuestScreen(),   // 1번: 퀘스트 (오늘 만든 화면!)
-    const Center(child: Text("프로필")),// 2번: 프로필
+    const ProfileScreen(),
     const StoreScreen(),
   ];
 
