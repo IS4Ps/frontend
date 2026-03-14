@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 사용을 위해 꼭 필요
 import 'screens/quest/quest_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/profile/profile_screen.dart';
 import 'screens/store_screen.dart';
 
 class MainScreen extends StatefulWidget {
