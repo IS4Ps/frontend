@@ -12,9 +12,11 @@ class RoutineScreen extends StatefulWidget {
 }
 
 class _RoutineScreenState extends State<RoutineScreen> {
-
   // 박스가 펼쳐져 있는지 상태를 저장하는 변수
   bool isExpanded = true;
+
+  // 추가: 현재 어떤 항목이 선택되었는지 내부적으로만 저장 (기본값 0: 양치하기)
+  int _selectedSubTaskIndex = 0;
 
   // 나중에 API에서 받아올 데이터 예시
   final List<Map<String, dynamic>> subTasks = [
@@ -50,7 +52,6 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
             _buildAchievementCard(),
             const SizedBox(height: 19),
-            // 호출부: 세 번째 인자로 widget.onGrowTap을 넣어줍니다.
             _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
             const SizedBox(height: 20),
             Padding(
@@ -60,7 +61,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
                 children: [
                   const Text("오늘의 퀘스트!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  _buildMainQuestCard(), // 메인 퀘스트 카드
+                  _buildMainQuestCard(),
                   const SizedBox(height: 9),
                   _buildLockedQuestCard("학원 다녀오기"),
                   const SizedBox(height: 15),
@@ -74,7 +75,6 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  // 달성률 카드
   Widget _buildAchievementCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 18),
@@ -112,7 +112,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
         width: double.infinity,
         height: 58,
         child: ElevatedButton(
-          onPressed: onTap, // QuestScreen에서 넘겨준 콜백을 실행하여 화면을 바꿉니다.
+          onPressed: onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -124,7 +124,6 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  // 메인 활성화 퀘스트 카드
   Widget _buildMainQuestCard() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -140,12 +139,11 @@ class _RoutineScreenState extends State<RoutineScreen> {
               const Text("등교 준비하기", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               GestureDetector(
                 onTap: () {
-                  // 버튼을 누르면 세부 진행 화면으로 이동!
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const RoutineDetailScreen(
-                        taskTitle: "양치하기",
+                      builder: (context) => RoutineDetailScreen(
+                        taskTitle: subTasks[_selectedSubTaskIndex]['title'],
                         mainQuestTitle: "등교 준비하기",
                       ),
                     ),
@@ -189,11 +187,14 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  // 세부 항목
+  // 색상 변경 없이 내부 로직만 수정
   Widget _buildSubTask(int index, String title, bool isDone) {
     return GestureDetector(
       onTap: () {
         setState(() {
+          // 클릭 시 내부 인덱스만 조용히 바꿈
+          _selectedSubTaskIndex = index;
+          // 기존 완료 토글 로직 유지
           subTasks[index]['isDone'] = !subTasks[index]['isDone'];
         });
       },
@@ -201,6 +202,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
+          // 색상은 기존 로직 그대로 유지 (완료면 초록색, 아니면 회색)
           color: isDone ? const Color(0xFFC6FF8C) : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(35),
         ),
