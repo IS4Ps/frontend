@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'concentrate_screen.dart';
 
 class GrowScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -34,15 +35,26 @@ class GrowScreen extends StatelessWidget {
                   gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)],
                   onTap: () => print("미니게임 클릭"),
                 ),
+
                 const SizedBox(height: 20),
                 _buildChildGrowCard(
                   title: "집중하기",
                   subtitle: "집중력 쑥쑥! 타이머로 시간 관리하기",
                   icon: Icons.timer_rounded,
                   gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)],
-                  onTap: () => print("집중하기 클릭"),
+                  onTap: () {
+                    // Navigator를 사용하여 화면 이동
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ConcentrateScreen(),
+                      ),
+                    );
+                  },
                 ),
+
                 const SizedBox(height: 20),
+
                 _buildChildGrowCard(
                   title: "퀴즈 풀러가기",
                   subtitle: "매일매일 똑똑해지는 AI 퀴즈 도전!",
