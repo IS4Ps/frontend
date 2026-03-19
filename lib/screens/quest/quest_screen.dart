@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'grow_screen.dart';
 import 'speech_bubble.dart';
 import 'routine_screen.dart';
+import 'ox_screen.dart';
 
 class QuestScreen extends StatefulWidget {
   const QuestScreen({super.key});
@@ -11,19 +12,24 @@ class QuestScreen extends StatefulWidget {
 }
 
 class _QuestScreenState extends State<QuestScreen> {
-  // 0: 메인, 1: 루틴 상세, 2: 성장 화면
+  // 0: 메인, 1: 루틴 상세, 2: 성장 화면, 3: OX 화면
   int currentStep = 0;
 
   @override
   Widget build(BuildContext context) {
-    // 2단계: 성장 화면
-    if (currentStep == 2) {
-      return GrowScreen(
-        onBack: () => setState(() => currentStep = 1),
+    if (currentStep == 3) {
+      return OxScreen(
+        onBack: () => setState(() => currentStep = 2),
       );
     }
 
-    // 1단계: 루틴 상세 화면
+    if (currentStep == 2) {
+      return GrowScreen(
+        onBack: () => setState(() => currentStep = 1),
+        onQuizTap: () => setState(() => currentStep = 3),
+      );
+    }
+
     if (currentStep == 1) {
       return RoutineScreen(
         onBack: () => setState(() => currentStep = 0),
@@ -31,7 +37,6 @@ class _QuestScreenState extends State<QuestScreen> {
       );
     }
 
-    // 0단계: 메인 퀘스트 화면
     return Scaffold(
       backgroundColor: const Color(0xFFFDFDFD),
       body: SingleChildScrollView(
@@ -42,7 +47,7 @@ class _QuestScreenState extends State<QuestScreen> {
             const SizedBox(height: 20),
             _buildCharacterSection(context),
             const SizedBox(height: 30),
-            _buildQuestCard(context), // 0단계에서 1단계로 전환하는 카드
+            _buildQuestCard(context),
             const SizedBox(height: 30),
           ],
         ),
@@ -56,8 +61,10 @@ class _QuestScreenState extends State<QuestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Level 1 모험가",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+          const Text(
+            "Level 1 모험가",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+          ),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(30),
@@ -71,7 +78,9 @@ class _QuestScreenState extends State<QuestScreen> {
           const SizedBox(height: 10),
           const Center(
             child: Text(
-                "70%", style: TextStyle(color: Colors.black, fontSize: 22)),
+              "70%",
+              style: TextStyle(color: Colors.black, fontSize: 22),
+            ),
           ),
         ],
       ),
@@ -146,7 +155,7 @@ class _QuestScreenState extends State<QuestScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          currentStep = 1; // 0단계에서 1단계(루틴상세)로 변경
+          currentStep = 1;
         });
       },
       child: Container(
@@ -169,11 +178,15 @@ class _QuestScreenState extends State<QuestScreen> {
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("다음 퀘스트",
-                    style: TextStyle(color: Colors.grey, fontSize: 18)),
+                Text(
+                  "다음 퀘스트",
+                  style: TextStyle(color: Colors.grey, fontSize: 18),
+                ),
                 SizedBox(height: 5),
-                Text("학원 다녀오기", style: TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.bold)),
+                Text(
+                  "학원 다녀오기",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
@@ -253,7 +266,15 @@ class BubblePainter extends CustomPainter {
     const double tailHeight = 10.0;
     double tailPosition = size.width * 0.8;
 
-    path.addRRect(RRect.fromLTRBR(0, 0, size.width, size.height - tailHeight, const Radius.circular(radius)));
+    path.addRRect(
+      RRect.fromLTRBR(
+        0,
+        0,
+        size.width,
+        size.height - tailHeight,
+        const Radius.circular(radius),
+      ),
+    );
     path.moveTo(tailPosition - tailWidth, size.height - tailHeight);
     path.lineTo(tailPosition, size.height);
     path.lineTo(tailPosition + tailWidth, size.height - tailHeight);
