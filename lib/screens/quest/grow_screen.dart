@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'concentrate_screen.dart';
+import 'ox_screen.dart';
 
 class GrowScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -60,7 +61,14 @@ class GrowScreen extends StatelessWidget {
                   subtitle: "매일매일 똑똑해지는 AI 퀴즈 도전!",
                   icon: Icons.auto_awesome_rounded,
                   gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)],
-                  onTap: () => print("퀴즈 클릭"),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OxScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
