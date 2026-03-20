@@ -3,7 +3,13 @@ import 'concentrate_screen.dart';
 
 class GrowScreen extends StatelessWidget {
   final VoidCallback? onBack;
-  const GrowScreen({super.key, this.onBack});
+  final VoidCallback? onQuizTap;
+
+  const GrowScreen({
+    super.key,
+    this.onBack,
+    this.onQuizTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +28,6 @@ class GrowScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -35,7 +40,6 @@ class GrowScreen extends StatelessWidget {
                   gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)],
                   onTap: () => print("미니게임 클릭"),
                 ),
-
                 const SizedBox(height: 20),
                 _buildChildGrowCard(
                   title: "집중하기",
@@ -43,7 +47,6 @@ class GrowScreen extends StatelessWidget {
                   icon: Icons.timer_rounded,
                   gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)],
                   onTap: () {
-                    // Navigator를 사용하여 화면 이동
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -52,15 +55,17 @@ class GrowScreen extends StatelessWidget {
                     );
                   },
                 ),
-
                 const SizedBox(height: 20),
-
                 _buildChildGrowCard(
                   title: "퀴즈 풀러가기",
                   subtitle: "매일매일 똑똑해지는 AI 퀴즈 도전!",
                   icon: Icons.auto_awesome_rounded,
                   gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)],
-                  onTap: () => print("퀴즈 클릭"),
+                  onTap: () {
+                    if (onQuizTap != null) {
+                      onQuizTap!();
+                    }
+                  },
                 ),
               ],
             ),
@@ -70,14 +75,13 @@ class GrowScreen extends StatelessWidget {
     );
   }
 
-  // 상단 헤더 부분 위젯
   Widget _buildHeader() {
     return Center(
       child: Stack(
         alignment: Alignment.center,
         children: [
           Container(
-            width: 350, // width를 화면에 맞게 약간 조정
+            width: 350,
             height: 100,
             decoration: BoxDecoration(
               color: const Color(0xFFF1F3F5),
@@ -138,16 +142,29 @@ class GrowScreen extends StatelessWidget {
           height: 145,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
-            gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             boxShadow: [
-              BoxShadow(color: gradient[0].withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
+              BoxShadow(
+                color: gradient[0].withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
             ],
           ),
           child: Stack(
             children: [
               Positioned(
-                right: -10, top: -5,
-                child: Icon(icon, size: 110, color: Colors.white.withOpacity(0.12)),
+                right: -10,
+                top: -5,
+                child: Icon(
+                  icon,
+                  size: 110,
+                  color: Colors.white.withOpacity(0.12),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -155,7 +172,10 @@ class GrowScreen extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(icon, size: 42, color: Colors.white),
                     ),
                     const SizedBox(width: 20),
@@ -164,9 +184,23 @@ class GrowScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600)),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
