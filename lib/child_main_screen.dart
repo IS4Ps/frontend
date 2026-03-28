@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 사용을 위해 꼭 필요
 import 'screens/quest/quest_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/home/home_screen.dart';
 import 'screens/profile/profile_screen.dart';
-import 'screens/store_screen.dart';
+import 'screens/store/store_screen.dart';
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class ChildMainScreen extends StatefulWidget {
+  const ChildMainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<ChildMainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<ChildMainScreen> {
   int _selectedIndex = 0; // 현재 선택된 탭의 인덱스
 
   final List<Widget> _screens = [
-    const Center(child: Text("홈 화면")),   // 0번: 홈
-    const QuestScreen(),   // 1번: 퀘스트 (오늘 만든 화면!)
+    const Center(child: Text("아동")),   // 0번: 홈
+    const QuestScreen(),
     const ProfileScreen(),
     const StoreScreen(),
   ];
