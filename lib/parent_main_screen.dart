@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/setting/setting_screen.dart';
 
 class ParentMainScreen extends StatefulWidget {
@@ -14,7 +15,7 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
 
   // 1. 보호자용 화면 리스트
   final List<Widget> _screens = [
-    const Center(child: Text("대시보드 화면")),
+    const DashboardScreen(),
     const Center(child: Text("루틴 설정 화면")),
     const Center(child: Text("보상 설정 화면")),
     const SettingScreen(),
