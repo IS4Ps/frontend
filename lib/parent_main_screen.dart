@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'screens/setting/setting_screen.dart';
 
 class ParentMainScreen extends StatefulWidget {
   const ParentMainScreen({super.key});
@@ -16,7 +17,7 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
     const Center(child: Text("대시보드 화면")),
     const Center(child: Text("루틴 설정 화면")),
     const Center(child: Text("보상 설정 화면")),
-    const Center(child: Text("설정 화면")),
+    const SettingScreen(),
   ];
 
   void _onItemTapped(int index) {
