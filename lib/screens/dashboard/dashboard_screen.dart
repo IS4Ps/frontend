@@ -28,6 +28,8 @@ class DashboardScreen extends StatelessWidget {
                   _buildActivityCard(),
                   const SizedBox(height: 24),
                   _buildEmotionCard(),
+                  const SizedBox(height: 24),
+                  _buildHeatmapCard(),
                 ],
               ),
             ),
@@ -328,17 +330,17 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildCalendarSection() {
     final List<String> dates = [
-      '31', '2', '3', '4', '5', '6', '7',
+      '1', '2', '3', '4', '5', '6', '7',
       '8', '9', '10', '11', '12', '13', '14',
       '15', '16', '17', '18', '19', '20', '21',
-      '22', '23', '24', '25', '26', '1', '2',
+      '22', '23', '24', '25', '26', '27', '28',
     ];
 
     final List<String> emotions = [
-      '', '😀', '☹️', '😡', '😮‍💨', '😆', '😆',
-      '😮', '☹️', '😡', '😆', '😮‍💨', '😀', '😡',
-      '😀', '😮‍💨', '😀', '☹️', '😣', '😡', '😮',
-      '😣', '😆', '😮‍💨', '', '', '', '',
+      '', '😀', '☹️', '😡', '😌', '😆', '😆',
+      '☹️', '😞', '😡', '😆', '😌', '😀', '😡',
+      '😀', '😌', '😀', '☹️', '😣', '😡', '☹️',
+      '😣', '😆', '😌', '', '', '', '',
     ];
 
     return Container(
@@ -374,7 +376,7 @@ class DashboardScreen extends StatelessWidget {
                   dates[index],
                   style: TextStyle(
                     fontSize: 13,
-                    color: (dates[index] == '25' || dates[index] == '26')
+                    color: (dates[index] == '25' || dates[index] == '26'|| dates[index] == '27' || dates[index] == '28')
                         ? Colors.black87
                         : isEmpty ? const Color(0xFFB8B8B8) : Colors.black87,
                     fontWeight: (index == 24 || index == 25) ? FontWeight.w500 : FontWeight.w500,
@@ -587,4 +589,102 @@ class EmotionLineChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+Widget _buildHeatmapCard() {
+  // 0: 없음, 1: 연한, 2: 중간, 3: 진한
+  final List<int> data = [
+    2,1,0,2,3,3,0,1,1,0,2,3,2,
+    2,2,2,0,3,2,1,2,1,0,0,2,3,
+    1,3,2,0,0,3,1,2,2,2,2,3,1,
+    2,1,0,2,2,0,0,2,2,0,3,2,2,
+    2,3,0,3,2,3,0,2,3,1,3,2,3,
+    3,2,2,0,1,3,3,1,0,1,3,0,0,
+    3,2,2,3,0,3,0,1,0,1,2,2,2,
+  ];
+
+  final colors = [
+    const Color(0xFFF1F3F5), // 없음
+    const Color(0xFFBDECC7), // 연한
+    const Color(0xFF2ED573), // 중간
+    const Color(0xFF138A36), // 진한
+  ];
+
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.symmetric(horizontal: 20),
+    padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: const Text(
+            '루틴 습관 히트맵',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: const Text(
+            '3개월 일관성',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF3D3D3D),
+            ),
+          ),
+        ),
+        const SizedBox(height: 25),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: GridView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: data.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 13,
+              crossAxisSpacing: 3,
+              mainAxisSpacing: 3,
+              childAspectRatio: 1,
+            ),
+            itemBuilder: (context, index) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: colors[data[index]],
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20), // 4 → 10
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text('1월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
+              SizedBox(width: 76),
+              Text('2월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
+              SizedBox(width: 60),
+              Text('3월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
