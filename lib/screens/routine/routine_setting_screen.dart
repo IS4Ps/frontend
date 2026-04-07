@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'routine_date_selector.dart';
+import 'routine_load_modal.dart';
+import 'routine_save_modal.dart';
 
 class RoutineSettingScreen extends StatefulWidget {
   const RoutineSettingScreen({super.key});
@@ -23,6 +26,7 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── 상단 헤더 ──────────────────────────────────────
                 Container(
                   width: double.infinity,
                   color: Colors.white,
@@ -52,6 +56,13 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                                 icon: Icons.save_outlined,
                                 text: '반복 루틴 저장',
                                 backgroundColor: const Color(0x90E047FF),
+                                // ✅ 모달 호출
+                                onTap: () {
+                                  showRoutineSaveModal(
+                                    context,
+                                    initialDay: selectedDay,
+                                  );
+                                },
                               ),
                             ),
                             const SizedBox(width: 32),
@@ -60,6 +71,9 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                                 icon: Icons.ios_share,
                                 text: '루틴 불러오기',
                                 backgroundColor: const Color(0x7C1586E2),
+                                onTap: () {
+                                  showRoutineLoadModal(context);
+                                },
                               ),
                             ),
                           ],
@@ -68,11 +82,14 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                     ],
                   ),
                 ),
+
+                // ── 본문 ───────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 15, 20, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 날짜 선택
                       const Padding(
                         padding: EdgeInsets.only(left: 15),
                         child: Text(
@@ -86,152 +103,23 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
+
+                      // ✅ WeekCalendarWidget 사용
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x14000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '2월 $selectedDay일',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontFamily: 'JejuGothic',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        isFullCalendarOpen =
-                                        !isFullCalendarOpen;
-                                      });
-                                    },
-                                    child: Icon(
-                                      isFullCalendarOpen
-                                          ? Icons.keyboard_arrow_up
-                                          : Icons.keyboard_arrow_down,
-                                      color: const Color(0xFFB0B0B0),
-                                      size: 22,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD9D9D9),
-                                  borderRadius: BorderRadius.circular(28),
-                                ),
-                                child: isFullCalendarOpen
-                                    ? Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                      children: [
-                                        _buildTopCalendarCell('일', 1),
-                                        _buildTopCalendarCell('월', 2),
-                                        _buildTopCalendarCell('화', 3),
-                                        _buildTopCalendarCell('수', 4),
-                                        _buildTopCalendarCell('목', 5),
-                                        _buildTopCalendarCell('금', 6),
-                                        _buildTopCalendarCell('토', 7),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        _buildNumberItem(8),
-                                        _buildNumberItem(9),
-                                        _buildNumberItem(10),
-                                        _buildNumberItem(11),
-                                        _buildNumberItem(12),
-                                        _buildNumberItem(13),
-                                        _buildNumberItem(14),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        _buildNumberItem(15),
-                                        _buildNumberItem(16),
-                                        _buildNumberItem(17),
-                                        _buildNumberItem(18),
-                                        _buildNumberItem(19),
-                                        _buildNumberItem(20),
-                                        _buildNumberItem(21),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        _buildNumberItem(22),
-                                        _buildNumberItem(23),
-                                        _buildNumberItem(24),
-                                        _buildNumberItem(25),
-                                        _buildNumberItem(26),
-                                        _buildNumberItem(27),
-                                        _buildNumberItem(28),
-                                      ],
-                                    ),
-                                  ],
-                                )
-                                    : Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceEvenly,
-                                  crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                                  children: [
-                                    _buildTopCalendarCell('일', 1),
-                                    _buildTopCalendarCell('월', 2),
-                                    _buildTopCalendarCell('화', 3),
-                                    _buildTopCalendarCell('수', 4),
-                                    _buildTopCalendarCell('목', 5),
-                                    _buildTopCalendarCell('금', 6),
-                                    _buildTopCalendarCell('토', 7),
-                                  ],
-                                ),
-                              ),
-                            ],
+                        child: WeekCalendarWidget(
+                          selectedDay: selectedDay,
+                          isFullCalendarOpen: isFullCalendarOpen,
+                          onDaySelected: (day) =>
+                              setState(() => selectedDay = day),
+                          onToggleCalendar: () => setState(
+                                () => isFullCalendarOpen = !isFullCalendarOpen,
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
+
+                      // 시간 설정
                       const Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text(
@@ -248,12 +136,8 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                       Padding(
                         padding: const EdgeInsets.only(left: 16),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 65,
-                              child: _timeBox('8:30'),
-                            ),
+                            SizedBox(width: 65, child: _timeBox('8:30')),
                             const SizedBox(width: 8),
                             const Text(
                               '~',
@@ -263,14 +147,13 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            SizedBox(
-                              width: 65,
-                              child: _timeBox('9:30'),
-                            ),
+                            SizedBox(width: 65, child: _timeBox('9:30')),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
+
+                      // 미션 제목
                       const Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text(
@@ -310,6 +193,8 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
+
+                      // 태그 선택
                       const Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text(
@@ -336,6 +221,8 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                         ),
                       ),
                       const SizedBox(height: 32),
+
+                      // 미션 저장 버튼
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: SizedBox(
@@ -372,137 +259,41 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
       ),
     );
   }
-
-  Widget _buildTopCalendarCell(String day, int date) {
-    final bool isSelected = selectedDay == date;
-
-    return SizedBox(
-      width: 34,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            day,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 14,
-              fontFamily: 'JejuGothic',
-              fontWeight: FontWeight.w700,
-              height: 1.0,
-            ),
-          ),
-          const SizedBox(height: 1),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedDay = date;
-              });
-            },
-            child: SizedBox(
-              width: 34,
-              height: 28,
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  if (isSelected)
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF8EBBE4),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  Text(
-                    '$date',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'JejuGothic',
-                      fontWeight: FontWeight.w700,
-                      height: 1.0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNumberItem(int date) {
-    final bool isSelected = selectedDay == date;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedDay = date;
-        });
-      },
-      child: SizedBox(
-        width: 34,
-        height: 34,
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            if (isSelected)
-              Container(
-                width: 30,
-                height: 30,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF8EBBE4),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            Text(
-              '$date',
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'JejuGothic',
-                fontWeight: FontWeight.w700,
-                height: 1.0,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
+
+// ── 공통 위젯 ────────────────────────────────────────────────────────────────
 
 Widget _topActionButton({
   required IconData icon,
   required String text,
   required Color backgroundColor,
+  VoidCallback? onTap,
 }) {
-  return Container(
-    height: 56,
-    decoration: BoxDecoration(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(15),
-    ),
-    alignment: Alignment.center,
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: Colors.black),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 15,
-            fontFamily: 'JejuGothic',
-            fontWeight: FontWeight.w600,
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: Colors.black),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 15,
+              fontFamily: 'JejuGothic',
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
