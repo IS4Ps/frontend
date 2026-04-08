@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/routine/routine_setting_screen.dart';
 import 'screens/setting/setting_screen.dart';
 import 'screens/reward/reward_screen.dart';
 
@@ -17,7 +18,7 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
   // 1. 보호자용 화면 리스트
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const Center(child: Text("루틴 설정 화면")),
+    const RoutineSettingScreen(),
     const RewardScreen(),
     const SettingScreen(),
   ];
