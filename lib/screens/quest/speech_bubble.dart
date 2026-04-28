@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../view_model/quest/quest_view_model.dart';
 
 class SpeechBubble extends StatefulWidget {
   const SpeechBubble({super.key});
@@ -21,15 +23,49 @@ class _SpeechBubbleState extends State<SpeechBubble> {
     {'emoji': '😭', 'label': '매우 나쁨', 'sub': '화나요', 'color': const Color(0xFFFFB0B0)},
   ];
 
-  // 2단계: 상세 감정 데이터 (각자 다른 배경색 & 글자색 설정)
-  final List<Map<String, dynamic>> detailMoods = [
-    {'label': '행복해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
-    {'label': '편안해요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
-    {'label': '감사해요', 'color': const Color(0xFFE9807B), 'textColor': const Color(0xFF8B2F2B)},
-    {'label': '활기차요', 'color': const Color(0xFFE8B7FF), 'textColor': const Color(0xFF7B3DA0)},
-    {'label': '화사해요', 'color': const Color(0xFFF9E2E2), 'textColor': const Color(0xFF9E4B4B)},
-    {'label': '쾌적해요', 'color': const Color(0xFFF1FFAD), 'textColor': const Color(0xFF6F7A1E)},
-  ];
+  // 2단계: 상세 감정 데이터 (Map 구조로 변경됨)
+  final Map<int, List<Map<String, dynamic>>> detailMoodMap = {
+    0: [ // 😆 매우 좋음
+      {'label': '신나요', 'color': const Color(0xFFFFF4B7), 'textColor': const Color(0xFF8B7300)},
+      {'label': '최고예요', 'color': const Color(0xFFFFF4B7), 'textColor': const Color(0xFF8B7300)},
+      {'label': '활기차요', 'color': const Color(0xFFFFF4B7), 'textColor': const Color(0xFF8B7300)},
+      {'label': '짜릿해요', 'color': const Color(0xFFFFF4B7), 'textColor': const Color(0xFF8B7300)},
+      {'label': '즐거워요', 'color': const Color(0xFFFFF4B7), 'textColor': const Color(0xFF8B7300)},
+      {'label': '환상적예요', 'color': const Color(0xFFFFF4B7), 'textColor': const Color(0xFF8B7300)},
+    ],
+    1: [ // 😊 좋음
+      {'label': '행복해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
+      {'label': '편안해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
+      {'label': '감사해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
+      {'label': '뿌듯해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
+      {'label': '화사해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
+      {'label': '쾌적해요', 'color': const Color(0xFFC6FF8C), 'textColor': const Color(0xFF4E7A1E)},
+    ],
+    2: [ // 😐 보통
+      {'label': '그저그래요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
+      {'label': '차분해요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
+      {'label': '평온해요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
+      {'label': '멍해요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
+      {'label': '심심해요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
+      {'label': '졸려요', 'color': const Color(0xFFE1EFFF), 'textColor': const Color(0xFF4A608A)},
+    ],
+    3: [ // 😟 나쁨
+      {'label': '속상해요', 'color': const Color(0xFFFFE3D1), 'textColor': const Color(0xFF9E5C32)},
+      {'label': '우울해요', 'color': const Color(0xFFFFE3D1), 'textColor': const Color(0xFF9E5C32)},
+      {'label': '지쳐요', 'color': const Color(0xFFFFE3D1), 'textColor': const Color(0xFF9E5C32)},
+      {'label': '불안해요', 'color': const Color(0xFFFFE3D1), 'textColor': const Color(0xFF9E5C32)},
+      {'label': '답답해요', 'color': const Color(0xFFFFE3D1), 'textColor': const Color(0xFF9E5C32)},
+      {'label': '걱정돼요', 'color': const Color(0xFFFFE3D1), 'textColor': const Color(0xFF9E5C32)},
+    ],
+    4: [ // 😭 매우 나쁨
+      {'label': '화나요', 'color': const Color(0xFFFFD1D1), 'textColor': const Color(0xFF9E3232)},
+      {'label': '짜증나요', 'color': const Color(0xFFFFD1D1), 'textColor': const Color(0xFF9E3232)},
+      {'label': '슬퍼요', 'color': const Color(0xFFFFD1D1), 'textColor': const Color(0xFF9E3232)},
+      {'label': '서운해요', 'color': const Color(0xFFFFD1D1), 'textColor': const Color(0xFF9E3232)},
+      {'label': '억울해요', 'color': const Color(0xFFFFD1D1), 'textColor': const Color(0xFF9E3232)},
+      {'label': '힘들어요', 'color': const Color(0xFFFFD1D1), 'textColor': const Color(0xFF9E3232)},
+    ],
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -53,21 +89,31 @@ class _SpeechBubbleState extends State<SpeechBubble> {
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF4A90E2)),
           ),
           const SizedBox(height: 20),
-
           SizedBox(
             height: 140,
             child: isDetailView ? _buildDetailView() : _buildMainView(),
           ),
-
           const SizedBox(height: 20),
-
           ElevatedButton(
             onPressed: isButtonEnabled
-                ? () {
+                ? () async {
               if (!isDetailView) {
-                setState(() => isDetailView = true);
+                setState(() {
+                  isDetailView = true;
+                  selectedDetailIndex = null; // 상세 인덱스 초기화
+                });
               } else {
-                Navigator.pop(context);
+                final viewModel = context.read<QuestViewModel>();
+
+                // detailMoodMap에서 선택된 리스트를 가져와서 라벨 추출
+                final currentDetails = detailMoodMap[selectedIndex!]!;
+                String finalEmotion = currentDetails[selectedDetailIndex!]['label'];
+
+                await viewModel.saveFeeling(finalEmotion);
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
               }
             }
                 : null,
@@ -131,12 +177,15 @@ class _SpeechBubbleState extends State<SpeechBubble> {
   }
 
   Widget _buildDetailView() {
+    // 선택된 메인 기분에 맞는 상세 리스트 가져오기
+    final currentDetails = detailMoodMap[selectedIndex!] ?? [];
+
     return Center(
       child: Wrap(
         spacing: 8,
         runSpacing: 10,
         alignment: WrapAlignment.center,
-        children: List.generate(detailMoods.length, (index) {
+        children: List.generate(currentDetails.length, (index) {
           bool isSelected = selectedDetailIndex == index;
           return GestureDetector(
             onTap: () => setState(() => selectedDetailIndex = index),
@@ -144,17 +193,15 @@ class _SpeechBubbleState extends State<SpeechBubble> {
               width: 85,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: detailMoods[index]['color'],
+                color: currentDetails[index]['color'],
                 borderRadius: BorderRadius.circular(50),
-                // 선택 시에만 테두리를 강조해서 보여줍니다.
                 border: isSelected ? Border.all(color: const Color(0xFF5C85E5), width: 2) : null,
               ),
               child: Center(
                 child: Text(
-                  detailMoods[index]['label'],
+                  currentDetails[index]['label'],
                   style: TextStyle(
-                    // 여기서 각 데이터에 설정된 textColor를 적용합니다!
-                    color: detailMoods[index]['textColor'],
+                    color: currentDetails[index]['textColor'],
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),

@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
-import 'start_screen.dart'; // 처음엔 시작 화면을 띄우기
+import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'view_model/quest/quest_view_model.dart';
+import 'start_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => QuestViewModel()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +30,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1687E3)),
         useMaterial3: true,
       ),
-      home: const StartScreen(), // 첫 화면은 시작 화면!
+      home: const StartScreen(),
     );
   }
 }
