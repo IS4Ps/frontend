@@ -1,56 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../view_model/quest/quest_view_model.dart'; // 경로 확인 필요
 import 'grow_screen.dart';
 import 'speech_bubble.dart';
 import 'routine_screen.dart';
 import 'ox_screen.dart';
 
-class QuestScreen extends StatefulWidget {
+class QuestScreen extends StatelessWidget {
   const QuestScreen({super.key});
 
   @override
-  State<QuestScreen> createState() => _QuestScreenState();
-}
-
-class _QuestScreenState extends State<QuestScreen> {
-  // 0: 메인, 1: 루틴 상세, 2: 성장 화면, 3: OX 화면
-  int currentStep = 0;
-
-  @override
   Widget build(BuildContext context) {
-    if (currentStep == 3) {
-      return OxScreen(
-        onBack: () => setState(() => currentStep = 2),
-      );
-    }
+    // 1. Provider를 통해 ViewModel 연결
+    return ChangeNotifierProvider(
+      create: (_) => QuestViewModel(),
+      child: Consumer<QuestViewModel>(
+        builder: (context, viewModel, child) {
+          // --- 기존 화면 전환 로직 유지 ---
+          if (viewModel.currentStep == 3) {
+            return OxScreen(
+              onBack: () => viewModel.changeStep(2),
+            );
+          }
 
-    if (currentStep == 2) {
-      return GrowScreen(
-        onBack: () => setState(() => currentStep = 1),
-        onQuizTap: () => setState(() => currentStep = 3),
-      );
-    }
+          if (viewModel.currentStep == 2) {
+            return GrowScreen(
+              onBack: () => viewModel.changeStep(1),
+              onQuizTap: () => viewModel.changeStep(3),
+            );
+          }
 
-    if (currentStep == 1) {
-      return RoutineScreen(
-        onBack: () => setState(() => currentStep = 0),
-        onGrowTap: () => setState(() => currentStep = 2),
-      );
-    }
+          if (viewModel.currentStep == 1) {
+            return RoutineScreen(
+              onBack: () => viewModel.changeStep(0),
+              onGrowTap: () => viewModel.changeStep(2),
+            );
+          }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFDFDFD),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 50),
-            _buildLevelSection(),
-            const SizedBox(height: 20),
-            _buildCharacterSection(context),
-            const SizedBox(height: 30),
-            _buildQuestCard(context),
-            const SizedBox(height: 30),
-          ],
-        ),
+          return Scaffold(
+            backgroundColor: const Color(0xFFFDFDFD),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
+                  _buildLevelSection(),
+                  const SizedBox(height: 20),
+                  _buildCharacterSection(context, viewModel), // viewModel 전달
+                  const SizedBox(height: 30),
+                  _buildQuestCard(context, viewModel), // viewModel 전달
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -87,7 +90,7 @@ class _QuestScreenState extends State<QuestScreen> {
     );
   }
 
-  Widget _buildCharacterSection(BuildContext context) {
+  Widget _buildCharacterSection(BuildContext context, QuestViewModel viewModel) {
     return Stack(
       children: [
         Padding(
@@ -113,16 +116,40 @@ class _QuestScreenState extends State<QuestScreen> {
           top: 0,
           left: 30,
           child: GestureDetector(
-            onTap: () {
-              _showMoodPopup(context);
+
+            // 기록 있어도 팝업 뜨는 경우
+            onTap: () async {
+              // 최신 상태를 한 번 확인하고
+              await viewModel.loadTodayMood();
+
+              // 무조건 팝업을 띄움(수정 가능하게)
+              if (context.mounted) {
+                _showMoodPopup(context, viewModel);
+              }
             },
+
+            // 기록이 있으면 말풍선 선택해도 팝업 안뜸
+            // onTap: () async {
+            //   await viewModel.loadTodayMood();
+            //   // 데이터가 없을 때만 팝업 실행
+            //   if (viewModel.feelingData == null || viewModel.feelingData!.primaryEmotion == "NONE") {
+            //     _showMoodPopup(context, viewModel);
+            //   }
+            // },
+
             child: CustomPaint(
               painter: BubblePainter(),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 22),
-                child: const Text(
-                  "오늘의 기분은 어때?",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                child: viewModel.isLoading
+                    ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey)
+                )
+                    : Text(
+                  viewModel.message, // ViewModel의 메시지 반영
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -137,26 +164,28 @@ class _QuestScreenState extends State<QuestScreen> {
     );
   }
 
-  void _showMoodPopup(BuildContext context) {
+  void _showMoodPopup(BuildContext context, QuestViewModel viewModel) { // ✅ viewModel 추가
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-          child: const SpeechBubble(),
+      builder: (BuildContext dialogContext) { // 새로운 BuildContext
+        // 🔥 핵심: 기존 viewModel을 다이얼로그 안으로 전달합니다.
+        return ChangeNotifierProvider.value(
+          value: viewModel,
+          child: const Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.symmetric(horizontal: 20),
+            child: SpeechBubble(),
+          ),
         );
       },
     );
   }
 
-  Widget _buildQuestCard(BuildContext context) {
+  Widget _buildQuestCard(BuildContext context, QuestViewModel viewModel) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          currentStep = 1;
-        });
+        viewModel.changeStep(1); // setState 대신 viewModel 사용
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -253,6 +282,7 @@ class _QuestScreenState extends State<QuestScreen> {
   }
 }
 
+// BubblePainter 클래스는 기존과 동일하므로 유지하시면 됩니다.
 class BubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
