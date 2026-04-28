@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/view_model/store/store_view_model.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -8,17 +10,27 @@ class StoreScreen extends StatefulWidget {
 }
 
 class _StoreScreenState extends State<StoreScreen> {
-  int _selectedIndex = 0; // 선택된 탭 인덱스
+  int _selectedIndex = 0;
   final List<String> _categories = ["상점", "장비", "보상"];
 
   Set<int> _equippedIndexes = {};
   int? _activeIndex;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<StoreViewModel>(context, listen: false)
+          .loadStoreItems(1, 1); // 임시로 level=1, jobId=1
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           "상점",
           style: TextStyle(
@@ -69,16 +81,26 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Widget _buildShopGrid() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 8,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 30,
-        mainAxisSpacing: 30,
-        childAspectRatio: 0.7,
-      ),
-      itemBuilder: (context, index) => _itemCard("500gold"),
+    return Consumer<StoreViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: viewModel.items.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 30,
+            mainAxisSpacing: 30,
+            childAspectRatio: 0.7,
+          ),
+          itemBuilder: (context, index) {
+            final item = viewModel.items[index];
+            return _itemCard("${item.price}gold");
+          },
+        );
+      },
     );
   }
 
