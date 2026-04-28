@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:frontend/screens/quest/routine_detail_screen.dart';
-import 'grow_screen.dart';
+import '../../view_model/quest/quest_view_model.dart';
+import '../../models/quest/today_mission_model.dart';
 
 class RoutineScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -13,59 +15,122 @@ class RoutineScreen extends StatefulWidget {
 
 class _RoutineScreenState extends State<RoutineScreen> {
   bool isExpanded = true;
-
-  // 현재 '선택된' 단 하나의 인덱스 (기본값 0: 양치하기)
   int _selectedSubTaskIndex = 0;
 
+  // 하위 태스크 (API 응답에 하위 목록이 없을 경우를 대비한 샘플 데이터)
   final List<Map<String, dynamic>> subTasks = [
-    {"title": "양치하기", "isDone": false},
+    {"title": "양치하기", "isDone": true},
     {"title": "세수하기", "isDone": false},
     {"title": "옷 입기", "isDone": false},
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // 화면 진입 시 미션 목록 API 호출
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<QuestViewModel>().fetchTodayMissions();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(0, 50, 0, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 24),
-                onPressed: () {
-                  if (widget.onBack != null) {
-                    widget.onBack!();
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-              ),
+    return Consumer<QuestViewModel>(
+      builder: (context, viewModel, child) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF6F6F6),
+          body: viewModel.isLoading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF6389E9)))
+              : SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(0, 50, 0, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTopBar(),
+                const SizedBox(height: 10),
+                _buildAchievementCard(),
+                const SizedBox(height: 19),
+                _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("오늘의 퀘스트!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+
+                      // --- 미션 리스트 영역 ---
+                      if (viewModel.todayMissions.isEmpty)
+                        _buildEmptyQuestCard() // 데이터가 없을 때 표시될 둥근 상자
+                      else
+                        ...viewModel.todayMissions.asMap().entries.map((entry) {
+                          int idx = entry.key;
+                          TodayMissionModel mission = entry.value;
+
+                          if (idx == 0) {
+                            return _buildMainQuestCard(mission);
+                          } else {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 9),
+                              child: _buildLockedQuestCard(mission.bigTaskTitle),
+                            );
+                          }
+                        }).toList(),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            _buildAchievementCard(),
-            const SizedBox(height: 19),
-            _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("오늘의 퀘스트!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  _buildMainQuestCard(),
-                  const SizedBox(height: 9),
-                  _buildLockedQuestCard("학원 다녀오기"),
-                  const SizedBox(height: 15),
-                  _buildLockedQuestCard("잘 준비하기"),
-                ],
-              ),
-            ),
-          ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 상단 뒤로가기 버튼
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 24),
+        onPressed: () {
+          if (widget.onBack != null) {
+            widget.onBack!();
+          } else {
+            Navigator.pop(context);
+          }
+        },
+      ),
+    );
+  }
+
+  // 퀘스트가 없을 때 표시되는 하얀색 둥근 상자
+  Widget _buildEmptyQuestCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Text(
+          "오늘 예정된 퀘스트가 없습니다.",
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -120,7 +185,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  Widget _buildMainQuestCard() {
+  Widget _buildMainQuestCard(TodayMissionModel mission) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
@@ -132,52 +197,38 @@ class _RoutineScreenState extends State<RoutineScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("등교 준비하기", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(mission.bigTaskTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               GestureDetector(
                 onTap: () {
-                  // 현재 선택된 '단 하나'의 타이틀을 상세 화면으로 전달
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => RoutineDetailScreen(
                         taskTitle: subTasks[_selectedSubTaskIndex]['title'],
-                        mainQuestTitle: "등교 준비하기",
+                        mainQuestTitle: mission.bigTaskTitle,
                       ),
                     ),
                   );
                 },
-                child: _buildStatusLabel("퀘스트 시작하기", const Color(0xFF6389E9), Colors.white),
+                child: _buildStatusLabel(
+                  mission.status == "PENDING" ? "퀘스트 시작하기" : "진행 중",
+                  const Color(0xFF6389E9),
+                  Colors.white,
+                ),
               ),
             ],
           ),
-
           if (isExpanded) ...[
             const SizedBox(height: 20),
             Column(
               children: subTasks.asMap().entries.map((entry) {
-                int idx = entry.key;
-                var task = entry.value;
-                return _buildSubTask(idx, task['title'], task['isDone']);
+                return _buildSubTask(entry.key, entry.value['title'], entry.value['isDone']);
               }).toList(),
             ),
           ],
-
-          Transform.translate(
-            offset: const Offset(0, -5),
-            child: IconButton(
-              onPressed: () {
-                setState(() {
-                  isExpanded = !isExpanded;
-                });
-              },
-              icon: Icon(
-                isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: Colors.grey,
-                size: 28,
-              ),
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-            ),
+          IconButton(
+            onPressed: () => setState(() => isExpanded = !isExpanded),
+            icon: Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: Colors.grey, size: 28),
           ),
         ],
       ),
@@ -186,34 +237,20 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
   Widget _buildSubTask(int index, String title, bool isDone) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          // 1. 내부적으로 사용할 인덱스 저장
-          _selectedSubTaskIndex = index;
-
-          // 2. 핵심: 모든 태스크의 체크를 풀고, 현재 클릭한 것만 체크!
-          for (var task in subTasks) {
-            task['isDone'] = false;
-          }
-          subTasks[index]['isDone'] = true;
-        });
-      },
+      onTap: () => setState(() => _selectedSubTaskIndex = index),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
           color: isDone ? const Color(0xFFC6FF8C) : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(35),
+          border: _selectedSubTaskIndex == index ? Border.all(color: const Color(0xFF6389E9), width: 1) : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            Icon(
-              isDone ? Icons.check_circle : Icons.circle_outlined,
-              size: 22,
-              color: isDone ? Colors.black : Colors.grey,
-            ),
+            Icon(isDone ? Icons.check_circle : Icons.circle_outlined, size: 22, color: isDone ? Colors.black : Colors.grey),
           ],
         ),
       ),

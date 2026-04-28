@@ -17,17 +17,18 @@ class _QuestScreenState extends State<QuestScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면에 들어올 때마다 서버에서 최신 기분 데이터를 가져옴
+    // 화면에 들어올 때마다 최신 기분 데이터와 미션 목록을 가져옴
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<QuestViewModel>().loadTodayMood();
+        final viewModel = context.read<QuestViewModel>();
+        viewModel.loadTodayMood();
+        viewModel.fetchTodayMissions(); // 오늘의 퀘스트 목록 API 호출 추가
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // 이미 main.dart에 주입된 ViewModel을 Consumer가 찾아갑니다.
     return Consumer<QuestViewModel>(
       builder: (context, viewModel, child) {
         // --- 화면 전환 로직 ---
@@ -58,7 +59,7 @@ class _QuestScreenState extends State<QuestScreen> {
                 const SizedBox(height: 20),
                 _buildCharacterSection(context, viewModel),
                 const SizedBox(height: 30),
-                _buildQuestCard(context, viewModel),
+                _buildQuestCard(context, viewModel), // viewModel 전달
                 const SizedBox(height: 30),
               ],
             ),
@@ -155,7 +156,14 @@ class _QuestScreenState extends State<QuestScreen> {
     );
   }
 
+  // 수정된 부분: API 데이터를 반영하는 퀘스트 카드
   Widget _buildQuestCard(BuildContext context, QuestViewModel viewModel) {
+    // 미션 목록이 있으면 첫 번째 미션 제목을, 없으면 안내 문구를 표시
+    String displayTitle = "진행 중인 퀘스트가 없어요";
+    if (viewModel.todayMissions.isNotEmpty) {
+      displayTitle = viewModel.todayMissions.first.bigTaskTitle;
+    }
+
     return GestureDetector(
       onTap: () => viewModel.changeStep(1),
       child: Container(
@@ -164,20 +172,30 @@ class _QuestScreenState extends State<QuestScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFFDFDFD),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("다음 퀘스트", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                SizedBox(height: 5),
-                Text("학원 다녀오기", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const Text("다음 퀘스트", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                const SizedBox(height: 5),
+                // 서버에서 받아온 실제 퀘스트 제목 반영
+                Text(
+                  displayTitle,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
+            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
           ],
         ),
       ),
@@ -218,7 +236,6 @@ class _QuestScreenState extends State<QuestScreen> {
   }
 }
 
-// BubblePainter 클래스
 class BubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

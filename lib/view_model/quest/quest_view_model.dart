@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/quest/feeling_model.dart';
+import 'package:frontend/models/quest/today_mission_model.dart'; // 미션 모델 임포트
 import '../../repository/quest/quest_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -12,13 +13,14 @@ class QuestViewModel extends ChangeNotifier {
   String _message = "오늘의 기분은 어때?";
   FeelingModel? _feelingData;
 
+  List<TodayMissionModel> _todayMissions = [];
+
   int get currentStep => _currentStep;
-
   bool get isLoading => _isLoading;
-
   String get message => _message;
-
   FeelingModel? get feelingData => _feelingData;
+
+  List<TodayMissionModel> get todayMissions => _todayMissions;
 
   void changeStep(int step) {
     _currentStep = step;
@@ -49,15 +51,13 @@ class QuestViewModel extends ChangeNotifier {
     }
   }
 
-  // API 호출
+  // 기분 조회 API 호출
   Future<void> loadTodayMood() async {
     _isLoading = true;
     _message = "가져오는 중...";
     notifyListeners();
 
     final int dynamicChildId = _getChildIdFromToken(_testToken);
-    print("현재 토큰의 실제 아이 ID: $dynamicChildId");
-
     _feelingData = await _repository.getTodayMood(dynamicChildId, _testToken);
 
     if (_feelingData != null) {
@@ -65,7 +65,6 @@ class QuestViewModel extends ChangeNotifier {
           _feelingData!.primaryEmotion == "기록 없음") {
         _message = "오늘의 기분은 어때?";
       } else {
-        print("불러온 감정: ${_feelingData!.primaryEmotion}");
         _message = "오늘은 ${_feelingData!.primaryEmotion}!";
       }
     } else {
@@ -81,18 +80,36 @@ class QuestViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // 토큰에서 아이디 추출
     final int dynamicChildId = _getChildIdFromToken(_testToken);
-
-    // Repository 함수 호출 (아이디 포함)
     final bool isSuccess = await _repository.registerTodayMood(
         _testToken, dynamicChildId, selectedEmotion);
 
     if (isSuccess) {
-      print("저장 성공! 최신 데이터를 불러옵니다.");
-      await loadTodayMood(); // 여기서 다시 조회해서 말풍선을 바꾼다
+      await loadTodayMood();
     } else {
       _message = "기분 저장에 실패했어요.";
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // 오늘의 미션 목록 조회
+  Future<void> fetchTodayMissions() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+      print("[ViewModel] 미션 목록 로드 시작 (childId: $dynamicChildId)");
+
+      final List<TodayMissionModel> missions =
+      await _repository.getTodayMissions(dynamicChildId, _testToken);
+
+      _todayMissions = missions;
+    } catch (e) {
+      print("[ViewModel 에러] 미션 로드 실패: $e");
+      _todayMissions = []; // 실패 시 빈 리스트
+    } finally {
       _isLoading = false;
       notifyListeners();
     }

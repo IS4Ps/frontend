@@ -29,4 +29,17 @@ class QuestApiService {
       body: jsonEncode(request.toJson()), // 모델을 JSON 문자열로 변환
     );
   }
+
+  // 오늘의 미션 목록 조회
+  Future<http.Response> fetchTodayMissions(int childId, String token) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/today/$childId');
+
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
 }
