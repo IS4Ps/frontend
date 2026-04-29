@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 사용을 위해 꼭 필요
+import 'package:provider/provider.dart';
+import 'package:frontend/view_model/store/store_view_model.dart';
 import 'screens/quest/quest_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -30,40 +32,45 @@ class _MainScreenState extends State<ChildMainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFFFFFFF),
-          border: Border(
-            top: BorderSide(color: Color(0xFFE3E3E3), width: 1.0),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => StoreViewModel()),
+      ],
+      child: Scaffold(
+        body: _screens[_selectedIndex],
+        bottomNavigationBar: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFFFF),
+            border: Border(
+              top: BorderSide(color: Color(0xFFE3E3E3), width: 1.0),
+            ),
           ),
-        ),
-        // 1. Theme 위젯으로 감싸서 스플래시 효과 제거
-        child: Theme(
-          data: ThemeData(
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-          ),
-          child: BottomNavigationBar(
-            backgroundColor: const Color(0xFFFFFFFF),
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            selectedItemColor: const Color(0xFF4A90E2),
-            unselectedItemColor: const Color(0xFF7C7D7D),
-
-            // 2. 폰트 크기를 동일하게 설정해서 확대 현상 방지
-            selectedFontSize: 16,   // 원하는 크기로 설정
-            unselectedFontSize: 16, // 선택되지 않았을 때도 동일하게
-
-            items: [
-              _buildNavItem('assets/icons/home.svg', '홈'),
-              _buildNavItem('assets/icons/quest.svg', '퀘스트'),
-              _buildNavItem('assets/icons/profile.svg', '프로필'),
-              _buildNavItem('assets/icons/store.svg', '상점'),
-            ],
+          // 1. Theme 위젯으로 감싸서 스플래시 효과 제거
+          child: Theme(
+            data: ThemeData(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: BottomNavigationBar(
+              backgroundColor: const Color(0xFFFFFFFF),
+              elevation: 0,
+              type: BottomNavigationBarType.fixed,
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+              selectedItemColor: const Color(0xFF4A90E2),
+              unselectedItemColor: const Color(0xFF7C7D7D),
+      
+              // 2. 폰트 크기를 동일하게 설정해서 확대 현상 방지
+              selectedFontSize: 16,   // 원하는 크기로 설정
+              unselectedFontSize: 16, // 선택되지 않았을 때도 동일하게
+      
+              items: [
+                _buildNavItem('assets/icons/home.svg', '홈'),
+                _buildNavItem('assets/icons/quest.svg', '퀘스트'),
+                _buildNavItem('assets/icons/profile.svg', '프로필'),
+                _buildNavItem('assets/icons/store.svg', '상점'),
+              ],
+            ),
           ),
         ),
       ),
