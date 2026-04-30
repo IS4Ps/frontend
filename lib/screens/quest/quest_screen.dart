@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:model_viewer_plus/model_viewer_plus.dart'; // 3D 뷰어 패키지 추가
 import '../../view_model/quest/quest_view_model.dart';
 import 'grow_screen.dart';
 import 'speech_bubble.dart';
@@ -17,12 +18,11 @@ class _QuestScreenState extends State<QuestScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면에 들어올 때마다 최신 기분 데이터와 미션 목록을 가져옴
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final viewModel = context.read<QuestViewModel>();
         viewModel.loadTodayMood();
-        viewModel.fetchTodayMissions(); // 오늘의 퀘스트 목록 API 호출 추가
+        viewModel.fetchTodayMissions();
       }
     });
   }
@@ -31,7 +31,6 @@ class _QuestScreenState extends State<QuestScreen> {
   Widget build(BuildContext context) {
     return Consumer<QuestViewModel>(
       builder: (context, viewModel, child) {
-        // --- 화면 전환 로직 ---
         if (viewModel.currentStep == 3) {
           return OxScreen(onBack: () => viewModel.changeStep(2));
         }
@@ -48,7 +47,6 @@ class _QuestScreenState extends State<QuestScreen> {
           );
         }
 
-        // 메인 퀘스트 화면
         return Scaffold(
           backgroundColor: const Color(0xFFFDFDFD),
           body: SingleChildScrollView(
@@ -59,7 +57,7 @@ class _QuestScreenState extends State<QuestScreen> {
                 const SizedBox(height: 20),
                 _buildCharacterSection(context, viewModel),
                 const SizedBox(height: 30),
-                _buildQuestCard(context, viewModel), // viewModel 전달
+                _buildQuestCard(context, viewModel),
                 const SizedBox(height: 30),
               ],
             ),
@@ -93,6 +91,7 @@ class _QuestScreenState extends State<QuestScreen> {
     );
   }
 
+  // 1. 함수 찾기
   Widget _buildCharacterSection(BuildContext context, QuestViewModel viewModel) {
     return Stack(
       children: [
@@ -103,10 +102,26 @@ class _QuestScreenState extends State<QuestScreen> {
               width: 250,
               height: 310,
               decoration: BoxDecoration(
-                color: const Color(0xFFEEEEEE),
+                color: const Color(0xFFFDFDFD),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Center(child: Text("캐릭터 자리", style: TextStyle(color: Colors.grey))),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: const ModelViewer(
+                  src: 'assets/models/character/Ranger.glb',
+                  alt: "Ranger Character",
+                  autoRotate: false, // 자동 회전 끔
+                  cameraControls: true,
+                  disableZoom: true,
+                  autoPlay: true,
+
+                  // (모델 내부 로딩 배경색)
+                  backgroundColor: Color(0xFFFDFDFD),
+
+                  // 로딩 속도를 높여 회색이 보이는 찰나를 줄임
+                  loading: Loading.eager,
+                ),
+              ),
             ),
           ),
         ),
@@ -156,9 +171,7 @@ class _QuestScreenState extends State<QuestScreen> {
     );
   }
 
-  // 수정된 부분: API 데이터를 반영하는 퀘스트 카드
   Widget _buildQuestCard(BuildContext context, QuestViewModel viewModel) {
-    // 미션 목록이 있으면 첫 번째 미션 제목을, 없으면 안내 문구를 표시
     String displayTitle = "진행 중인 퀘스트가 없어요";
     if (viewModel.todayMissions.isNotEmpty) {
       displayTitle = viewModel.todayMissions.first.bigTaskTitle;
@@ -188,7 +201,6 @@ class _QuestScreenState extends State<QuestScreen> {
               children: [
                 const Text("다음 퀘스트", style: TextStyle(color: Colors.grey, fontSize: 18)),
                 const SizedBox(height: 5),
-                // 서버에서 받아온 실제 퀘스트 제목 반영
                 Text(
                   displayTitle,
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
