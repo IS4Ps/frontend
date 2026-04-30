@@ -1,10 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'ox_quiz_screen.dart';
 
-class OxScreen extends StatelessWidget {
+class OxScreen extends StatefulWidget {
   final VoidCallback? onBack;
 
   const OxScreen({super.key, this.onBack});
+
+  @override
+  State<OxScreen> createState() => _OxScreenState();
+}
+
+class _OxScreenState extends State<OxScreen> {
+  final ImagePicker _picker = ImagePicker();
+  List<XFile> _selectedImages = [];
+
+  Future<void> _pickImages() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      setState(() {
+        _selectedImages = images.take(4).toList(); // 최대 4장
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +35,8 @@ class OxScreen extends StatelessWidget {
         leadingWidth: 100,
         leading: GestureDetector(
           onTap: () {
-            if (onBack != null) {
-              onBack!();
+            if (widget.onBack != null) {
+              widget.onBack!();
             } else {
               Navigator.pop(context);
             }
@@ -61,9 +80,7 @@ class OxScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: () {
-                // TODO: 앨범 열기
-              },
+              onTap: _pickImages,
               child: Container(
                 width: double.infinity,
                 height: 90,
@@ -98,23 +115,20 @@ class OxScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(4, (index) => _buildImageSlot()),
-            ),
-            const Spacer(),
-            const Center(
-              child: Column(
-                children: [
-                  CircularProgressIndicator(
-                    color: Color(0xFF1586E2),
-                    strokeWidth: 4,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'AI가 이미지를 분석 중이에요!',
-                    style: TextStyle(fontSize: 16, color: Colors.black),
-                  ),
-                ],
-              ),
+              children: List.generate(4, (index) {
+                if (index < _selectedImages.length) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(_selectedImages[index].path),
+                      width: 75,
+                      height: 75,
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                }
+                return _buildImageSlot();
+              }),
             ),
             const Spacer(),
             Center(
