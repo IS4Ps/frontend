@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 사용을 위해 꼭 필요
 import 'package:provider/provider.dart';
 import 'package:frontend/view_model/store/store_view_model.dart';
+import 'package:frontend/view_model/store/inventory_view_model.dart';
 import 'screens/quest/quest_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -35,6 +36,7 @@ class _MainScreenState extends State<ChildMainScreen> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => StoreViewModel()),
+        ChangeNotifierProvider(create: (_) => InventoryViewModel()),
       ],
       child: Scaffold(
         body: _screens[_selectedIndex],

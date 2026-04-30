@@ -35,4 +35,24 @@ class StoreRepository {
       return null;
     }
   }
+
+  Future<bool> purchaseItem(int itemId, int childId, String token) async {
+    try {
+      print("[API 호출] 아이템 구매 시작 (itemId: $itemId, childId: $childId)");
+
+      final response = await _apiService.purchaseItem(itemId, childId, token);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("[API 성공] 아이템 구매 완료");
+        return true;
+      } else {
+        print("[API 실패] 상태 코드: ${response.statusCode}");
+        print("[에러 내용] ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("[Repository 에러] 네트워크/런타임 문제 발생: $e");
+      return false;
+    }
+  }
 }

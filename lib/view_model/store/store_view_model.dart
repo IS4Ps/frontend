@@ -15,6 +15,10 @@ class StoreViewModel extends ChangeNotifier {
 
   final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
 
+  int getChildId() {
+    return _getChildIdFromToken(_testToken);
+  }
+
   int _getChildIdFromToken(String token) {
     try {
       final parts = token.split('.');
@@ -40,6 +44,23 @@ class StoreViewModel extends ChangeNotifier {
     notifyListeners();
 
     _items = await _repository.getStoreItems(childLevel, childJobId, _testToken) ?? [];
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> purchaseItem(int itemId, int childId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final bool isSuccess = await _repository.purchaseItem(itemId, childId, _testToken);
+
+    if (isSuccess) {
+      print("[구매 성공] 아이템 구매 완료");
+      await loadStoreItems(1, 1); // 상점 목록 새로고침
+    } else {
+      print("[구매 실패] 아이템 구매 실패");
+    }
 
     _isLoading = false;
     notifyListeners();
