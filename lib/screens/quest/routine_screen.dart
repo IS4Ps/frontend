@@ -27,10 +27,16 @@ class _RoutineScreenState extends State<RoutineScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면 진입 시 미션 목록 API 호출
+    // 화면 진입 시 미션 목록 및 주간 통계 API 호출
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<QuestViewModel>().fetchTodayMissions();
+        final viewModel = context.read<QuestViewModel>();
+
+        // 1. 오늘의 미션 불러오기
+        viewModel.fetchTodayMissions();
+
+        // 2. 주간 통계 및 보상 자격 불러오기
+        viewModel.fetchWeeklyStats();
       }
     });
   }
@@ -50,7 +56,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
               children: [
                 _buildTopBar(),
                 const SizedBox(height: 10),
-                _buildAchievementCard(),
+                _buildAchievementCard(viewModel),
                 const SizedBox(height: 19),
                 _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
                 const SizedBox(height: 20),
@@ -136,7 +142,15 @@ class _RoutineScreenState extends State<RoutineScreen> {
     );
   }
 
-  Widget _buildAchievementCard() {
+  Widget _buildAchievementCard(QuestViewModel viewModel) {
+    final stats = viewModel.weeklyStats;
+
+    // 데이터 로드 전 기본값 처리
+    double progressValue = stats != null ? stats.weeklySuccessRate / 100 : 0.0;
+    String statusText = stats != null
+        ? "${stats.successDays}/${stats.totalDays}일 성공 (${stats.weeklySuccessRate.toInt()}%)"
+        : "데이터를 불러오는 중...";
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 18),
       padding: const EdgeInsets.all(20),
@@ -148,19 +162,27 @@ class _RoutineScreenState extends State<RoutineScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("퀘스트 달성률", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("주간 퀘스트 달성률", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // 보상 자격이 있으면 선물 아이콘 표시
+              if (stats?.isRewardEligible ?? false)
+                _buildStatusLabel("보상 획득!", const Color(0xFFFFEBEB), const Color(0xFFE9807B)),
+            ],
+          ),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: const LinearProgressIndicator(
-              value: 0.62,
+            child: LinearProgressIndicator(
+              value: progressValue, // API 데이터 반영
               minHeight: 18,
-              backgroundColor: Color(0xFFE2E2E2),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+              backgroundColor: const Color(0xFFE2E2E2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
             ),
           ),
           const SizedBox(height: 8),
-          const Text("5/8 완료 (62%)", style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text(statusText, style: const TextStyle(color: Colors.grey, fontSize: 16)),
         ],
       ),
     );

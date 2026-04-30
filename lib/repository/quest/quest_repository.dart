@@ -3,6 +3,7 @@ import 'package:frontend/models/quest/feeling_model.dart';
 import 'package:frontend/models/quest/feeling_request_model.dart';
 import 'package:frontend/models/quest/today_mission_model.dart'; // 모델 임포트 확인
 import '../../services/quest/quest_api_service.dart';
+import 'package:frontend/models/quest/weekly_stats_model.dart';
 
 class QuestRepository {
   final QuestApiService _apiService = QuestApiService();
@@ -93,6 +94,24 @@ class QuestRepository {
     } catch (e) {
       print("[Repository 에러] 미션 목록 로드 중 문제 발생: $e");
       return [];
+    }
+  }
+
+  // 주간 달성률 조회 (퀘스트)
+  Future<WeeklyStatsModel?> getWeeklyStats(int childId, String token) async {
+    try {
+      // Dio 대신 프로젝트에서 사용하는 apiService의 http 호출 사용
+      final response = await _apiService.fetchWeeklyStats(childId, token);
+
+      if (response.statusCode == 200) {
+        // http 패키지는 response.body를 직접 decode해야 합니다.
+        final Map<String, dynamic> decodedData = jsonDecode(utf8.decode(response.bodyBytes));
+        return WeeklyStatsModel.fromJson(decodedData['data']);
+      }
+      return null;
+    } catch (e) {
+      print("통계 API 레포지토리 에러: $e");
+      return null;
     }
   }
 }
