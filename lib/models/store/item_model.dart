@@ -6,7 +6,7 @@ class ItemModel {
   final String splineTriggerName;
   final int requiredLevel;
   final int? requiredJobId;
-  final bool? isOwned;
+  final bool isOwned;
 
   ItemModel({
     required this.itemId,

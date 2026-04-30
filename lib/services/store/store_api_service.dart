@@ -14,4 +14,16 @@ class StoreApiService {
       },
     );
   }
+
+  // 아이템 구매
+  Future<http.Response> purchaseItem(int itemId, int childId, String token) async {
+    final url = Uri.parse('$baseUrl/api/v1/inventory/$itemId/purchase?childId=$childId');
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
 }

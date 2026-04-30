@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/view_model/store/store_view_model.dart';
+import 'package:frontend/view_model/store/inventory_view_model.dart';
+
+import '../../models/store/item_model.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -21,7 +24,9 @@ class _StoreScreenState extends State<StoreScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<StoreViewModel>(context, listen: false)
-          .loadStoreItems(1, 1); // 임시로 level=1, jobId=1
+          .loadStoreItems(1, 1);
+      Provider.of<InventoryViewModel>(context, listen: false)
+          .loadInventory();
     });
   }
 
@@ -86,50 +91,57 @@ class _StoreScreenState extends State<StoreScreen> {
         if (viewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: viewModel.items.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 30,
-            mainAxisSpacing: 30,
-            childAspectRatio: 0.7,
+        return GestureDetector(
+          onTap: () => setState(() => _activeIndex = null),
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: viewModel.items.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 30,
+              mainAxisSpacing: 30,
+              childAspectRatio: 0.7,
+            ),
+            itemBuilder: (context, index) {
+              final item = viewModel.items[index];
+              return _itemCard(item, _activeIndex == index, () => setState(() => _activeIndex = index));
+            },
           ),
-          itemBuilder: (context, index) {
-            final item = viewModel.items[index];
-            return _itemCard("${item.price}gold");
-          },
         );
       },
     );
   }
 
   Widget _buildEquipmentGrid() {
-    return GestureDetector(
-      onTap: () => setState(() => _activeIndex = null), // ← 배경 클릭 시 장착 해제 버튼만 숨김
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 3,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 30,
-          mainAxisSpacing: 30,
-          childAspectRatio: 0.7,
-        ),
-        itemBuilder: (context, index) => _equipmentCard(
-          ["용사의 검", "용사의 투구", "용사의 신발"][index],
-          _equippedIndexes.contains(index),
-          _activeIndex == index,
-              () => setState(() {
-            _equippedIndexes.add(index);
-            _activeIndex = index;
-          }),
-              () => setState(() {
-            _equippedIndexes.remove(index);
-            _activeIndex = null;
-          }),
-        ),
-      ),
+    return Consumer<InventoryViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return GestureDetector(
+          onTap: () => setState(() => _activeIndex = null),
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: viewModel.items.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 30,
+              mainAxisSpacing: 30,
+              childAspectRatio: 0.7,
+            ),
+            itemBuilder: (context, index) {
+              final item = viewModel.items[index];
+              return _equipmentCard(
+                item.itemName,
+                item.isEquipped,
+                _activeIndex == index,
+                    () => setState(() => _activeIndex = index),
+                    () => setState(() => _activeIndex = null),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -312,44 +324,75 @@ Widget _categoryButton(String text, bool selected) {
   );
 }
 
-Widget _itemCard(String label) {
-  return Container(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(15),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black12,
-          blurRadius: 4,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Center(
-            child: Container(
-              width: 75,
-              height: 75,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD9D9D9),
-                shape: BoxShape.circle,
+Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap) {
+  return Consumer<StoreViewModel>(
+    builder: (context, viewModel, child) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            border: isActive
+                ? Border.all(color: const Color(0xFF1586E2), width: 2)
+                : Border.all(color: Colors.transparent, width: 2),
+            boxShadow: const [
+              BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Container(
+                    width: 75,
+                    height: 75,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFD9D9D9),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
               ),
-            ),
+              if (isActive && !item.isOwned)
+                GestureDetector(
+                  onTap: () async {
+                    final childId = viewModel.getChildId();
+                    await viewModel.purchaseItem(item.itemId, childId);
+                    if (context.mounted) {
+                      Provider.of<InventoryViewModel>(context, listen: false).loadInventory();
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1586E2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      "구매",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    item.isOwned ? "보유 중" : "${item.price}gold",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+            ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ),
-      ],
-    ),
+      );
+    },
   );
 }
