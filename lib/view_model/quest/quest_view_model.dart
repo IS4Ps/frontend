@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/quest/feeling_model.dart';
-import 'package:frontend/models/quest/today_mission_model.dart'; // 미션 모델 임포트
+import 'package:frontend/models/quest/today_mission_model.dart';
+import 'package:frontend/models/quest/weekly_stats_model.dart'; // 주간 통계 모델 추가 필요
 import '../../repository/quest/quest_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -12,15 +13,16 @@ class QuestViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String _message = "오늘의 기분은 어때?";
   FeelingModel? _feelingData;
-
   List<TodayMissionModel> _todayMissions = [];
+  WeeklyStatsModel? _weeklyStats;
 
   int get currentStep => _currentStep;
   bool get isLoading => _isLoading;
   String get message => _message;
   FeelingModel? get feelingData => _feelingData;
-
   List<TodayMissionModel> get todayMissions => _todayMissions;
+
+  WeeklyStatsModel? get weeklyStats => _weeklyStats;
 
   void changeStep(int step) {
     _currentStep = step;
@@ -51,7 +53,7 @@ class QuestViewModel extends ChangeNotifier {
     }
   }
 
-  // 기분 조회 API 호출
+  // 오늘 감정 조회
   Future<void> loadTodayMood() async {
     _isLoading = true;
     _message = "가져오는 중...";
@@ -75,7 +77,7 @@ class QuestViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 기분 저장 로직
+  // 감정 기록 저장 조회
   Future<void> saveFeeling(String selectedEmotion) async {
     _isLoading = true;
     notifyListeners();
@@ -108,7 +110,31 @@ class QuestViewModel extends ChangeNotifier {
       _todayMissions = missions;
     } catch (e) {
       print("[ViewModel 에러] 미션 로드 실패: $e");
-      _todayMissions = []; // 실패 시 빈 리스트
+      _todayMissions = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // 주간 달성률 조회 (퀘스트)
+  Future<void> fetchWeeklyStats() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+      print("[ViewModel] 주간 통계 로드 시작 (childId: $dynamicChildId)");
+
+      // Repository에 getWeeklyStats 메서드를 구현해야 함
+      final WeeklyStatsModel? stats = await _repository.getWeeklyStats(dynamicChildId, _testToken);
+
+      if (stats != null) {
+        _weeklyStats = stats;
+        print("[ViewModel] 주간 통계 로드 완료: ${stats.weeklySuccessRate}%");
+      }
+    } catch (e) {
+      print("[ViewModel 에러] 주간 통계 로드 실패: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
