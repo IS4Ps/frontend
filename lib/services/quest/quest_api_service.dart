@@ -42,4 +42,17 @@ class QuestApiService {
       },
     );
   }
+
+  // 주간 달성률 조회 (퀘스트)
+  Future<http.Response> fetchWeeklyStats(int childId, String token) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId');
+
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
 }
