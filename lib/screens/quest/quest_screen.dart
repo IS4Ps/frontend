@@ -23,6 +23,7 @@ class _QuestScreenState extends State<QuestScreen> {
         final viewModel = context.read<QuestViewModel>();
         viewModel.loadTodayMood();
         viewModel.fetchTodayMissions();
+        viewModel.fetchEquippedItems();
       }
     });
   }
@@ -107,24 +108,41 @@ class _QuestScreenState extends State<QuestScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: const ModelViewer(
-                  src: 'assets/models/character/Ranger.glb',
-                  alt: "Ranger Character",
-                  autoRotate: false, // 자동 회전 끔
-                  cameraControls: true,
-                  disableZoom: true,
-                  autoPlay: true,
+                child: Stack( // 모델들을 겹치기 위해 내부에서 다시 Stack 사용
+                  children: [
+                    // 1. 기본 캐릭터 모델
+                    const ModelViewer(
+                      src: 'assets/models/character/Ranger.glb',
+                      alt: "Base Character",
+                      autoRotate: false,
+                      cameraControls: true,
+                      disableZoom: true,
+                      autoPlay: true,
+                      backgroundColor: Color(0xFFFDFDFD),
+                      loading: Loading.eager,
+                    ),
 
-                  // (모델 내부 로딩 배경색)
-                  backgroundColor: Color(0xFFFDFDFD),
-
-                  // 로딩 속도를 높여 회색이 보이는 찰나를 줄임
-                  loading: Loading.eager,
+                    // 2. 장착된 아이템 리스트를 순회하며 위에 얹기
+                    ...viewModel.equippedItems.map((item) {
+                      return ModelViewer(
+                        src: 'assets/models/item/${item.splineTriggerName}.glb',
+                        alt: item.itemName,
+                        autoRotate: false,
+                        cameraControls: false, // 아이템 모델은 컨트롤 비활성화 (캐릭터에 고정된 느낌)
+                        disableZoom: true,
+                        autoPlay: true,
+                        backgroundColor: Colors.transparent, // 배경을 투명하게 해서 캐릭터가 보이게 함
+                        loading: Loading.eager,
+                      );
+                    }).toList(),
+                  ],
                 ),
               ),
             ),
           ),
         ),
+
+        // 말풍선 및 스태스 박스 (기존 코드 유지)
         Positioned(
           top: 0,
           left: 30,
