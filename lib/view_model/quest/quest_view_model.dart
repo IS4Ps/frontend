@@ -5,6 +5,7 @@ import 'package:frontend/models/quest/today_mission_model.dart';
 import 'package:frontend/models/quest/weekly_stats_model.dart'; // 주간 통계 모델 추가 필요
 import '../../repository/quest/quest_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/models/quest/equipped_item_model.dart';
 
 class QuestViewModel extends ChangeNotifier {
   final QuestRepository _repository = QuestRepository();
@@ -135,6 +136,31 @@ class QuestViewModel extends ChangeNotifier {
       }
     } catch (e) {
       print("[ViewModel 에러] 주간 통계 로드 실패: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // 현재 장착 아이템 조회
+  List<EquippedItemModel> _equippedItems = [];
+  List<EquippedItemModel> get equippedItems => _equippedItems;
+
+  Future<void> fetchEquippedItems() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+      final List<EquippedItemModel> items = await _repository.getEquippedItems(dynamicChildId, _testToken);
+
+      // 장착된 아이템만 필터링해서 저장 (isEquipped가 true인 것만)
+      _equippedItems = items.where((item) => item.isEquipped).toList();
+
+      print("[ViewModel] 장착 아이템 로드 완료: ${_equippedItems.length}개");
+    } catch (e) {
+      print("[ViewModel 에러] 장착 아이템 로드 실패: $e");
+      _equippedItems = [];
     } finally {
       _isLoading = false;
       notifyListeners();

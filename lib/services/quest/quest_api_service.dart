@@ -55,4 +55,18 @@ class QuestApiService {
       },
     );
   }
+
+  // 현재 장착 아이템 조회 추가
+  Future<http.Response> fetchEquippedItems(int childId, String token) async {
+    // 백엔드 명세서의 URL: /api/v1/inventory/{childId}/equipped
+    final url = Uri.parse('$baseUrl/api/v1/inventory/$childId/equipped');
+
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
 }

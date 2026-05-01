@@ -4,6 +4,7 @@ import 'package:frontend/models/quest/feeling_request_model.dart';
 import 'package:frontend/models/quest/today_mission_model.dart'; // 모델 임포트 확인
 import '../../services/quest/quest_api_service.dart';
 import 'package:frontend/models/quest/weekly_stats_model.dart';
+import 'package:frontend/models/quest/equipped_item_model.dart';
 
 class QuestRepository {
   final QuestApiService _apiService = QuestApiService();
@@ -112,6 +113,40 @@ class QuestRepository {
     } catch (e) {
       print("통계 API 레포지토리 에러: $e");
       return null;
+    }
+  }
+
+  // 현재 장착 아이템 조회 추가
+  Future<List<EquippedItemModel>> getEquippedItems(int childId, String token) async {
+    try {
+      print("[API 호출] 현재 장착 아이템 조회 시작 (childId: $childId)");
+
+      final response = await _apiService.fetchEquippedItems(childId, token);
+
+      if (response.statusCode == 200) {
+        print("[API 성공] 장착 아이템 로드 완료");
+
+        // 한글 깨짐 방지 디코딩
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+
+        if (body['data'] != null && body['data'] is List) {
+          final List<dynamic> dataList = body['data'];
+
+          // JSON 리스트를 EquippedItemModel 리스트로 변환
+          return dataList
+              .map((json) => EquippedItemModel.fromJson(json))
+              .toList();
+        } else {
+          print("[데이터 분석] 장착된 아이템 데이터가 없습니다.");
+          return [];
+        }
+      } else {
+        print("[API 실패] 상태 코드: ${response.statusCode}, 내용: ${response.body}");
+        return [];
+      }
+    } catch (e) {
+      print("[Repository 에러] 장착 아이템 로드 중 문제 발생: $e");
+      return [];
     }
   }
 }
