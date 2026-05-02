@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'concentrate_screen.dart';
+import 'n_back_game_screen.dart';
 
 class GrowScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -38,7 +39,15 @@ class GrowScreen extends StatelessWidget {
                   subtitle: "재미있는 미니게임으로 골드 모으기!",
                   icon: Icons.sports_esports_rounded,
                   gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)],
-                  onTap: () => print("미니게임 클릭"),
+                  onTap: () {
+                    // N-Back 게임 화면으로 이동
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NBackGameScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 _buildChildGrowCard(

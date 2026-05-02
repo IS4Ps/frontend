@@ -1,6 +1,7 @@
 import 'dart:convert'; // jsonEncode를 위해 추가
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/quest/feeling_request_model.dart'; // import 확인!
+import 'package:frontend/models/quest/n_back_start_request_model.dart';
 
 class QuestApiService {
   static const String baseUrl = "http://100.27.204.252:8080";
@@ -62,6 +63,20 @@ class QuestApiService {
     final url = Uri.parse('$baseUrl/api/v1/inventory/$childId/equipped');
 
     return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
+
+  // N-Back 게임 시작
+  Future<http.Response> startNBackGame(String token, NBackStartRequestModel request) async {
+    // 백엔드 명세서의 URL: /api/v1/minigames/n-back/start
+    final url = Uri.parse('$baseUrl/api/v1/minigames/n-back/start');
+
+    return await http.post(
       url,
       headers: {
         'Authorization': 'Bearer $token',
