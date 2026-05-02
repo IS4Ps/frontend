@@ -1,32 +1,24 @@
 import 'package:flutter/material.dart';
-import 'concentrate_screen.dart';
 import 'n_back_game_screen.dart';
-import 'mini_game_select_screen.dart';
 
-class GrowScreen extends StatelessWidget {
-  final VoidCallback? onBack;
-  final VoidCallback? onQuizTap;
-
-  const GrowScreen({
-    super.key,
-    this.onBack,
-    this.onQuizTap,
-  });
+class MiniGameSelectScreen extends StatelessWidget {
+  const MiniGameSelectScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // GrowScreen과 동일한 배경색
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(0, 50, 0, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 뒤로가기 버튼 (GrowScreen 스타일 유지)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 24),
-                onPressed: onBack,
+                onPressed: () => Navigator.pop(context),
               ),
             ),
             const SizedBox(height: 10),
@@ -35,46 +27,42 @@ class GrowScreen extends StatelessWidget {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 30),
-                _buildChildGrowCard(
-                  title: "미니게임 하러가기",
-                  subtitle: "재미있는 미니게임으로 골드 모으기!",
-                  icon: Icons.sports_esports_rounded,
-                  gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)],
+
+                // 1. 도형 순서 기억하기 (N-Back)
+                _buildGameCard(
+                  title: "도형 순서 기억하기",
+                  subtitle: "전에 나온 도형들을 기억하세요!",
+                  icon: Icons.psychology_outlined,
+                  gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)], // 파란색 계열
                   onTap: () {
-                    // 미니게임 선택하는 화면으로 이동
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const MiniGameSelectScreen(),
-                      ),
+                      MaterialPageRoute(builder: (context) => const NBackGameScreen()),
                     );
                   },
                 ),
                 const SizedBox(height: 20),
-                _buildChildGrowCard(
-                  title: "집중하기",
-                  subtitle: "집중력 쑥쑥! 타이머로 시간 관리하기",
-                  icon: Icons.timer_rounded,
-                  gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)],
+
+                // 2. Go/No-Go
+                _buildGameCard(
+                  title: "Go/No-Go",
+                  subtitle: "알맞은 도형이 나오면 클릭해요!",
+                  icon: Icons.traffic_outlined,
+                  gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)], // 초록색 계열
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ConcentrateScreen(),
-                      ),
-                    );
+                    // TODO: Go/No-Go 게임 연결
                   },
                 ),
                 const SizedBox(height: 20),
-                _buildChildGrowCard(
-                  title: "퀴즈 풀러가기",
-                  subtitle: "매일매일 똑똑해지는 AI 퀴즈 도전!",
-                  icon: Icons.auto_awesome_rounded,
-                  gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)],
+
+                // 3. 단어 색깔 구별하기 (Stroop)
+                _buildGameCard(
+                  title: "단어 색깔 구별하기",
+                  subtitle: "단어의 색을 골라주세요!",
+                  icon: Icons.visibility_outlined,
+                  gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)], // 보라/분홍 계열
                   onTap: () {
-                    if (onQuizTap != null) {
-                      onQuizTap!();
-                    }
+                    // TODO: 스트룹 게임 연결
                   },
                 ),
               ],
@@ -85,6 +73,7 @@ class GrowScreen extends StatelessWidget {
     );
   }
 
+  // 헤더 영역 (GrowScreen의 헤더 스타일 재사용)
   Widget _buildHeader() {
     return Center(
       child: Stack(
@@ -98,45 +87,22 @@ class GrowScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(50),
             ),
           ),
-          Column(
-            children: [
-              const Text(
-                "성장하러 가볼까요?",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F1F1F),
-                  letterSpacing: -1.0,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDot(const Color(0xFFFFB7B2)),
-                  _buildDot(const Color(0xFFFFDAC1)),
-                  _buildDot(const Color(0xFFE2F0CB)),
-                  _buildDot(const Color(0xFFB5EAD7)),
-                  _buildDot(const Color(0xFFC7CEEA)),
-                ],
-              ),
-            ],
+          const Text(
+            "미니게임을 선택해주세요!",
+            style: TextStyle(
+              fontSize: 28, // GrowScreen(32)보다 약간 작게 조절
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F1F1F),
+              letterSpacing: -1.0,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDot(Color color) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
-
-  Widget _buildChildGrowCard({
+  // 게임 선택 카드 (GrowScreen의 _buildChildGrowCard 로직과 동일하게 구현)
+  Widget _buildGameCard({
     required String title,
     required String subtitle,
     required IconData icon,
@@ -167,6 +133,7 @@ class GrowScreen extends StatelessWidget {
           ),
           child: Stack(
             children: [
+              // 배경에 깔리는 큰 아이콘 효과
               Positioned(
                 right: -10,
                 top: -5,
@@ -180,6 +147,7 @@ class GrowScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: Row(
                   children: [
+                    // 아이콘 동그라미 배경
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
