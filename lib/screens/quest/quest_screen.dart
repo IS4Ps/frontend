@@ -112,7 +112,7 @@ class _QuestScreenState extends State<QuestScreen> {
                   children: [
                     // 1. 기본 캐릭터 모델
                     const ModelViewer(
-                      src: 'assets/models/character/Ranger.glb',
+                      src: 'assets/models/character/Rogue.glb',
                       alt: "Base Character",
                       autoRotate: false,
                       cameraControls: true,
@@ -167,8 +167,211 @@ class _QuestScreenState extends State<QuestScreen> {
             ),
           ),
         ),
+
+        Positioned(
+          top: 0, // 말풍선 아래 적절한 높이
+          right: 40, // 오른쪽 여백
+          child: GestureDetector(
+            onTap: () => _showJobSelectionPopup(context),
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.face,
+                  size: 30,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+        ),
+
         Positioned(right: 30, bottom: 0, child: _buildStatBox()),
       ],
+    );
+  }
+
+  // 동그라미 사람 아이콘 선택 시
+  void _showJobSelectionPopup(BuildContext context) {
+    int selectedIndex = -1;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            bool isSelected = selectedIndex != -1;
+
+            return Dialog(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: Colors.white,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // 내용물에 맞게 높이 조절
+                  children: [
+                    _buildJobItem(0, "전사", "강력한 힘을 자랑하는 전사\n운동을 통해 체력을 기르세요!", selectedIndex == 0, () => setState(() => selectedIndex = 0)),
+                    const SizedBox(height: 16),
+                    _buildJobItem(1, "마법사", "지혜를 자랑하는 마법사\n공부, 독서를 통해 지혜를 기르세요!", selectedIndex == 1, () => setState(() => selectedIndex = 1)),
+                    const SizedBox(height: 16),
+                    _buildJobItem(2, "예술가", "자유로운 영혼의 예술가\n예술을 통해 창의력을 기르세요!", selectedIndex == 2, () => setState(() => selectedIndex = 2)),
+
+                    const SizedBox(height: 35),
+
+                    GestureDetector(
+                      onTap: isSelected ? () => Navigator.pop(context) : null,
+                      child: Opacity(
+                        opacity: isSelected ? 1.0 : 0.5,
+                        child: Container(
+                          width: double.infinity, // 버튼도 팝업 너비에 맞춰 넓게
+                          margin: const EdgeInsets.symmetric(horizontal: 80),
+                          height: 55,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4388E2),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: isSelected ? [
+                              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+                            ] : [],
+                          ),
+                          child: const Center(
+                            child: Text(
+                                "선택 완료",
+                                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                    const Text(
+                      "직업 선택의 기회는 한 번밖에 없습니다!\n신중하게 선택하세요!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildJobItem(int index, String title, String desc, bool isSelected, VoidCallback onTap) {
+    List<String> descLines = desc.split('\n');
+    String mainDesc = descLines[0];
+    String subDesc = descLines.length > 1 ? descLines[1] : "";
+
+    String getImagePath() {
+      switch (index) {
+        case 0: return 'assets/models/character/Knight.png';
+        case 1: return 'assets/models/character/Mage.png';
+        case 2: return 'assets/models/character/Ranger.png';
+        default: return 'assets/models/character/Rogue.png';
+      }
+    }
+
+    Color getBorderColor() {
+      switch (index) {
+        case 0: return const Color(0xFFFF7070);
+        case 1: return const Color(0xFF54C517);
+        case 2: return const Color(0xFF2194FF);
+        default: return const Color(0xFFEEEEEE);
+      }
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : const Color(0xFFFDFDFD),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF75F94C) : const Color(0xFFEEEEEE),
+            width: 2,
+          ),
+          boxShadow: isSelected ? [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+          ] : [],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: getBorderColor(),
+                  width: 1.0,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  getImagePath(),
+                  fit: BoxFit.contain,
+                  // 사진 파일이 폴더에 없거나 경로가 틀리면 아래 에러 텍스트가 뜹니다.
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Text(
+                      "사진 없음",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: Colors.black54),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black)),
+                  const SizedBox(height: 6),
+                  Text(
+                    mainDesc,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subDesc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.normal,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
