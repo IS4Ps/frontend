@@ -112,7 +112,7 @@ class _QuestScreenState extends State<QuestScreen> {
                   children: [
                     // 1. 기본 캐릭터 모델
                     const ModelViewer(
-                      src: 'assets/models/character/Ranger.glb',
+                      src: 'assets/models/character/Rogue.glb',
                       alt: "Base Character",
                       autoRotate: false,
                       cameraControls: true,
@@ -276,10 +276,18 @@ class _QuestScreenState extends State<QuestScreen> {
 
   Widget _buildJobItem(int index, String title, String desc, bool isSelected, VoidCallback onTap) {
     List<String> descLines = desc.split('\n');
-    String mainDesc = descLines[0]; // "자유로운 영혼의 예술가" 등 요약 문구
-    String subDesc = descLines.length > 1 ? descLines[1] : ""; // 세부 설명
+    String mainDesc = descLines[0];
+    String subDesc = descLines.length > 1 ? descLines[1] : "";
 
-    // 직업별 테두리 색상 설정
+    String getImagePath() {
+      switch (index) {
+        case 0: return 'assets/models/character/Knight.png';
+        case 1: return 'assets/models/character/Mage.png';
+        case 2: return 'assets/models/character/Ranger.png';
+        default: return 'assets/models/character/Rogue.png';
+      }
+    }
+
     Color getBorderColor() {
       switch (index) {
         case 0: return const Color(0xFFFF7070);
@@ -306,23 +314,30 @@ class _QuestScreenState extends State<QuestScreen> {
         ),
         child: Row(
           children: [
-            // 캐릭터 아이콘 박스
             Container(
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: const Color(0xFFD9D9D9), // 배경색 회색으로 통일
+                color: const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: getBorderColor(), // 직업별로 다른 테두리 색상
+                  color: getBorderColor(),
                   width: 1.0,
                 ),
               ),
-              child: const Center(
-                child: Text(
-                  "캐릭터\n아이콘",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 10, color: Colors.black54),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  getImagePath(),
+                  fit: BoxFit.contain,
+                  // 사진 파일이 폴더에 없거나 경로가 틀리면 아래 에러 텍스트가 뜹니다.
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Text(
+                      "사진 없음",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: Colors.black54),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -331,10 +346,8 @@ class _QuestScreenState extends State<QuestScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, // 가장 굵게
-                    color: Colors.black)),
+                  Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black)),
                   const SizedBox(height: 6),
-                  // 1. 핵심 요약 문구 강조 (폰트 크기 16, Bold)
                   Text(
                     mainDesc,
                     style: const TextStyle(
@@ -344,7 +357,6 @@ class _QuestScreenState extends State<QuestScreen> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  // 2. 세부 설명 (기존 스타일 유지)
                   Text(
                     subDesc,
                     style: const TextStyle(
