@@ -32,6 +32,6 @@ class QuizApiService {
     print('[응답 데이터] ${response.body}');
 
     final data = jsonDecode(response.body);
-    return List<Map<String, dynamic>>.from(data['data']);
+    return List<Map<String, dynamic>>.from(data['data']['quizzes']);
   }
 }

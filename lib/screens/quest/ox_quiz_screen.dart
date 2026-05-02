@@ -182,7 +182,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            quiz?['question'] ?? '문제',
+            quiz?['questionText'] ?? '문제',
             style: const TextStyle(
               color: Colors.black,
               fontSize: 20,
