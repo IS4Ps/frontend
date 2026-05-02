@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../view_model/reward/reward_view_model.dart';
 
 class RewardScreen extends StatefulWidget {
   const RewardScreen({super.key});
@@ -8,10 +10,17 @@ class RewardScreen extends StatefulWidget {
 }
 
 class _RewardScreenState extends State<RewardScreen> {
-  bool isWeekly = true;
+  @override
+  void initState() {
+    super.initState();
+    // 화면 진입 시 오프라인 보상 목록 로드
+    Future.microtask(() => context.read<RewardViewModel>().fetchOfflineRewards());
+  }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<RewardViewModel>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFECF2F8),
       body: Column(
@@ -28,12 +37,12 @@ class _RewardScreenState extends State<RewardScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildPeriodTab('주간', Icons.calendar_today_rounded, isWeekly, () {
-                        setState(() => isWeekly = true);
+                      _buildPeriodTab('주간', Icons.calendar_today_rounded, viewModel.isWeekly, () {
+                        viewModel.togglePeriod(true);
                       }),
                       const SizedBox(width: 12),
-                      _buildPeriodTab('월간', Icons.calendar_month_rounded, !isWeekly, () {
-                        setState(() => isWeekly = false);
+                      _buildPeriodTab('월간', Icons.calendar_month_rounded, !viewModel.isWeekly, () {
+                        viewModel.togglePeriod(false);
                       }),
                     ],
                   ),
@@ -51,7 +60,9 @@ class _RewardScreenState extends State<RewardScreen> {
                     children: [
                       const Text('달성률별 보상 설정', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          // TODO: 등록 API(POST) 연동 시 활용
+                        },
                         child: const Text(
                           '+ 단계추가',
                           style: TextStyle(color: Color(0xFFDD00FF), fontSize: 14),
@@ -61,10 +72,28 @@ class _RewardScreenState extends State<RewardScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 3. 보상 카드 리스트 (개별 카드 스타일)
-                  _buildRewardCard('50'),
-                  _buildRewardCard('70'),
-                  _buildRewardCard('100'),
+                  // 3. 보상 카드 리스트 (API 연동 및 기존 UI 유지)
+                  if (viewModel.isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (viewModel.filteredRewards.isEmpty)
+                  // 데이터가 0개일 때 기존 UI 형태 유지를 위해 빈 카드 노출
+                    Column(
+                      children: [
+                        _buildRewardCard('50', '보상 종류(예: 게임 시간, 용돈, 놀이공원)'),
+                        _buildRewardCard('70', '보상 종류(예: 게임 시간, 용돈, 놀이공원)'),
+                        _buildRewardCard('100', '보상 종류(예: 게임 시간, 용돈, 놀이공원)'),
+                      ],
+                    )
+                  else
+                  // 데이터가 있을 때 서버 데이터로 카드 생성
+                    Column(
+                      children: viewModel.filteredRewards.map((reward) =>
+                          _buildRewardCard(
+                              reward.targetPercent.toString(),
+                              reward.rewardPromiseText
+                          )
+                      ).toList(),
+                    ),
                 ],
               ),
             ),
@@ -96,7 +125,6 @@ class _RewardScreenState extends State<RewardScreen> {
     );
   }
 
-  // 주간/월간 탭 (이미지 스타일 반영)
   Widget _buildPeriodTab(String title, IconData icon, bool isSelected, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
@@ -127,14 +155,12 @@ class _RewardScreenState extends State<RewardScreen> {
     );
   }
 
-  // 보상 단계 카드
-  Widget _buildRewardCard(String percent) {
+  Widget _buildRewardCard(String percent, String rewardHint) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        // 1. 전체 카드의 모서리를 이미지처럼 크게 둥글게 처리
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFF7C7D7D), width: 0.55),
       ),
@@ -142,13 +168,12 @@ class _RewardScreenState extends State<RewardScreen> {
         children: [
           Row(
             children: [
-              // 2. 숫자 입력 박스 (알약 모양 테두리)
               Container(
                 width: 54,
                 height: 24,
                 decoration: BoxDecoration(
                   border: Border.all(color: const Color(0xFF7C7D7D), width: 0.55),
-                  borderRadius: BorderRadius.circular(6), // 살짝 둥근 사각형
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -159,20 +184,17 @@ class _RewardScreenState extends State<RewardScreen> {
               const SizedBox(width: 8),
               const Text('% 달성 시', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const Spacer(),
-              // 3. X 아이콘 (빨간색)
               const Icon(Icons.close, color: Color(0xFFFF0000), size: 20),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              // 4. 보상 종류 입력창
               Expanded(
                 flex: 3,
-                child: _buildInputBox('보상 종류(예: 게임 시간, 용돈, 놀이공원)'),
+                child: _buildInputBox(rewardHint),
               ),
               const SizedBox(width: 12),
-              // 5. 수량/금액 입력창
               Expanded(
                 flex: 1,
                 child: _buildInputBox('수량/금액'),
@@ -184,20 +206,18 @@ class _RewardScreenState extends State<RewardScreen> {
     );
   }
 
-  // 내부 입력 박스 스타일
   Widget _buildInputBox(String hint) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        // 6. 이미지처럼 입력칸 테두리를 아주 둥글게 처리
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: const Color(0xFF7C7D7D), width: 0.55),
       ),
       child: Text(
         hint,
         style: const TextStyle(color: Color(0xFF7C7D7D), fontSize: 12),
-        overflow: TextOverflow.ellipsis, // 글자가 길면 생략
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
