@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'view_model/dashboard/dashboard_view_model.dart';
 import 'view_model/quest/quest_view_model.dart';
+import 'view_model/reward/reward_view_model.dart';
 import 'start_screen.dart';
 
 Future<void> main() async {
@@ -22,6 +23,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => QuestViewModel()),
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
+        ChangeNotifierProvider(create: (_) => RewardViewModel()),
       ],
       child: const MyApp(),
     ),
