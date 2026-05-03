@@ -6,6 +6,8 @@ import 'package:frontend/models/quest/weekly_stats_model.dart'; // 주간 통계
 import '../../repository/quest/quest_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/models/quest/equipped_item_model.dart';
+import 'package:frontend/models/quest/n_back_start_request_model.dart';
+import 'package:frontend/models/quest/n_back_start_response_model.dart';
 
 class QuestViewModel extends ChangeNotifier {
   final QuestRepository _repository = QuestRepository();
@@ -161,6 +163,45 @@ class QuestViewModel extends ChangeNotifier {
     } catch (e) {
       print("[ViewModel 에러] 장착 아이템 로드 실패: $e");
       _equippedItems = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // --- N-Back 게임 관련 상태 ---
+  NBackStartResponseModel? _nBackData;
+  NBackStartResponseModel? get nBackData => _nBackData;
+
+  Future<void> startNBackGame(int nLevel) async {
+    _isLoading = true;
+    _message = "게임 데이터를 불러오는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      final request = NBackStartRequestModel(
+        childId: dynamicChildId,
+        nLevel: nLevel,
+        totalCount: 20,
+      );
+
+      // Repository로부터 데이터를 받아와 직접 할당
+      final response = await _repository.startNBackGame(_testToken, request);
+
+      if (response != null) {
+        _nBackData = response;
+        _message = "게임 시작!";
+        print("[ViewModel] N-Back 로드 완료: ${response.sessionId}");
+      } else {
+        _nBackData = null;
+        _message = "게임 데이터를 가져오지 못했습니다.";
+      }
+    } catch (e) {
+      print("[ViewModel 에러] N-Back 시작 실패: $e");
+      _nBackData = null;
+      _message = "서버 연결에 실패했어요.";
     } finally {
       _isLoading = false;
       notifyListeners();

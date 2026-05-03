@@ -5,6 +5,8 @@ import 'package:frontend/models/quest/today_mission_model.dart'; // 모델 임�
 import '../../services/quest/quest_api_service.dart';
 import 'package:frontend/models/quest/weekly_stats_model.dart';
 import 'package:frontend/models/quest/equipped_item_model.dart';
+import 'package:frontend/models/quest/n_back_start_request_model.dart';
+import 'package:frontend/models/quest/n_back_start_response_model.dart';
 
 class QuestRepository {
   final QuestApiService _apiService = QuestApiService();
@@ -148,5 +150,32 @@ class QuestRepository {
       print("[Repository 에러] 장착 아이템 로드 중 문제 발생: $e");
       return [];
     }
+  }
+
+  // n-back 게임 시작
+
+  Future<NBackStartResponseModel?> startNBackGame(String token, NBackStartRequestModel request) async {
+    try {
+      final response = await _apiService.startNBackGame(token, request);
+
+      // 1. 상태 코드 확인 로그 추가
+      print("[Repository] 응답 코드: ${response.statusCode}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final String decodedBody = utf8.decode(response.bodyBytes);
+        final Map<String, dynamic> jsonData = jsonDecode(decodedBody);
+
+        // 2. 모델로 변환 시도 (여기서 null이 리턴되면 모델 클래스의 fromJson 문제)
+        return NBackStartResponseModel.fromJson(jsonData);
+      } else {
+        // 3. 에러 발생 시 서버가 준 메시지 출력
+        print("[Repository] 서버 에러 메시지: ${response.body}");
+      }
+    } catch (e, stacktrace) {
+      // 4. 스택트레이스를 함께 출력하여 정확한 에러 위치 파악
+      print("[Repository 에러] startNBackGame 상세: $e");
+      print("[Repository 스택트레이스] $stacktrace");
+    }
+    return null;
   }
 }
