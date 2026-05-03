@@ -1,11 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'notification_screen.dart';
 import '../../view_model/dashboard/dashboard_view_model.dart';
 import '../../models/dashboard/monthly_mood_model.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onNotificationTap;
+  const DashboardScreen({super.key, this.onNotificationTap}); // 수정
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -100,22 +102,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: const [
-                Icon(Icons.notifications_none, size: 34),
-                Positioned(
-                  right: -2,
-                  top: 18,
-                  child: Text(
-                    '④',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 12,
+            child: GestureDetector(
+              onTap: () {
+                widget.onNotificationTap?.call();
+              },
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: const [
+                  Icon(Icons.notifications_none, size: 34),
+                  Positioned(
+                    right: -2,
+                    top: 18,
+                    child: Text(
+                      '④',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
