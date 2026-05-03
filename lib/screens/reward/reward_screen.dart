@@ -130,7 +130,6 @@ class _RewardScreenState extends State<RewardScreen> {
         children: [
           Row(
             children: [
-              // 달성률 TextField
               Container(
                 width: 54, height: 24,
                 decoration: BoxDecoration(
@@ -153,7 +152,6 @@ class _RewardScreenState extends State<RewardScreen> {
               const SizedBox(width: 8),
               const Text('% 달성 시', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const Spacer(),
-              // 삭제 버튼 (X)
               GestureDetector(
                 onTap: () => viewModel.removeRewardStep(index),
                 child: const Icon(Icons.close, color: Color(0xFFFF0000), size: 20),
@@ -163,20 +161,26 @@ class _RewardScreenState extends State<RewardScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              // 보상 종류 TextField
+              // 보상 종류 TextField (왼쪽 정렬)
               Expanded(
                 flex: 3,
                 child: _buildEditableInputBox(
-                    rewardContent,
-                    '보상 종류(예: 게임 시간, 용돈)',
-                        (val) => viewModel.updateRewardEntry(index, text: val)
+                  rewardContent,
+                  '보상 종류(예: 게임 시간, 용돈)',
+                      (val) => viewModel.updateRewardEntry(index, text: val),
+                  textAlign: TextAlign.start,
                 ),
               ),
               const SizedBox(width: 12),
-              // 수량/금액 TextField
+              // 수량/금액 TextField (가운데 정렬 반영)
               Expanded(
                 flex: 1,
-                child: _buildEditableInputBox('', '수량/금액', (val) {}),
+                child: _buildEditableInputBox(
+                  '',
+                  '수량/금액',
+                      (val) {},
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),
@@ -185,7 +189,8 @@ class _RewardScreenState extends State<RewardScreen> {
     );
   }
 
-  Widget _buildEditableInputBox(String value, String hint, Function(String) onChanged) {
+  // textAlign 매개변수를 추가하여 정렬을 제어할 수 있게 수정했습니다.
+  Widget _buildEditableInputBox(String value, String hint, Function(String) onChanged, {TextAlign textAlign = TextAlign.start}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
@@ -195,6 +200,7 @@ class _RewardScreenState extends State<RewardScreen> {
       ),
       child: TextField(
         onChanged: onChanged,
+        textAlign: textAlign, // 가운데 정렬 적용 부분
         style: const TextStyle(color: Colors.black, fontSize: 12),
         decoration: InputDecoration(
           hintText: hint,
