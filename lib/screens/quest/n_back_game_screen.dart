@@ -143,80 +143,82 @@ class _NBackGameScreenState extends State<NBackGameScreen> {
   // 3. 결과 UI
   Widget _buildResultUI() {
     return Center(
-      child: Column(
-        children: [
-          const Text("도형 순서 기억하기", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          Container(
-            width: 340,
-            padding: const EdgeInsets.all(25),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 10))]
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const Text("도형 순서 기억하기", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Container(
+              width: 340,
+              padding: const EdgeInsets.all(25),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 10))]
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("미니게임 성공!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFECF2F8),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.black.withOpacity(0.05))
+                    ),
+                    child: Column(
+                      children: [
+                        const Text("게임 결과", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Text("수고하셨습니다. 총 20문항에 대한 결과입니다.", style: TextStyle(fontSize: 11, color: Colors.black54)),
+                        const SizedBox(height: 15),
+                        _buildDetailResult("정답", "15개", const Color(0xFF8CD85A), "일치할 때 누름 + 불일치일 때 안 누름"),
+                        const SizedBox(height: 12),
+                        _buildDetailResult("오답", "5개", Colors.redAccent, "불일치인데 누름 + 일치인데 안 누름"),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(color: const Color(0xFFF1F3F7), borderRadius: BorderRadius.circular(15)),
+                    child: Column(
+                      children: [
+                        const Text("획득 보상", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: const [
+                            Text("+n gold", style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text("+n exp", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActionBtn("난이도 올려서 다시하기", Colors.black, () {}),
+                  const SizedBox(height: 12),
+                  _buildActionBtn("지금 난이도로 다시하기", const Color(0xFF5C92E1), () {
+                    setState(() {
+                      isGameFinished = false;
+                      currentIndex = 0;
+                    });
+                    _startSequence(); // 게임 재시작
+                  }),
+                  const SizedBox(height: 6),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("홈으로 돌아가기", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text("미니게임 성공!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFECF2F8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.black.withOpacity(0.05))
-                  ),
-                  child: Column(
-                    children: [
-                      const Text("게임 결과", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const Text("수고하셨습니다. 총 20문항에 대한 결과입니다.", style: TextStyle(fontSize: 11, color: Colors.black54)),
-                      const SizedBox(height: 25),
-                      _buildDetailResult("정답", "15개", const Color(0xFF8CD85A), "일치할 때 누름 + 불일치일 때 안 누름"),
-                      const SizedBox(height: 20),
-                      _buildDetailResult("오답", "5개", Colors.redAccent, "불일치인데 누름 + 일치인데 안 누름"),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(color: const Color(0xFFF1F3F7), borderRadius: BorderRadius.circular(15)),
-                  child: Column(
-                    children: [
-                      const Text("획득 보상", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: const [
-                          Text("+n gold", style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text("+n exp", style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      )
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 25),
-                _buildActionBtn("난이도 올려서 다시하기", Colors.black, () {}),
-                const SizedBox(height: 12),
-                _buildActionBtn("지금 난이도로 다시하기", const Color(0xFF5C92E1), () {
-                  setState(() {
-                    isGameFinished = false;
-                    currentIndex = 0;
-                  });
-                  _startSequence(); // 게임 재시작
-                }),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("홈으로 돌아가기", style: TextStyle(color: Colors.grey, fontSize: 13)),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
