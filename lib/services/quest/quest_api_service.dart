@@ -73,7 +73,6 @@ class QuestApiService {
 
   // N-Back 게임 시작
   Future<http.Response> startNBackGame(String token, NBackStartRequestModel request) async {
-    // 백엔드 명세서의 URL: /api/v1/minigames/n-back/start
     final url = Uri.parse('$baseUrl/api/v1/minigames/n-back/start');
 
     return await http.post(
@@ -82,6 +81,7 @@ class QuestApiService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
+      body: jsonEncode(request.toJson()),
     );
   }
 }

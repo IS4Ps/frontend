@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'n_back_game_screen.dart';
+import 'package:frontend/view_model/quest/quest_view_model.dart';
+import 'package:provider/provider.dart';
 
 class MiniGameSelectScreen extends StatelessWidget {
   const MiniGameSelectScreen({super.key});
@@ -33,12 +35,25 @@ class MiniGameSelectScreen extends StatelessWidget {
                   title: "도형 순서 기억하기",
                   subtitle: "전에 나온 도형들을 기억하세요!",
                   icon: Icons.psychology_outlined,
-                  gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)], // 파란색 계열
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const NBackGameScreen()),
-                    );
+                  gradient: [const Color(0xFF63AFFF), const Color(0xFF8FD8FF)],
+                  onTap: () async {
+                    final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+
+                    // API 호출을 먼저 수행합니다. (nLevel: 2)
+                    await viewModel.startNBackGame(2);
+
+                    if (viewModel.nBackData != null) {
+                      // 데이터 로드 성공 시 게임 화면으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NBackGameScreen()),
+                      );
+                    } else {
+                      // 실패 시 에러 메시지 표시
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(viewModel.message)),
+                      );
+                    }
                   },
                 ),
                 const SizedBox(height: 20),

@@ -8,6 +8,11 @@
 .history
 .env
 
+# IDE related (Android Studio / IntelliJ)
+.idea/
+*.iml
+.flutter-plugins
+.flutter-plugins-dependencies
 
 # Flutter repo-specific
 /bin/cache/
