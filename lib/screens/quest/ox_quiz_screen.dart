@@ -3,8 +3,9 @@ import 'dart:async';
 
 class OxQuizScreen extends StatefulWidget {
   final VoidCallback? onBack;
+  final List<Map<String, dynamic>> quizzes;
 
-  const OxQuizScreen({super.key, this.onBack});
+  const OxQuizScreen({super.key, this.onBack, required this.quizzes});
 
   @override
   State<OxQuizScreen> createState() => _OxQuizScreenState();
@@ -14,6 +15,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
   int _seconds = 60;
   Timer? _timer;
   String? _selected;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -25,7 +27,6 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_seconds == 0) {
         timer.cancel();
-        // TODO: 시간 초과 처리
       } else {
         setState(() {
           _seconds--;
@@ -34,10 +35,14 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     });
   }
 
-  void _resetTimer() {
+  void _nextQuestion() {
     _timer?.cancel();
     setState(() {
       _seconds = 60;
+      _selected = null;
+      if (_currentIndex < widget.quizzes.length - 1) {
+        _currentIndex++;
+      }
     });
     _startTimer();
   }
@@ -48,12 +53,6 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     return '$m:$s';
   }
 
-  Color get _timerColor {
-    // if (_seconds <= 10) return const Color(0xFFFF6F6F); // 빨강 (10초 이하)
-    // if (_seconds <= 20) return const Color(0xFFFFD700); // 노랑 (20초 이하)
-    return const Color(0xFF8AC5F5); // 기본 파랑
-  }
-
   @override
   void dispose() {
     _timer?.cancel();
@@ -62,6 +61,8 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentQuiz = widget.quizzes.isNotEmpty ? widget.quizzes[_currentIndex] : null;
+
     return Scaffold(
       backgroundColor: const Color(0xFF1586E2),
       body: SafeArea(
@@ -80,13 +81,13 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildQuestionCard(),
+                    _buildQuestionCard(currentQuiz),
                     const SizedBox(height: 35),
                     _buildOxButtons(),
                     const SizedBox(height: 25),
                     _buildSelectButton(),
                     const SizedBox(height: 20),
-                    _buildExplanationBox(),
+                    _buildExplanationBox(currentQuiz),
                     const SizedBox(height: 25),
                     _buildNextButton(),
                   ],
@@ -104,7 +105,6 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 24, 8),
       child: Row(
         children: [
-          // 타이머
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: 110,
@@ -130,8 +130,6 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
               ],
             ),
           ),
-
-          // 제목
           const Expanded(
             child: Center(
               child: Text(
@@ -145,7 +143,6 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
               ),
             ),
           ),
-
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
@@ -166,7 +163,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     );
   }
 
-  Widget _buildQuestionCard() {
+  Widget _buildQuestionCard(Map<String, dynamic>? quiz) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -181,18 +178,18 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '문제',
-            style: TextStyle(
+            quiz?['questionText'] ?? '문제',
+            style: const TextStyle(
               color: Colors.black,
               fontSize: 20,
               fontFamily: 'JejuGothic',
             ),
           ),
-          SizedBox(height: 80),
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -231,7 +228,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selected = label; // 👉 선택 저장
+          _selected = label;
         });
       },
       child: AnimatedContainer(
@@ -259,19 +256,10 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
             height: 90,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 14,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: bgColor,
-              ),
+              border: Border.all(color: Colors.white, width: 14),
             ),
           )
-              : Container(
+              : SizedBox(
             width: 90,
             height: 90,
             child: Stack(
@@ -323,14 +311,14 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
             color: Colors.black,
             fontSize: 20,
             fontFamily: 'JejuGothic',
-            fontWeight: FontWeight.w600
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildExplanationBox() {
+  Widget _buildExplanationBox(Map<String, dynamic>? quiz) {
     return Expanded(
       child: Container(
         width: double.infinity,
@@ -346,18 +334,17 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
             ),
           ],
         ),
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '해설',
-              style: TextStyle(
+              quiz?['explanation'] ?? '해설',
+              style: const TextStyle(
                 color: Colors.black,
                 fontSize: 20,
                 fontFamily: 'JejuGothic',
               ),
             ),
-            SizedBox(height: 40),
           ],
         ),
       ),
@@ -366,12 +353,9 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
 
   Widget _buildNextButton() {
     return Padding(
-
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: GestureDetector(
-        onTap: () {
-          _resetTimer();
-        },
+        onTap: _nextQuestion,
         child: Container(
           width: double.infinity,
           height: 45,
