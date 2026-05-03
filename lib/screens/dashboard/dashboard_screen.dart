@@ -376,7 +376,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 7,
-          childAspectRatio: 0.65,
+          childAspectRatio: 0.55,
           crossAxisSpacing: 4,
           mainAxisSpacing: 4,
         ),
@@ -400,7 +400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   '$day',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: isEmpty ? const Color(0xFFB8B8B8) : Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
