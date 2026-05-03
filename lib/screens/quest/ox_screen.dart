@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:frontend/services/quest/quiz_api_service.dart';
 import 'ox_quiz_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OxScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -15,12 +17,13 @@ class OxScreen extends StatefulWidget {
 class _OxScreenState extends State<OxScreen> {
   final ImagePicker _picker = ImagePicker();
   List<XFile> _selectedImages = [];
+  bool _isLoading = false;
 
   Future<void> _pickImages() async {
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
       setState(() {
-        _selectedImages = images.take(4).toList(); // 최대 4장
+        _selectedImages = images.take(4).toList();
       });
     }
   }
@@ -131,15 +134,52 @@ class _OxScreenState extends State<OxScreen> {
               }),
             ),
             const Spacer(),
+            if (_isLoading)
+              const Center(
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(
+                      color: Color(0xFF1586E2),
+                      strokeWidth: 4,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'AI가 이미지를 분석 중이에요!',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                    ),
+                  ],
+                ),
+              ),
+            const Spacer(),
             Center(
               child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OxQuizScreen(),
-                    ),
-                  );
+                onTap: () async {
+                  if (_selectedImages.isEmpty) return;
+
+                  setState(() {
+                    _isLoading = true;
+                  });
+
+                  try {
+                    final token = dotenv.env['TEST_TOKEN'] ?? '';
+                    final service = QuizApiService();
+                    final quizzes = await service.generateQuiz(_selectedImages, 5, token);
+
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OxQuizScreen(quizzes: quizzes),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    print('[에러] $e');
+                  } finally {
+                    setState(() {
+                      _isLoading = false;
+                    });
+                  }
                 },
                 child: Container(
                   width: 150,

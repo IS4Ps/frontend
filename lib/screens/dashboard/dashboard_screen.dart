@@ -1,40 +1,67 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../view_model/dashboard/dashboard_view_model.dart';
+import '../../models/dashboard/monthly_mood_model.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 화면 빌드 후 현재 날짜 기준으로 월간 감정 데이터 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DashboardViewModel>().fetchMonthlyMood();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEBF1F7),
-      body: Column(
-        children: [
-          Container(
-            color: Colors.white,
-            child: SafeArea(
-              bottom: false,
-              child: _buildHeader(),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              child: Column(
-                children: [
-                  _buildProgressCard(),
-                  const SizedBox(height: 24),
-                  _buildActivityCard(),
-                  const SizedBox(height: 24),
-                  _buildEmotionCard(),
-                  const SizedBox(height: 24),
-                  _buildHeatmapCard(),
-                ],
+      body: Consumer<DashboardViewModel>(
+        builder: (context, viewModel, child) {
+          // 로딩 상태 처리
+          if (viewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return Column(
+            children: [
+              Container(
+                color: Colors.white,
+                child: SafeArea(
+                  bottom: false,
+                  child: _buildHeader(),
+                ),
               ),
-            ),
-          ),
-        ],
+              const SizedBox(height: 24),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: Column(
+                    children: [
+                      _buildProgressCard(),
+                      const SizedBox(height: 24),
+                      _buildActivityCard(),
+                      const SizedBox(height: 24),
+                      // ViewModel 데이터를 전달하여 감정 카드 빌드
+                      _buildEmotionCard(viewModel.monthlyMoodData),
+                      const SizedBox(height: 24),
+                      _buildHeatmapCard(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -232,7 +259,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmotionCard() {
+  Widget _buildEmotionCard(MonthlyMoodModel? moodData) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -255,7 +282,7 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          _buildCalendarSection(),
+          _buildCalendarSection(moodData),
           const SizedBox(height: 4),
           const Padding(
             padding: EdgeInsets.only(left: 6),
@@ -271,9 +298,9 @@ class DashboardScreen extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _TopEmotionItem(emoji: '😃', label: '행복'),
-              _TopEmotionItem(emoji: '😆', label: '신남'),
-              _TopEmotionItem(emoji: '😌', label: '평온'),
+              _TopEmotionItem(emoji: '😆', label: '행복'),
+              _TopEmotionItem(emoji: '😊', label: '신남'),
+              _TopEmotionItem(emoji: '😐', label: '평온'),
             ],
           ),
           const SizedBox(height: 10),
@@ -328,20 +355,13 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCalendarSection() {
-    final List<String> dates = [
-      '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', '10', '11', '12', '13', '14',
-      '15', '16', '17', '18', '19', '20', '21',
-      '22', '23', '24', '25', '26', '27', '28',
-    ];
+  Widget _buildCalendarSection(MonthlyMoodModel? moodData) {
+    final now = DateTime.now();
+    final int year = moodData?.year ?? now.year;
+    final int month = moodData?.month ?? now.month;
 
-    final List<String> emotions = [
-      '', '😀', '☹️', '😡', '😌', '😆', '😆',
-      '☹️', '😞', '😡', '😆', '😌', '😀', '😡',
-      '😀', '😌', '😀', '☹️', '😣', '😡', '☹️',
-      '😣', '😆', '😌', '', '', '', '',
-    ];
+    // 해당 월의 마지막 날짜 계산
+    final int daysInMonth = DateTime(year, month + 1, 0).day;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
@@ -351,17 +371,22 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: GridView.builder(
         padding: EdgeInsets.zero,
-        itemCount: dates.length,
+        itemCount: daysInMonth,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 7,
-          childAspectRatio: 0.65,
-          crossAxisSpacing: 0,
-          mainAxisSpacing: 0,
+          childAspectRatio: 0.55,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
         ),
         itemBuilder: (context, index) {
-          final bool isEmpty = emotions[index].isEmpty;
+          final int day = index + 1;
+          // API Key 형식 생성: YYYY-MM-DD
+          final String dateKey = "$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}";
+
+          final log = moodData?.moodMap[dateKey];
+          final bool isEmpty = log == null;
 
           return Container(
             decoration: BoxDecoration(
@@ -373,24 +398,116 @@ class DashboardScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  dates[index],
+                  '$day',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: (dates[index] == '25' || dates[index] == '26'|| dates[index] == '27' || dates[index] == '28')
-                        ? Colors.black87
-                        : isEmpty ? const Color(0xFFB8B8B8) : Colors.black87,
-                    fontWeight: (index == 24 || index == 25) ? FontWeight.w500 : FontWeight.w500,
+                    fontSize: 12,
+                    color: isEmpty ? const Color(0xFFB8B8B8) : Colors.black87,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  emotions[index],
+                  log?.emotionEmoji ?? '',
                   style: const TextStyle(fontSize: 22),
                 ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildHeatmapCard() {
+    final List<int> data = [
+      2,1,0,2,3,3,0,1,1,0,2,3,2,
+      2,2,2,0,3,2,1,2,1,0,0,2,3,
+      1,3,2,0,0,3,1,2,2,2,2,3,1,
+      2,1,0,2,2,0,0,2,2,0,3,2,2,
+      2,3,0,3,2,3,0,2,3,1,3,2,3,
+      3,2,2,0,1,3,3,1,0,1,3,0,0,
+      3,2,2,3,0,3,0,1,0,1,2,2,2,
+    ];
+
+    final colors = [
+      const Color(0xFFF1F3F5),
+      const Color(0xFFBDECC7),
+      const Color(0xFF2ED573),
+      const Color(0xFF138A36),
+    ];
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text(
+              '루틴 습관 히트맵',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text(
+              '3개월 일관성',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF3D3D3D),
+              ),
+            ),
+          ),
+          const SizedBox(height: 25),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GridView.builder(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: data.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 13,
+                crossAxisSpacing: 3,
+                mainAxisSpacing: 3,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: colors[data[index]],
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('1월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
+                SizedBox(width: 76),
+                Text('2월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
+                SizedBox(width: 60),
+                Text('3월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -589,102 +706,4 @@ class EmotionLineChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-Widget _buildHeatmapCard() {
-  // 0: 없음, 1: 연한, 2: 중간, 3: 진한
-  final List<int> data = [
-    2,1,0,2,3,3,0,1,1,0,2,3,2,
-    2,2,2,0,3,2,1,2,1,0,0,2,3,
-    1,3,2,0,0,3,1,2,2,2,2,3,1,
-    2,1,0,2,2,0,0,2,2,0,3,2,2,
-    2,3,0,3,2,3,0,2,3,1,3,2,3,
-    3,2,2,0,1,3,3,1,0,1,3,0,0,
-    3,2,2,3,0,3,0,1,0,1,2,2,2,
-  ];
-
-  final colors = [
-    const Color(0xFFF1F3F5), // 없음
-    const Color(0xFFBDECC7), // 연한
-    const Color(0xFF2ED573), // 중간
-    const Color(0xFF138A36), // 진한
-  ];
-
-  return Container(
-    width: double.infinity,
-    margin: const EdgeInsets.symmetric(horizontal: 20),
-    padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: const Text(
-            '루틴 습관 히트맵',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: const Text(
-            '3개월 일관성',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF3D3D3D),
-            ),
-          ),
-        ),
-        const SizedBox(height: 25),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: GridView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: data.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 13,
-              crossAxisSpacing: 3,
-              mainAxisSpacing: 3,
-              childAspectRatio: 1,
-            ),
-            itemBuilder: (context, index) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: colors[data[index]],
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20), // 4 → 10
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('1월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-              SizedBox(width: 76),
-              Text('2월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-              SizedBox(width: 60),
-              Text('3월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
