@@ -16,18 +16,31 @@ class _StoreScreenState extends State<StoreScreen> {
   int _selectedIndex = 0;
   final List<String> _categories = ["상점", "장비", "보상"];
 
-  Set<int> _equippedIndexes = {};
   int? _activeIndex;
+  Set<int> _purchasedItemIds = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StoreViewModel>(context, listen: false)
-          .loadStoreItems(1, 1);
+      Provider.of<StoreViewModel>(context, listen: false).loadStoreItems(1, 1);
+
       Provider.of<InventoryViewModel>(context, listen: false)
-          .loadInventory();
+          .loadInventory()
+          .then((_) {
+        final inventoryItems = Provider.of<InventoryViewModel>(context, listen: false).items;
+        setState(() {
+          _purchasedItemIds = inventoryItems.map((e) => e.itemId).toSet();
+        });
+      });
     });
+  }
+
+  void _onTabTapped(int index) {
+    setState(() => _selectedIndex = index);
+    if (index == 1) {
+      Provider.of<InventoryViewModel>(context, listen: false).loadInventory();
+    }
   }
 
   @override
@@ -57,7 +70,7 @@ class _StoreScreenState extends State<StoreScreen> {
                 return Padding(
                   padding: EdgeInsets.only(right: index < _categories.length - 1 ? 10 : 0),
                   child: GestureDetector(
-                    onTap: () => setState(() => _selectedIndex = index), // ← 탭 클릭 시 변경
+                    onTap: () => _onTabTapped(index),
                     child: _categoryButton(_categories[index], _selectedIndex == index),
                   ),
                 );
@@ -65,24 +78,18 @@ class _StoreScreenState extends State<StoreScreen> {
             ),
           ),
           Expanded(
-            child: _buildContent(), // ← 탭에 따라 다른 화면
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [
+                _buildShopGrid(),
+                _buildEquipmentGrid(),
+                _buildRewardGrid(),
+              ],
+            ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildContent() {
-    switch (_selectedIndex) {
-      case 0:
-        return _buildShopGrid();
-      case 1:
-        return _buildEquipmentGrid(); // 장비 화면
-      case 2:
-        return _buildRewardGrid();    // 보상 화면
-      default:
-        return _buildShopGrid();
-    }
   }
 
   Widget _buildShopGrid() {
@@ -269,18 +276,12 @@ class _StoreScreenState extends State<StoreScreen> {
                   children: [
                     Text(
                       rewards[index]["title"]!,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       rewards[index]["subtitle"]!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -293,14 +294,88 @@ class _StoreScreenState extends State<StoreScreen> {
                 ),
                 child: const Text(
                   "사용",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap) {
+    return Consumer<StoreViewModel>(
+      builder: (context, viewModel, child) {
+        final isPurchased = _purchasedItemIds.contains(item.itemId);
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              border: isActive
+                  ? Border.all(color: const Color(0xFF1586E2), width: 2)
+                  : Border.all(color: Colors.transparent, width: 2),
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4)),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: 75,
+                      height: 75,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD9D9D9),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+                if (isActive && !isPurchased)
+                  GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        _purchasedItemIds.add(item.itemId);
+                        _activeIndex = null;
+                      });
+                      final childId = viewModel.getChildId();
+                      await viewModel.purchaseItem(item.itemId, childId);
+                      if (context.mounted) {
+                        await Provider.of<InventoryViewModel>(context, listen: false).loadInventory();
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1586E2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        "구매",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      isPurchased ? "보유 중" : "${item.price}gold",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -321,78 +396,5 @@ Widget _categoryButton(String text, bool selected) {
       text,
       style: const TextStyle(fontWeight: FontWeight.bold),
     ),
-  );
-}
-
-Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap) {
-  return Consumer<StoreViewModel>(
-    builder: (context, viewModel, child) {
-      return GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: isActive
-                ? Border.all(color: const Color(0xFF1586E2), width: 2)
-                : Border.all(color: Colors.transparent, width: 2),
-            boxShadow: const [
-              BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4)),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Center(
-                  child: Container(
-                    width: 75,
-                    height: 75,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFD9D9D9),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ),
-              if (isActive && !item.isOwned)
-                GestureDetector(
-                  onTap: () async {
-                    final childId = viewModel.getChildId();
-                    await viewModel.purchaseItem(item.itemId, childId);
-                    if (context.mounted) {
-                      Provider.of<InventoryViewModel>(context, listen: false).loadInventory();
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1586E2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      "구매",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    item.isOwned ? "보유 중" : "${item.price}gold",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      );
-    },
   );
 }
