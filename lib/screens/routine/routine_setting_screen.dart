@@ -13,6 +13,8 @@ class RoutineSettingScreen extends StatefulWidget {
 class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
   bool isFullCalendarOpen = false;
   int selectedDay = 1;
+  final TextEditingController _subTaskController = TextEditingController();
+  List<String> _subTasks = [];
 
   @override
   Widget build(BuildContext context) {
@@ -153,74 +155,200 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 미션 제목
-                      const Padding(
-                        padding: EdgeInsets.only(left: 16),
-                        child: Text(
-                          '미션 제목',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontFamily: 'JejuGothic',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          width: double.infinity,
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          alignment: Alignment.centerLeft,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                              color: const Color(0x607C7D7D),
+// 미션 제목 → 큰 과제/태그선택/세부과제 영역
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x3F000000),
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
                             ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Text(
-                            '예: 책 1권 읽기',
-                            style: TextStyle(
-                              color: Color(0xFF7C7D7D),
-                              fontSize: 16,
-                              fontFamily: 'JejuGothic',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 큰 과제
+                            const Text(
+                              '큰 과제',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'JejuGothic',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              alignment: Alignment.centerLeft,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: const Color(0x607C7D7D)),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Text(
+                                '예: 등교 준비하기',
+                                style: TextStyle(
+                                  color: Color(0xFF7C7D7D),
+                                  fontSize: 16,
+                                  fontFamily: 'JejuGothic',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
 
-                      // 태그 선택
-                      const Padding(
-                        padding: EdgeInsets.only(left: 16),
-                        child: Text(
-                          '태그 선택',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontFamily: 'JejuGothic',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16),
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: const [
-                            _TagChip(label: '운동'),
-                            _TagChip(label: '공부'),
-                            _TagChip(label: '생활'),
+                            // 태그 선택
+                            const Text(
+                              '태그 선택',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'JejuGothic',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: const [
+                                _TagChip(label: '운동'),
+                                _TagChip(label: '공부'),
+                                _TagChip(label: '생활'),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // 세부 과제
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFECF2F8),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '세부 과제',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 13,
+                                      fontFamily: 'JejuGothic',
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ..._subTasks.map((task) => Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(15),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x3F000000),
+                                          blurRadius: 4,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          task,
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontFamily: 'JejuGothic',
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _subTasks.remove(task);
+                                            });
+                                          },
+                                          child: const Icon(Icons.close, size: 16, color: Color(0xFF7C7D7D)),
+                                        ),
+                                      ],
+                                    ),
+                                  )).toList(),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          height: 29,
+                                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                                          alignment: Alignment.centerLeft,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(color: const Color(0x607C7D7D)),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: TextField(
+                                            controller: _subTaskController,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontFamily: 'JejuGothic',
+                                            ),
+                                            decoration: const InputDecoration(
+                                              hintText: '세부 과제 추가 (예: 세수하기)',
+                                              hintStyle: TextStyle(
+                                                color: Color(0xFF7C7D7D),
+                                                fontSize: 11,
+                                                fontFamily: 'JejuGothic',
+                                              ),
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (_subTaskController.text.isNotEmpty) {
+                                            setState(() {
+                                              _subTasks.add(_subTaskController.text);
+                                              _subTaskController.clear();
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 29,
+                                          height: 29,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF8AC5F5),
+                                            borderRadius: BorderRadius.circular(5),
+                                          ),
+                                          child: const Icon(Icons.add, color: Colors.white, size: 20),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
                       // 미션 저장 버튼
                       Padding(
