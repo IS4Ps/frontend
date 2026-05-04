@@ -10,15 +10,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/models/reward/offline_reward_list_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/routine/big_task_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/repository/routine/big_task_repository.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/services/routine/big_task_api_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/view_model/routine/big_task_view_model.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,6 +25,13 @@
   </component>
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -65,7 +70,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "#69 on Merging feat/#64-item-purchase-api",
+    "git-widget-placeholder": "feat/#74-big-task-api",
     "io.flutter.project.isFirstOpen": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
