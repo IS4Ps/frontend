@@ -45,4 +45,21 @@ class InventoryViewModel extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<void> equipItem(int inventoryId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final bool isSuccess = await _repository.equipItem(inventoryId, _testToken);
+
+    if (isSuccess) {
+      print("[장착/해제 성공]");
+      await loadInventory(); // 장비 목록 새로고침
+    } else {
+      print("[장착/해제 실패]");
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
 }
