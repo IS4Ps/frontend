@@ -1,3 +1,5 @@
+import 'package:provider/provider.dart';
+import 'package:frontend/view_model/routine/big_task_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/screens/dashboard/notification_screen.dart';
@@ -22,6 +24,9 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
       _selectedIndex = index;
       _showNotification = false;
     });
+    if (index == 1) {
+      Provider.of<BigTaskViewModel>(context, listen: false).loadBigTasks();
+    }
   }
 
   @override
