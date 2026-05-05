@@ -11,10 +11,12 @@ class GoNogoGameScreen extends StatefulWidget {
 }
 
 class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
+  // 상태 제어 변수
   bool isGameFinished = false;
   int currentIndex = 0;
   bool isShowingStimulus = false;
 
+  // --- 타이머 변수 ---
   Timer? _countdownTimer;
   int _remainingTime = 50;
   final int _totalStartTime = 50;
@@ -36,6 +38,7 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     super.dispose();
   }
 
+  // 실시간 타이머
   void _startTimer() {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -51,17 +54,15 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     });
   }
 
-  // 게임 시퀀스 로직
+  // 게임 시퀀스 로직 (Go/No-Go 전용 데이터 사용)
   Future<void> _startSequence() async {
     final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+    // ◀ nBackData 대신 goNoGoData 사용
+    final data = viewModel.goNoGoData;
 
-    // 데이터를 가져오되, Map 형태로 캐스팅하여 에러 방지
-    final rawData = viewModel.nBackData ?? _getDummyData();
-    final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
+    if (data == null) return;
 
-    final List stimuliList = data['stimuli'] as List;
-
-    for (int i = 0; i < stimuliList.length; i++) {
+    for (int i = 0; i < data.stimuli.length; i++) {
       if (!mounted || isGameFinished) break;
 
       setState(() {
@@ -69,26 +70,17 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
         isShowingStimulus = true;
       });
 
-      await Future.delayed(Duration(milliseconds: data['displayTime'] ?? 1000));
+      // 명세서의 timeLimit(ms) 동안 자극 노출
+      await Future.delayed(Duration(milliseconds: data.timeLimit));
 
       if (!mounted || isGameFinished) break;
       setState(() => isShowingStimulus = false);
 
-      await Future.delayed(Duration(milliseconds: data['intervalTime'] ?? 500));
+      // 자극 사이의 대기 시간 (예: 500ms)
+      await Future.delayed(const Duration(milliseconds: 500));
     }
 
     if (mounted && !isGameFinished) _finishGame();
-  }
-
-  // UI 확인용 더미 데이터
-  Map<String, dynamic> _getDummyData() {
-    return {
-      'nLevel': 1,
-      'totalCount': 20,
-      'displayTime': 1000,
-      'intervalTime': 500,
-      'stimuli': List.generate(20, (index) => {'index': index, 'value': 'circle'}),
-    };
   }
 
   void _finishGame() {
@@ -99,28 +91,33 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<QuestViewModel>(context);
-
-    // 데이터 타입을 명시적으로 지정
-    final rawData = viewModel.nBackData ?? _getDummyData();
-    final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
+    // ◀ goNoGoData 참조
+    final data = viewModel.goNoGoData;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
-        child: isGameFinished
+        child: data == null
+            ? const Center(child: CircularProgressIndicator())
+            : isGameFinished
             ? _buildResultUI()
             : _buildGameUI(data),
       ),
     );
   }
 
-  // 메인 게임 UI (data['키값']
-  Widget _buildGameUI(Map<String, dynamic> data) {
+  // 메인 게임 UI
+  Widget _buildGameUI(dynamic data) {
+    // 현재 표시해야 할 자극 데이터 (type, image 포함)
+    final currentStimulus = data.stimuli[currentIndex];
+
     return Column(
       children: [
         const SizedBox(height: 40),
         const Text('Go/No-Go', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
+
+        // 시간 표시 및 프로그레스 바
         SizedBox(
           width: 320,
           child: Column(
@@ -140,6 +137,8 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
           ),
         ),
         const SizedBox(height: 30),
+
+        // 메인 카드
         Center(
           child: Container(
             width: 320,
@@ -161,27 +160,32 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
                       child: const Text('그만하기', style: TextStyle(color: Colors.grey, fontSize: 13)),
                     ),
                     Column(
-                      children: [
-                        Text('Level - ${data['nLevel'] ?? 1}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const Text('(초록 원이 나오면 터치!)', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      children: const [
+                        Text('Level - 1', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('(초록 원이 나오면 터치!)', style: TextStyle(fontSize: 10, color: Colors.grey)),
                       ],
                     ),
                     const Text('점수 : 100', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
                 ),
+
+                // 중앙 자극 영역
                 Expanded(
                   child: Center(
-                    child: Container(
-                      width: 140, height: 140,
-                      decoration: BoxDecoration(
-                        color: isShowingStimulus ? const Color(0xFFE57373) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
+                    child: isShowingStimulus
+                        ? _getStimulusWidget(currentStimulus.image)
+                        : const SizedBox.shrink(),
                   ),
                 ),
+
+                // 터치 버튼 (GO 타입일 때만 정답 처리)
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    if (isShowingStimulus) {
+                      bool isCorrect = currentStimulus.type == "GO";
+                      print(isCorrect ? "정답! (GO 클릭)" : "오답! (NOGO 클릭)");
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5689D7),
                     foregroundColor: Colors.white,
@@ -199,6 +203,19 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     );
   }
 
+  // 서버의 image 문자열 값에 따라 위젯 매핑
+  Widget _getStimulusWidget(String imageName) {
+    switch (imageName) {
+      case 'monster_green': // GO 자극 예시
+        return const Icon(Icons.sentiment_very_satisfied, size: 120, color: Colors.green);
+      case 'bomb_red': // NOGO 자극 예시
+        return const Icon(Icons.dangerous, size: 120, color: Colors.red);
+      default:
+        return const Icon(Icons.help_outline, size: 120, color: Colors.grey);
+    }
+  }
+
+  // 결과 UI
   Widget _buildResultUI() {
     return SingleChildScrollView(
       child: Column(
@@ -232,12 +249,12 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
                     child: Column(
                       children: [
                         const Text('게임 결과', style: TextStyle(fontWeight: FontWeight.bold)),
-                        const Text('수고하셨습니다. 총 50문항에 대한 결과입니다.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        const Text('수고하셨습니다. 총 20문항에 대한 결과입니다.', style: TextStyle(fontSize: 10, color: Colors.grey)),
                         const SizedBox(height: 10),
-                        _resultRow('맞은 개수', '45개', color: Colors.green),
-                        _resultRow('틀린 개수', '5개', color: Colors.red),
+                        _resultRow('맞은 개수', '18개', color: Colors.green),
+                        _resultRow('틀린 개수', '2개', color: Colors.red),
                         _resultRow('정확도', '90%'),
-                        _resultRow('점수', '1000점'),
+                        _resultRow('점수', '900점'),
                       ],
                     ),
                   ),
@@ -265,7 +282,7 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
                   }),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('홈 화면으로 돌아가기', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    child: const Text('이전 화면으로 돌아가기', style: TextStyle(color: Colors.grey, fontSize: 13)),
                   )
                 ],
               ),
@@ -276,6 +293,7 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     );
   }
 
+  // --- 헬퍼 위젯 ---
   Widget _buildGrayBox({required Widget child}) {
     return Container(
       width: double.infinity,
