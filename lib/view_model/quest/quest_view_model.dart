@@ -8,6 +8,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/models/quest/equipped_item_model.dart';
 import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_start_response_model.dart';
+import 'package:frontend/models/quest/n_back_submit_response_model.dart';
+import 'package:frontend/models/quest/n_back_submit_request_model.dart';
+
 
 class QuestViewModel extends ChangeNotifier {
   final QuestRepository _repository = QuestRepository();
@@ -202,6 +205,54 @@ class QuestViewModel extends ChangeNotifier {
       print("[ViewModel 에러] N-Back 시작 실패: $e");
       _nBackData = null;
       _message = "서버 연결에 실패했어요.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // N-Back 게임 결과
+  NBackSubmitResponseModel? _nBackResult;
+  NBackSubmitResponseModel? get nBackResult => _nBackResult;
+
+  Future<bool> submitNBackGame(List<NBackAnswerModel> userAnswers) async {
+    // 시작 API를 통해 받은 데이터가 없으면 진행 불가
+    if (_nBackData == null) {
+      _message = "게임 세션이 유효하지 않습니다.";
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _message = "결과를 저장하는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      // 명세서에 따른 요청 객체 생성
+      final request = NBackSubmitRequestModel(
+        childId: dynamicChildId,
+        sessionId: _nBackData!.sessionId, // 시작 시 받은 sessionId 필수 포함
+        answers: userAnswers,
+      );
+
+      // Repository를 통해 API 호출 (NBackSubmitResponseModel 반환 가정)
+      final response = await _repository.submitNBackGame(_testToken, request);
+
+      if (response != null) {
+        _nBackResult = response;
+        _message = "게임 완료! 보상을 획득했습니다.";
+        print("[ViewModel] N-Back 결과 제출 성공: ${response.score}점");
+        return true;
+      } else {
+        _message = "결과 저장에 실패했습니다.";
+        return false;
+      }
+    } catch (e) {
+      print("[ViewModel 에러] N-Back 제출 실패: $e");
+      _message = "서버 연결에 실패했어요.";
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
