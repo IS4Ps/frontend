@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'n_back_game_screen.dart';
 import 'package:frontend/view_model/quest/quest_view_model.dart';
 import 'package:provider/provider.dart';
+import 'go_nogo_game_screen.dart';
+
 
 class MiniGameSelectScreen extends StatelessWidget {
   const MiniGameSelectScreen({super.key});
@@ -63,9 +65,13 @@ class MiniGameSelectScreen extends StatelessWidget {
                   title: "Go/No-Go",
                   subtitle: "알맞은 도형이 나오면 클릭해요!",
                   icon: Icons.traffic_outlined,
-                  gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)], // 초록색 계열
+                  gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)],
                   onTap: () {
-                    // TODO: Go/No-Go 게임 연결
+                    // ◀ 이 부분이 실행되면 방금 만든 디자인의 화면으로 넘어갑니다.
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const GoNogoGameScreen()),
+                    );
                   },
                 ),
                 const SizedBox(height: 20),
