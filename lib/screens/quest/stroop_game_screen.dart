@@ -99,7 +99,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     );
   }
 
-  // 메인 게임
+  // --- 메인 게임 UI ---
   Widget _buildGameUI() {
     return Column(
       children: [
@@ -107,6 +107,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
         const Text('단어 색깔 구별하기', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
         const SizedBox(height: 15),
 
+        // 타이머 섹션
         SizedBox(
           width: 320,
           child: Column(
@@ -140,6 +141,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
             ),
             child: Column(
               children: [
+                // 카드 헤더
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -153,6 +155,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
                 ),
                 const SizedBox(height: 20),
 
+                // 문제 영역
                 Container(
                   width: double.infinity,
                   height: 160,
@@ -169,9 +172,27 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
                   ),
                 ),
                 const SizedBox(height: 35),
-                const Text('아래에서 글자 색에 해당하는 칸을 누르세요', style: TextStyle(fontSize: 12, color: Colors.black54)),
+
+                // 강조된 안내 텍스트 (RichText 적용)
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    children: [
+                      const TextSpan(text: '아래에서 '),
+                      TextSpan(
+                        text: '글자 색',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900, // 가장 진하게
+                          color: Colors.black.withOpacity(0.85), // 더 어두운 색상
+                        ),
+                      ),
+                      const TextSpan(text: '에 해당하는 칸을 누르세요'),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 20),
 
+                // 정답 선택 버튼 (2x2 Grid)
                 GridView.count(
                   shrinkWrap: true,
                   crossAxisCount: 2,
@@ -189,7 +210,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     );
   }
 
-  // 결과 화면
+  // --- 결과 UI ---
   Widget _buildResultUI(QuestViewModel viewModel) {
     return Center(
       child: SingleChildScrollView(
@@ -236,7 +257,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
 
                   // 1. 난이도 올려서 다시하기 (검정 버튼)
                   _actionButton('난이도 올려서 다시하기', Colors.black, () {
-                    // 여기에 난이도 변경 로직 추가 가능
+                    // 난이도 조절 로직 추가 지점
                   }),
                   const SizedBox(height: 12),
 
@@ -269,6 +290,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     );
   }
 
+  // --- 헬퍼 위젯 ---
   Widget _buildColorSelectionBtn(String label, Color color) {
     return ElevatedButton(
       onPressed: _generateNewQuestion,
