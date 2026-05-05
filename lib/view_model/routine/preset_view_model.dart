@@ -9,7 +9,7 @@ class PresetViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  final String _testToken = dotenv.env['PARENT_TOKEN'] ?? "";
+  final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
 
   int _getParentIdFromToken(String token) {
     try {
