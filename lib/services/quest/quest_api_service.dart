@@ -4,6 +4,7 @@ import 'package:frontend/models/quest/feeling_request_model.dart'; // import 확
 import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_submit_request_model.dart';
 import 'package:frontend/models/quest/go_nogo_start_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_submit_request_model.dart';
 
 
 class QuestApiService {
@@ -105,6 +106,20 @@ class QuestApiService {
   // Go/No-Go 게임 시작
   Future<http.Response> startGoNoGoGame(String token, GoNoGoStartRequestModel request) async {
     final url = Uri.parse('$baseUrl/api/v1/minigames/go-no-go/start');
+
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+  }
+
+  // Go/No-Go 정답 제출
+  Future<http.Response> submitGoNoGoGame(String token, GoNoGoSubmitRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/go-no-go/submit');
 
     return await http.post(
       url,
