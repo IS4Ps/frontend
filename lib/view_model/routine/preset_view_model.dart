@@ -1,0 +1,58 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import '../../repository/routine/preset_repository.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+class PresetViewModel extends ChangeNotifier {
+  final PresetRepository _repository = PresetRepository();
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  final String _testToken = dotenv.env['PARENT_TOKEN'] ?? "";
+
+  int _getParentIdFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return 1;
+
+      String payload = parts[1];
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
+
+      final String decoded = utf8.decode(base64Url.decode(payload));
+      final Map<String, dynamic> json = jsonDecode(decoded);
+
+      return int.parse(json['sub'].toString());
+    } catch (e) {
+      print("토큰 디코딩 에러: $e");
+      return 1;
+    }
+  }
+
+  Future<bool> createPreset({
+    required String title,
+    required List<int> bigTaskIds,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final int parentId = _getParentIdFromToken(_testToken);
+    final body = {
+      "parentId": parentId,
+      "title": title,
+      "description": "",
+      "icon": "default",
+      "durationDays": 1,
+      "bigTaskIds": bigTaskIds,
+    };
+
+    final bool isSuccess = await _repository.createPreset(body, _testToken);
+
+    _isLoading = false;
+    notifyListeners();
+
+    return isSuccess;
+  }
+}
