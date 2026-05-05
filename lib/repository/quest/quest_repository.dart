@@ -7,6 +7,9 @@ import 'package:frontend/models/quest/weekly_stats_model.dart';
 import 'package:frontend/models/quest/equipped_item_model.dart';
 import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_start_response_model.dart';
+import 'package:frontend/models/quest/n_back_submit_request_model.dart';
+import 'package:frontend/models/quest/n_back_submit_response_model.dart';
+
 
 class QuestRepository {
   final QuestApiService _apiService = QuestApiService();
@@ -177,5 +180,32 @@ class QuestRepository {
       print("[Repository 스택트레이스] $stacktrace");
     }
     return null;
+  }
+
+  // --- N-Back 게임 정답 제출 추가 ---
+  Future<NBackSubmitResponseModel?> submitNBackGame(
+      String token, NBackSubmitRequestModel request) async {
+    try {
+      print("[Repository] N-Back 정답 제출 시작 (sessionId: ${request.sessionId})");
+
+      final response = await _apiService.submitNBackGame(token, request);
+
+      print("[Repository] 응답 코드: ${response.statusCode}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final String decodedBody = utf8.decode(response.bodyBytes);
+        final Map<String, dynamic> jsonData = jsonDecode(decodedBody);
+
+        // API 명세서의 Response Body 구조에 맞춰 모델 변환
+        return NBackSubmitResponseModel.fromJson(jsonData);
+      } else {
+        print("[Repository] 제출 실패 서버 에러: ${response.body}");
+        return null;
+      }
+    } catch (e, stacktrace) {
+      print("[Repository 에러] submitNBackGame 상세: $e");
+      print("[Repository 스택트레이스] $stacktrace");
+      return null;
+    }
   }
 }
