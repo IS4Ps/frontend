@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'n_back_game_screen.dart';
 import 'package:frontend/view_model/quest/quest_view_model.dart';
 import 'package:provider/provider.dart';
+import 'stroop_game_screen.dart';
+
 
 class MiniGameSelectScreen extends StatelessWidget {
   const MiniGameSelectScreen({super.key});
@@ -77,7 +79,11 @@ class MiniGameSelectScreen extends StatelessWidget {
                   icon: Icons.visibility_outlined,
                   gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)], // 보라/분홍 계열
                   onTap: () {
-                    // TODO: 스트룹 게임 연결
+                    // Navigator를 통해 스트룹 게임 화면으로 이동합니다.
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const StroopGameScreen()),
+                    );
                   },
                 ),
               ],
