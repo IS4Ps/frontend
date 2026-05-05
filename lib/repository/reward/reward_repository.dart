@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:frontend/models/reward/offline_reward_list_model.dart';
 import '../../services/reward/reward_api_service.dart';
+import 'package:frontend/models/reward/offline_reward_request_model.dart';
 
 class RewardRepository {
   final RewardApiService _apiService = RewardApiService();
@@ -36,6 +37,27 @@ class RewardRepository {
     } catch (e) {
       print("[Repository 에러] 오프라인 보상 목록 로드 중 문제 발생: $e");
       return [];
+    }
+  }
+
+  // 오프라인 보상 등록
+  Future<bool> registerOfflineReward(String token, OfflineRewardRequestModel request) async {
+    try {
+      print("[API 호출] 오프라인 보상 등록 시작");
+
+      final response = await _apiService.postOfflineReward(token, request);
+
+      // 성공 상태 코드 확인 (일반적으로 200 또는 201)
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("[API 성공] 오프라인 보상 등록 완료");
+        return true;
+      } else {
+        print("[API 실패] 상태 코드: ${response.statusCode}, 내용: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("[Repository 에러] 오프라인 보상 등록 중 문제 발생: $e");
+      return false;
     }
   }
 }
