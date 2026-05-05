@@ -13,7 +13,7 @@ class BigTaskViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<BigTaskModel> get bigTasks => _bigTasks;
 
-  final String _testToken = dotenv.env['PARENT_TOKEN'] ?? "";
+  final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
 
   int _getParentIdFromToken(String token) {
     try {
