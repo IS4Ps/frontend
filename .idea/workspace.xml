@@ -9,10 +9,10 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="">
+    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="[FEAT/#82] ui 수정">
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/routine/routine_setting_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/routine/routine_setting_screen.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +21,13 @@
   </component>
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -59,11 +66,11 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "feat/#72-subtask-ui",
+    "git-widget-placeholder": "dev",
     "io.flutter.project.isFirstOpen": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
-    "settings.editor.selected.configurable": "configurable.group.tools",
+    "settings.editor.selected.configurable": "flutter.settings",
     "show.migrate.to.gradle.popup": "false"
   }
 }]]></component>
@@ -81,6 +88,28 @@
       <option name="presentableId" value="Default" />
       <updated>1777792656460</updated>
     </task>
+    <task id="LOCAL-00001" summary="[FEAT/#82] stroop 게임 UI 구현하기">
+      <option name="closed" value="true" />
+      <created>1777984485832</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1777984485832</updated>
+    </task>
+    <task id="LOCAL-00002" summary="[FEAT/#82] ui 수정">
+      <option name="closed" value="true" />
+      <created>1777984864323</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1777984864323</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="[FEAT/#82] stroop 게임 UI 구현하기" />
+    <MESSAGE value="[FEAT/#82] ui 수정" />
+    <option name="LAST_COMMIT_MESSAGE" value="[FEAT/#82] ui 수정" />
   </component>
 </project>
