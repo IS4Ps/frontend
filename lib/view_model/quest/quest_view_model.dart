@@ -10,6 +10,10 @@ import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_start_response_model.dart';
 import 'package:frontend/models/quest/n_back_submit_response_model.dart';
 import 'package:frontend/models/quest/n_back_submit_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_start_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_start_response_model.dart';
+import 'package:frontend/models/quest/go_nogo_submit_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_submit_response_model.dart';
 
 
 class QuestViewModel extends ChangeNotifier {
@@ -251,6 +255,90 @@ class QuestViewModel extends ChangeNotifier {
       }
     } catch (e) {
       print("[ViewModel 에러] N-Back 제출 실패: $e");
+      _message = "서버 연결에 실패했어요.";
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Go/No-Go 게임 시작
+  GoNoGoStartResponseModel? _goNoGoData;
+  GoNoGoStartResponseModel? get goNoGoData => _goNoGoData;
+
+  Future<void> startGoNoGoGame({int difficulty = 1, int totalCount = 20}) async {
+    _isLoading = true;
+    _message = "게임 데이터를 불러오는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      final request = GoNoGoStartRequestModel(
+        childId: dynamicChildId,
+        totalCount: totalCount,
+        difficulty: difficulty,
+      );
+
+      // Repository를 통해 API 호출
+      final response = await _repository.startGoNoGoGame(_testToken, request);
+
+      if (response != null) {
+        _goNoGoData = response;
+        _message = "게임 시작!";
+        print("[ViewModel] Go/No-Go 로드 완료: ${response.sessionId}");
+      } else {
+        _goNoGoData = null;
+        _message = "게임 데이터를 가져오지 못했습니다.";
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Go/No-Go 시작 실패: $e");
+      _goNoGoData = null;
+      _message = "서버 연결에 실패했어요.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Go/No-Go 정답 제출
+  GoNoGoSubmitResponseModel? _goNoGoResult;
+  GoNoGoSubmitResponseModel? get goNoGoResult => _goNoGoResult;
+
+  Future<bool> submitGoNoGoGame(List<GoNoGoAnswerModel> userAnswers) async {
+    if (_goNoGoData == null) {
+      _message = "게임 세션이 유효하지 않습니다.";
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _message = "결과를 저장하는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      final request = GoNoGoSubmitRequestModel(
+        childId: dynamicChildId,
+        sessionId: _goNoGoData!.sessionId,
+        answers: userAnswers,
+      );
+
+      final response = await _repository.submitGoNoGoGame(_testToken, request);
+
+      if (response != null) {
+        _goNoGoResult = response;
+        _message = "게임 완료! 보상을 획득했습니다.";
+        print("[ViewModel] Go/No-Go 제출 성공: ${response.score}점 획득");
+        return true;
+      } else {
+        _message = "결과 저장에 실패했습니다.";
+        return false;
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Go/No-Go 제출 실패: $e");
       _message = "서버 연결에 실패했어요.";
       return false;
     } finally {
