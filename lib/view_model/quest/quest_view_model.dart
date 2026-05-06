@@ -12,6 +12,8 @@ import 'package:frontend/models/quest/n_back_submit_response_model.dart';
 import 'package:frontend/models/quest/n_back_submit_request_model.dart';
 import 'package:frontend/models/quest/stroop_start_request_model.dart';
 import 'package:frontend/models/quest/stroop_start_response_model.dart';
+import 'package:frontend/models/quest/stroop_submit_request_model.dart';
+import 'package:frontend/models/quest/stroop_submit_response_model.dart';
 
 
 class QuestViewModel extends ChangeNotifier {
@@ -295,6 +297,55 @@ class QuestViewModel extends ChangeNotifier {
       print("[ViewModel 에러] Stroop 시작 실패: $e");
       _stroopData = null;
       _message = "서버 연결에 실패했어요.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // stroop 정답 제출
+  StroopSubmitResponseModel? _stroopResult;
+  StroopSubmitResponseModel? get stroopResult => _stroopResult;
+
+  /// [추가] 스트룹 게임 결과 제출 메서드
+  Future<bool> submitStroopGame(List<StroopAnswerModel> userAnswers) async {
+    // 시작 API를 통해 받은 데이터(sessionId)가 없으면 진행 불가
+    if (_stroopData == null) {
+      _message = "게임 세션이 유효하지 않습니다.";
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _message = "결과를 저장하는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      // image_b01933.png 명세에 따른 요청 객체 생성
+      final request = StroopSubmitRequestModel(
+        childId: dynamicChildId,
+        sessionId: _stroopData!.sessionId, // 시작 시 받은 sessionId 사용
+        answers: userAnswers,
+      );
+
+      // Repository를 통해 API 호출
+      final response = await _repository.submitStroopGame(_testToken, request);
+
+      if (response != null) {
+        _stroopResult = response;
+        _message = "게임 완료! 보상을 획득했습니다.";
+        print("[ViewModel] Stroop 결과 제출 성공: ${response.score}점");
+        return true;
+      } else {
+        _message = "결과 저장에 실패했습니다.";
+        return false;
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Stroop 제출 실패: $e");
+      _message = "서버 연결에 실패했어요.";
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

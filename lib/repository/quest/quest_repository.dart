@@ -11,6 +11,8 @@ import 'package:frontend/models/quest/n_back_submit_request_model.dart';
 import 'package:frontend/models/quest/n_back_submit_response_model.dart';
 import 'package:frontend/models/quest/stroop_start_request_model.dart';
 import 'package:frontend/models/quest/stroop_start_response_model.dart';
+import 'package:frontend/models/quest/stroop_submit_request_model.dart';
+import 'package:frontend/models/quest/stroop_submit_response_model.dart';
 
 
 class QuestRepository {
@@ -234,6 +236,34 @@ class QuestRepository {
       }
     } catch (e, stacktrace) {
       print("[Repository 에러] startStroopGame 상세: $e");
+      print("[Repository 스택트레이스] $stacktrace");
+      return null;
+    }
+  }
+
+  // stroop 정답 제출
+  Future<StroopSubmitResponseModel?> submitStroopGame(
+      String token, StroopSubmitRequestModel request) async {
+    try {
+      print("[Repository] Stroop 정답 제출 시작 (sessionId: ${request.sessionId})");
+
+      final response = await _apiService.submitStroopGame(token, request);
+
+      print("[Repository] 응답 코드: ${response.statusCode}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // 한글 깨짐 방지 디코딩 적용
+        final String decodedBody = utf8.decode(response.bodyBytes);
+        final Map<String, dynamic> jsonData = jsonDecode(decodedBody);
+
+        print("[Repository] Stroop 결과 분석 완료");
+        return StroopSubmitResponseModel.fromJson(jsonData);
+      } else {
+        print("[Repository] Stroop 제출 실패 서버 에러: ${response.body}");
+        return null;
+      }
+    } catch (e, stacktrace) {
+      print("[Repository 에러] submitStroopGame 상세: $e");
       print("[Repository 스택트레이스] $stacktrace");
       return null;
     }

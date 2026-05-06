@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_model/quest/quest_view_model.dart';
+import 'package:frontend/models/quest/stroop_submit_request_model.dart';
 
 class StroopGameScreen extends StatefulWidget {
   const StroopGameScreen({super.key});
@@ -12,13 +12,18 @@ class StroopGameScreen extends StatefulWidget {
 }
 
 class _StroopGameScreenState extends State<StroopGameScreen> {
-  // 게임 상태 관리
   bool isGameFinished = false;
   int _remainingTime = 50;
   final int _totalStartTime = 50;
   Timer? _countdownTimer;
 
-  // 문제 관련 데이터 (Stroop 효과용)
+  final List<StroopAnswerModel> _userAnswers = [];
+  DateTime? _questionStartTime;
+  int _currentQuestionIndex = 1;
+
+  // 백엔드 기준 문항 수 설정
+  final int _maxQuestions = 20;
+
   final Map<String, Color> gameColors = {
     '빨강': const Color(0xFFEF5350),
     '파랑': const Color(0xFF42A5F5),
@@ -26,15 +31,16 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     '노랑': const Color(0xFFFFEB3B),
   };
 
-  late String currentText;
-  late Color currentTextColor;
-  int score = 100;
+  late String currentText = "";
+  late Color currentTextColor = Colors.black;
 
   @override
   void initState() {
     super.initState();
-    _generateNewQuestion();
-    _startTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadQuestionFromServer();
+      _startTimer();
+    });
   }
 
   @override
@@ -49,27 +55,66 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
       if (_remainingTime > 0) {
         setState(() => _remainingTime--);
       } else {
+        // 시간 초과 시 종료
         _finishGame();
       }
     });
   }
 
-  void _generateNewQuestion() {
-    final names = gameColors.keys.toList();
-    final random = Random();
-    setState(() {
-      currentText = names[random.nextInt(names.length)];
-      String colorName;
-      do {
-        colorName = names[random.nextInt(names.length)];
-      } while (colorName == currentText);
-      currentTextColor = gameColors[colorName]!;
-    });
+  void _loadQuestionFromServer() {
+    final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+    final stimuli = viewModel.stroopData?.stimuli;
+
+    // 현재 인덱스가 최대 문항 수를 넘지 않았을 때만 로드
+    if (stimuli != null && stimuli.isNotEmpty && _currentQuestionIndex <= _maxQuestions) {
+      final indexToLoad = (_currentQuestionIndex - 1) % stimuli.length;
+      final currentStimulus = stimuli[indexToLoad];
+
+      setState(() {
+        currentText = currentStimulus.word;
+        currentTextColor = gameColors[currentStimulus.inkColor] ?? Colors.black;
+        _questionStartTime = DateTime.now();
+      });
+    }
   }
 
-  void _finishGame() {
+  void _handleAnswer(String selectedLabel) {
+    if (_questionStartTime == null || isGameFinished) return;
+
+    final responseTime = DateTime.now().difference(_questionStartTime!).inMilliseconds;
+
+    _userAnswers.add(StroopAnswerModel(
+      index: _currentQuestionIndex,
+      selectedColor: selectedLabel,
+      responseTime: responseTime,
+    ));
+
+    // 20번째 문제를 풀었으면 즉시 종료
+    if (_currentQuestionIndex >= _maxQuestions) {
+      _finishGame();
+    } else {
+      _currentQuestionIndex++;
+      _loadQuestionFromServer();
+    }
+  }
+
+  void _finishGame() async {
+    if (isGameFinished) return; // 중복 실행 방지
+
     _countdownTimer?.cancel();
-    if (mounted) setState(() => isGameFinished = true);
+    final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+
+    bool success = await viewModel.submitStroopGame(_userAnswers);
+
+    if (mounted) {
+      if (success) {
+        setState(() => isGameFinished = true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(viewModel.message)),
+        );
+      }
+    }
   }
 
   @override
@@ -88,7 +133,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
       ),
       body: SafeArea(
         child: viewModel.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(color: Colors.black))
             : AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: isGameFinished
@@ -99,7 +144,6 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     );
   }
 
-  // --- 메인 게임 UI ---
   Widget _buildGameUI() {
     return Column(
       children: [
@@ -107,12 +151,11 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
         const Text('단어 색깔 구별하기', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
         const SizedBox(height: 15),
 
-        // 타이머 섹션
         SizedBox(
           width: 320,
           child: Column(
             children: [
-              Text('시간 : $_remainingTime초', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text('남은 시간 : $_remainingTime초', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
@@ -141,7 +184,6 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
             ),
             child: Column(
               children: [
-                // 카드 헤더
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -150,12 +192,10 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
                       child: const Text('그만하기', style: TextStyle(color: Colors.grey, fontSize: 14)),
                     ),
                     const Text('Level - 1', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text('점수 : $score', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('문항 : $_currentQuestionIndex / $_maxQuestions', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                // 문제 영역
                 Container(
                   width: double.infinity,
                   height: 160,
@@ -172,8 +212,6 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
                   ),
                 ),
                 const SizedBox(height: 35),
-
-                // 강조된 안내 텍스트 (RichText 적용)
                 RichText(
                   text: TextSpan(
                     style: const TextStyle(fontSize: 12, color: Colors.black54),
@@ -181,18 +219,13 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
                       const TextSpan(text: '아래에서 '),
                       TextSpan(
                         text: '글자 색',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900, // 가장 진하게
-                          color: Colors.black.withOpacity(0.85), // 더 어두운 색상
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black.withOpacity(0.85)),
                       ),
                       const TextSpan(text: '에 해당하는 칸을 누르세요'),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // 정답 선택 버튼 (2x2 Grid)
                 GridView.count(
                   shrinkWrap: true,
                   crossAxisCount: 2,
@@ -210,8 +243,10 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     );
   }
 
-  // --- 결과 UI ---
   Widget _buildResultUI(QuestViewModel viewModel) {
+    final result = viewModel.stroopResult;
+    if (result == null) return const Center(child: Text("결과 데이터 로드 중..."));
+
     return Center(
       child: SingleChildScrollView(
         child: Column(
@@ -230,56 +265,48 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
                 children: [
                   const Text('미니게임 성공!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-
                   _buildGrayBox(
                     child: Column(
                       children: [
                         const Text('게임 결과', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                        const Text('수고하셨습니다. 총 n문항에 대한 결과입니다.', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                        // 서버 응답값 totalCount를 신뢰하여 출력
+                        Text(
+                          '수고하셨습니다. 총 ${result.totalCount}문항에 대한 결과입니다.',
+                          style: const TextStyle(fontSize: 11, color: Colors.black54),
+                        ),
                         const SizedBox(height: 15),
-                        _resultRow('맞은 개수', 'n개', color: Colors.green),
-                        _resultRow('틀린 개수', 'n개', color: Colors.red),
-                        _resultRow('정확도', 'n%'),
-                        _resultRow('점수', 'n점'),
+                        _resultRow('맞은 개수', '${result.correctCount}개', color: Colors.green),
+                        _resultRow('틀린 개수', '${result.wrongCount}개', color: Colors.red),
+                        _resultRow('정확도', '${result.accuracy.toStringAsFixed(1)}%'),
+                        _resultRow('점수', '${result.score}점'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 15),
-
                   Row(
                     children: [
-                      Expanded(child: _buildGrayBox(child: _buildInfoItem('평균 반응속도', '350ms'))),
+                      Expanded(child: _buildGrayBox(child: _buildInfoItem('평균 반응속도', '${result.avgResponseTime.toInt()}ms'))),
                       const SizedBox(width: 15),
-                      Expanded(child: _buildGrayBox(child: _buildInfoItem('획득 보상', '+n gold\n+n exp'))),
+                      Expanded(child: _buildGrayBox(child: _buildInfoItem('획득 보상', '+${result.rewardGold} gold\n+${result.statCreativityGain} creativity'))),
                     ],
                   ),
                   const SizedBox(height: 25),
-
-                  // 1. 난이도 올려서 다시하기 (검정 버튼)
-                  _actionButton('난이도 올려서 다시하기', Colors.black, () {
-                    // 난이도 조절 로직 추가 지점
-                  }),
+                  _actionButton('난이도 올려서 다시하기', Colors.black, () {}),
                   const SizedBox(height: 12),
-
-                  // 2. 지금 난이도로 다시하기 (파란 버튼)
                   _actionButton('지금 난이도로 다시하기', const Color(0xFF5C92E1), () {
                     setState(() {
                       isGameFinished = false;
                       _remainingTime = _totalStartTime;
-                      score = 100;
+                      _userAnswers.clear();
+                      _currentQuestionIndex = 1;
                     });
                     _startTimer();
-                    _generateNewQuestion();
+                    _loadQuestionFromServer();
                   }),
                   const SizedBox(height: 8),
-
-                  // 3. 홈으로 돌아가기 (텍스트 버튼)
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                        '홈 화면으로 돌아가기',
-                        style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500)
-                    ),
+                    child: const Text('홈 화면으로 돌아가기', style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500)),
                   )
                 ],
               ),
@@ -290,10 +317,10 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     );
   }
 
-  // --- 헬퍼 위젯 ---
+  // 버튼 및 기타 헬퍼 함수는 동일
   Widget _buildColorSelectionBtn(String label, Color color) {
     return ElevatedButton(
-      onPressed: _generateNewQuestion,
+      onPressed: () => _handleAnswer(label),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -316,10 +343,7 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 15),
-      decoration: BoxDecoration(
-        color: const Color(0xFFECF2F8),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFECF2F8), borderRadius: BorderRadius.circular(20)),
       child: child,
     );
   }

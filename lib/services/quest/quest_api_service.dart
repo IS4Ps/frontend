@@ -4,6 +4,7 @@ import 'package:frontend/models/quest/feeling_request_model.dart'; // import 확
 import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_submit_request_model.dart';
 import 'package:frontend/models/quest/stroop_start_request_model.dart';
+import 'package:frontend/models/quest/stroop_submit_request_model.dart';
 
 
 class QuestApiService {
@@ -113,6 +114,19 @@ class QuestApiService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(request.toJson()), // childId, totalCount, difficulty 포함
+    );
+  }
+
+  // stroop 정답 제출
+  Future<http.Response> submitStroopGame(String token, StroopSubmitRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/stroop/submit');
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()),
     );
   }
 }
