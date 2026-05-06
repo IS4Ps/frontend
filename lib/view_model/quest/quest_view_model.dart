@@ -10,6 +10,8 @@ import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_start_response_model.dart';
 import 'package:frontend/models/quest/n_back_submit_response_model.dart';
 import 'package:frontend/models/quest/n_back_submit_request_model.dart';
+import 'package:frontend/models/quest/stroop_start_request_model.dart';
+import 'package:frontend/models/quest/stroop_start_response_model.dart';
 
 
 class QuestViewModel extends ChangeNotifier {
@@ -253,6 +255,46 @@ class QuestViewModel extends ChangeNotifier {
       print("[ViewModel 에러] N-Back 제출 실패: $e");
       _message = "서버 연결에 실패했어요.";
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // stroop 게임 시작
+  StroopStartResponseModel? _stroopData;
+  StroopStartResponseModel? get stroopData => _stroopData;
+
+  Future<void> startStroopGame({int totalCount = 20, int difficulty = 1}) async {
+    _isLoading = true;
+    _message = "스트룹 게임 데이터를 불러오는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      // 모델 생성
+      final request = StroopStartRequestModel(
+        childId: dynamicChildId,
+        totalCount: totalCount,
+        difficulty: difficulty,
+      );
+
+      // Repository 호출
+      final response = await _repository.startStroopGame(_testToken, request);
+
+      if (response != null) {
+        _stroopData = response;
+        _message = "스트룹 게임 시작!";
+        print("[ViewModel] Stroop 로드 완료: ${response.sessionId}");
+      } else {
+        _stroopData = null;
+        _message = "게임 데이터를 가져오지 못했습니다.";
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Stroop 시작 실패: $e");
+      _stroopData = null;
+      _message = "서버 연결에 실패했어요.";
     } finally {
       _isLoading = false;
       notifyListeners();
