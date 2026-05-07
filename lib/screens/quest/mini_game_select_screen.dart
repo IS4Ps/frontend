@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'n_back_game_screen.dart';
 import 'package:frontend/view_model/quest/quest_view_model.dart';
 import 'package:provider/provider.dart';
+import 'stroop_game_screen.dart';
+import 'go_nogo_game_screen.dart';
+
 
 class MiniGameSelectScreen extends StatelessWidget {
   const MiniGameSelectScreen({super.key});
@@ -64,8 +67,25 @@ class MiniGameSelectScreen extends StatelessWidget {
                   subtitle: "알맞은 도형이 나오면 클릭해요!",
                   icon: Icons.traffic_outlined,
                   gradient: [const Color(0xFF8CD85A), const Color(0xFFB5E385)], // 초록색 계열
-                  onTap: () {
-                    // TODO: Go/No-Go 게임 연결
+                  onTap: () async {
+                    final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+
+                    // Go/No-Go 게임 시작 API 호출 (난이도 1, 총 20문항 예시)
+                    await viewModel.startGoNoGoGame(difficulty: 1, totalCount: 20);
+
+                    // 데이터 로드 성공 여부 확인
+                    if (viewModel.goNoGoData != null) {
+                      // 성공 시 게임 화면으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const GoNogoGameScreen()),
+                      );
+                    } else {
+                      // 실패 시 스낵바 등으로 에러 메시지 표시
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(viewModel.message)),
+                      );
+                    }
                   },
                 ),
                 const SizedBox(height: 20),
@@ -75,9 +95,25 @@ class MiniGameSelectScreen extends StatelessWidget {
                   title: "단어 색깔 구별하기",
                   subtitle: "단어의 색을 골라주세요!",
                   icon: Icons.visibility_outlined,
-                  gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)], // 보라/분홍 계열
-                  onTap: () {
-                    // TODO: 스트룹 게임 연결
+                  gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)],
+                  onTap: () async {
+                    final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+
+                    // N-Back처럼 API 호출을 먼저 수행합니다. (총 20문제, 난이도 1)
+                    await viewModel.startStroopGame(totalCount: 20, difficulty: 1);
+
+                    if (viewModel.stroopData != null) {
+                      // 데이터 로드 성공 시 스트룹 게임 화면으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const StroopGameScreen()),
+                      );
+                    } else {
+                      // 실패 시 에러 메시지 표시
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(viewModel.message)),
+                      );
+                    }
                   },
                 ),
               ],
