@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'n_back_game_screen.dart';
 import 'package:frontend/view_model/quest/quest_view_model.dart';
 import 'package:provider/provider.dart';
-import 'go_nogo_game_screen.dart';
 import 'stroop_game_screen.dart';
+import 'go_nogo_game_screen.dart';
 
 
 class MiniGameSelectScreen extends StatelessWidget {
@@ -95,13 +95,25 @@ class MiniGameSelectScreen extends StatelessWidget {
                   title: "단어 색깔 구별하기",
                   subtitle: "단어의 색을 골라주세요!",
                   icon: Icons.visibility_outlined,
-                  gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)], // 보라/분홍 계열
-                  onTap: () {
-                    // Navigator 코드는 반드시 onTap 콜백 함수 내부에 있어야 합니다.
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StroopGameScreen()),
-                    );
+                  gradient: [const Color(0xFFD644FC), const Color(0xFFF17AC8)],
+                  onTap: () async {
+                    final viewModel = Provider.of<QuestViewModel>(context, listen: false);
+
+                    // N-Back처럼 API 호출을 먼저 수행합니다. (총 20문제, 난이도 1)
+                    await viewModel.startStroopGame(totalCount: 20, difficulty: 1);
+
+                    if (viewModel.stroopData != null) {
+                      // 데이터 로드 성공 시 스트룹 게임 화면으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const StroopGameScreen()),
+                      );
+                    } else {
+                      // 실패 시 에러 메시지 표시
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(viewModel.message)),
+                      );
+                    }
                   },
                 ),
               ],

@@ -108,47 +108,59 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     final result = viewModel.goNoGoResult;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
+      backgroundColor: const Color(0xFFECF2F8), // 배경색을 Stroop과 통일
       body: SafeArea(
         child: data == null
-            ? const Center(child: CircularProgressIndicator())
-            : isGameFinished
-            ? _buildResultUI(result)
-            : _buildGameUI(data),
+            ? const Center(child: CircularProgressIndicator(color: Colors.black))
+            : AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: isGameFinished
+              ? _buildResultUI(result)
+              : _buildGameUI(data),
+        ),
       ),
     );
   }
 
+  // --- 게임 중 UI ---
   Widget _buildGameUI(dynamic data) {
     final currentStimulus = data.stimuli[currentIndex];
 
     return Column(
       children: [
         const SizedBox(height: 40),
-        const Text('Go/No-Go', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
+        const Text('Go/No-Go', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
         _buildTimerBar(),
         const SizedBox(height: 30),
         Center(
           child: Container(
-            width: 320,
-            height: 480,
+            width: 340,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(25),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
             ),
             child: Column(
               children: [
                 _buildGameHeader(),
-                Expanded(
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F3F5),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: const Color(0xFFDEE2E6)),
+                  ),
                   child: Center(
                     child: isShowingStimulus
                         ? _getStimulusWidget(currentStimulus.image)
                         : const SizedBox.shrink(),
                   ),
                 ),
+                const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
                     if (isShowingStimulus && userAnswers.length <= currentIndex && stimulusStartTime != null) {
@@ -171,43 +183,34 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     );
   }
 
+  // --- 결과 UI: 버튼 추가 및 레이아웃 수정 ---
   Widget _buildResultUI(dynamic result) {
     if (result == null) return const Center(child: CircularProgressIndicator());
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 10),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ),
-          const Text('Go/No-Go', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          Center(
-            child: Container(
-              width: 320,
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const Text('Go/No-Go', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 25),
+            Container(
+              width: 340,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
               ),
               child: Column(
                 children: [
-                  const Text('미니게임 성공!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
+                  const Text('미니게임 성공!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
                   _buildGrayBox(
                     child: Column(
                       children: [
-                        const Text('게임 결과', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('수고하셨습니다. 총 ${result.totalCount}문항에 대한 결과입니다.', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                        const SizedBox(height: 10),
+                        const Text('게임 결과', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text('수고하셨습니다. 총 ${result.totalCount}문항에 대한 결과입니다.', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                        const SizedBox(height: 15),
                         _resultRow('맞은 개수', '${result.correctCount}개', color: Colors.green),
                         _resultRow('틀린 개수', '${result.wrongCount}개', color: Colors.red),
                         _resultRow('정확도', '${result.accuracy}%'),
@@ -215,37 +218,43 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 15),
                   Row(
                     children: [
                       Expanded(
                         child: _buildGrayBox(
                           child: Column(
                             children: [
-                              const Text('평균 반응속도', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 10),
-                              Text('${result.avgResponseTime.toInt()}ms', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                              const Text('평균 반응속도', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              Text('${result.avgResponseTime.toInt()}ms', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 15),
                       Expanded(
                         child: _buildGrayBox(
                           child: Column(
                             children: [
-                              const Text('획득 보상', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 10),
-                              Text('+${result.rewardGold} gold', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              Text('+${result.statStrengthGain} strength', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                              const Text('획득 보상', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              Text('+${result.rewardGold} gold', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                              Text('+${result.statStrengthGain} strength', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  _actionButton('지금 난이도로 다시하기', const Color(0xFF5689D7), () {
+                  const SizedBox(height: 25),
+
+                  // ★ 버튼 2개(검은색/파란색)로 수정
+                  _actionButton('난이도 올려서 다시하기', Colors.black, () {
+                    // 난이도 상승 로직 (필요시 구현)
+                  }),
+                  const SizedBox(height: 12),
+                  _actionButton('지금 난이도로 다시하기', const Color(0xFF5C92E1), () {
                     if (mounted) {
                       setState(() {
                         isGameFinished = false;
@@ -257,25 +266,27 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
                       _startSequence();
                     }
                   }),
+                  const SizedBox(height: 8),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('홈 화면으로 돌아가기', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    child: const Text('홈 화면으로 돌아가기', style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500)),
                   )
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // --- 헬퍼 위젯들 ---
   Widget _buildTimerBar() {
     return SizedBox(
       width: 320,
       child: Column(
         children: [
-          Text('시간 : $_remainingTime초', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text('남은 시간 : $_remainingTime초', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -298,27 +309,27 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
       children: [
         GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: const Text('그만하기', style: TextStyle(color: Colors.grey, fontWeight : FontWeight.bold, fontSize: 13)),
+          child: const Text('그만하기', style: TextStyle(color: Colors.grey, fontSize: 14)),
         ),
         const Column(
           children: [
             Text('Level - 1', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             Text(
                 '(초록 원이 나오면 터치!)',
-                style: TextStyle(fontSize: 12, color: Colors.black, fontWeight: FontWeight.bold)
+                style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w700)
             ),
           ],
         ),
-        const Text('점수 : 100', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const Text('점수 : 0', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       ],
     );
   }
 
   ButtonStyle _buttonStyle() {
     return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF5689D7),
+      backgroundColor: const Color(0xFF5C92E1),
       foregroundColor: Colors.white,
-      minimumSize: const Size(double.infinity, 65),
+      minimumSize: const Size(double.infinity, 60),
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
     );
@@ -327,30 +338,30 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
   Widget _getStimulusWidget(String imageName) {
     switch (imageName) {
       case 'monster_green':
-        return const Icon(Icons.sentiment_very_satisfied, size: 120, color: Colors.green);
+        return const Icon(Icons.sentiment_very_satisfied, size: 140, color: Colors.green);
       case 'bomb_red':
-        return const Icon(Icons.dangerous, size: 120, color: Colors.red);
+        return const Icon(Icons.dangerous, size: 140, color: Colors.red);
       default:
-        return const Icon(Icons.help_outline, size: 120, color: Colors.grey);
+        return const Icon(Icons.help_outline, size: 140, color: Colors.grey);
     }
   }
 
   Widget _buildGrayBox({required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFFE9ECEF), borderRadius: BorderRadius.circular(15)),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 15),
+      decoration: BoxDecoration(color: const Color(0xFFECF2F8), borderRadius: BorderRadius.circular(20)),
       child: child,
     );
   }
 
   Widget _resultRow(String label, String value, {Color? color}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          Text('$label : ', style: const TextStyle(fontSize: 13, color: Colors.black54)),
           Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
@@ -358,15 +369,19 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
   }
 
   Widget _actionButton(String text, Color bgColor, VoidCallback onTap) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bgColor,
-        minimumSize: const Size(double.infinity, 55),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        elevation: 0,
+    return SizedBox(
+      width: double.infinity,
+      height: 58,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          elevation: 0,
+        ),
+        child: Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),
-      child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     );
   }
 }
