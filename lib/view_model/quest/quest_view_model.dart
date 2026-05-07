@@ -8,6 +8,17 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/models/quest/equipped_item_model.dart';
 import 'package:frontend/models/quest/n_back_start_request_model.dart';
 import 'package:frontend/models/quest/n_back_start_response_model.dart';
+import 'package:frontend/models/quest/n_back_submit_response_model.dart';
+import 'package:frontend/models/quest/n_back_submit_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_start_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_start_response_model.dart';
+import 'package:frontend/models/quest/go_nogo_submit_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_submit_response_model.dart';
+import 'package:frontend/models/quest/stroop_start_request_model.dart';
+import 'package:frontend/models/quest/stroop_start_response_model.dart';
+import 'package:frontend/models/quest/stroop_submit_request_model.dart';
+import 'package:frontend/models/quest/stroop_submit_response_model.dart';
+
 
 class QuestViewModel extends ChangeNotifier {
   final QuestRepository _repository = QuestRepository();
@@ -202,6 +213,227 @@ class QuestViewModel extends ChangeNotifier {
       print("[ViewModel 에러] N-Back 시작 실패: $e");
       _nBackData = null;
       _message = "서버 연결에 실패했어요.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // N-Back 게임 결과
+  NBackSubmitResponseModel? _nBackResult;
+  NBackSubmitResponseModel? get nBackResult => _nBackResult;
+
+  Future<bool> submitNBackGame(List<NBackAnswerModel> userAnswers) async {
+    // 시작 API를 통해 받은 데이터가 없으면 진행 불가
+    if (_nBackData == null) {
+      _message = "게임 세션이 유효하지 않습니다.";
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _message = "결과를 저장하는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      // 명세서에 따른 요청 객체 생성
+      final request = NBackSubmitRequestModel(
+        childId: dynamicChildId,
+        sessionId: _nBackData!.sessionId, // 시작 시 받은 sessionId 필수 포함
+        answers: userAnswers,
+      );
+
+      // Repository를 통해 API 호출 (NBackSubmitResponseModel 반환 가정)
+      final response = await _repository.submitNBackGame(_testToken, request);
+
+      if (response != null) {
+        _nBackResult = response;
+        _message = "게임 완료! 보상을 획득했습니다.";
+        print("[ViewModel] N-Back 결과 제출 성공: ${response.score}점");
+        return true;
+      } else {
+        _message = "결과 저장에 실패했습니다.";
+        return false;
+      }
+    } catch (e) {
+      print("[ViewModel 에러] N-Back 제출 실패: $e");
+      _message = "서버 연결에 실패했어요.";
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Go/No-Go 게임 시작
+  GoNoGoStartResponseModel? _goNoGoData;
+  GoNoGoStartResponseModel? get goNoGoData => _goNoGoData;
+
+  Future<void> startGoNoGoGame({int difficulty = 1, int totalCount = 20}) async {
+    _isLoading = true;
+    _message = "게임 데이터를 불러오는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      final request = GoNoGoStartRequestModel(
+        childId: dynamicChildId,
+        totalCount: totalCount,
+        difficulty: difficulty,
+      );
+
+      // Repository를 통해 API 호출
+      final response = await _repository.startGoNoGoGame(_testToken, request);
+
+      if (response != null) {
+        _goNoGoData = response;
+        _message = "게임 시작!";
+        print("[ViewModel] Go/No-Go 로드 완료: ${response.sessionId}");
+      } else {
+        _goNoGoData = null;
+        _message = "게임 데이터를 가져오지 못했습니다.";
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Go/No-Go 시작 실패: $e");
+      _goNoGoData = null;
+      _message = "서버 연결에 실패했어요.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Go/No-Go 정답 제출
+  GoNoGoSubmitResponseModel? _goNoGoResult;
+  GoNoGoSubmitResponseModel? get goNoGoResult => _goNoGoResult;
+
+  Future<bool> submitGoNoGoGame(List<GoNoGoAnswerModel> userAnswers) async {
+    if (_goNoGoData == null) {
+      _message = "게임 세션이 유효하지 않습니다.";
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _message = "결과를 저장하는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      final request = GoNoGoSubmitRequestModel(
+        childId: dynamicChildId,
+        sessionId: _goNoGoData!.sessionId,
+        answers: userAnswers,
+      );
+
+      final response = await _repository.submitGoNoGoGame(_testToken, request);
+
+      if (response != null) {
+        _goNoGoResult = response;
+        _message = "게임 완료! 보상을 획득했습니다.";
+        print("[ViewModel] Go/No-Go 제출 성공: ${response.score}점 획득");
+        return true;
+      } else {
+        _message = "결과 저장에 실패했습니다.";
+        return false;
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Go/No-Go 제출 실패: $e");
+      _message = "서버 연결에 실패했어요.";
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // stroop 게임 시작
+  StroopStartResponseModel? _stroopData;
+  StroopStartResponseModel? get stroopData => _stroopData;
+
+  Future<void> startStroopGame({int totalCount = 20, int difficulty = 1}) async {
+    _isLoading = true;
+    _message = "스트룹 게임 데이터를 불러오는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      // 모델 생성
+      final request = StroopStartRequestModel(
+        childId: dynamicChildId,
+        totalCount: totalCount,
+        difficulty: difficulty,
+      );
+
+      // Repository 호출
+      final response = await _repository.startStroopGame(_testToken, request);
+
+      if (response != null) {
+        _stroopData = response;
+        _message = "스트룹 게임 시작!";
+        print("[ViewModel] Stroop 로드 완료: ${response.sessionId}");
+      } else {
+        _stroopData = null;
+        _message = "게임 데이터를 가져오지 못했습니다.";
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Stroop 시작 실패: $e");
+      _stroopData = null;
+      _message = "서버 연결에 실패했어요.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // stroop 정답 제출
+  StroopSubmitResponseModel? _stroopResult;
+  StroopSubmitResponseModel? get stroopResult => _stroopResult;
+
+  /// [추가] 스트룹 게임 결과 제출 메서드
+  Future<bool> submitStroopGame(List<StroopAnswerModel> userAnswers) async {
+    // 시작 API를 통해 받은 데이터(sessionId)가 없으면 진행 불가
+    if (_stroopData == null) {
+      _message = "게임 세션이 유효하지 않습니다.";
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _message = "결과를 저장하는 중...";
+    notifyListeners();
+
+    try {
+      final int dynamicChildId = _getChildIdFromToken(_testToken);
+
+      // image_b01933.png 명세에 따른 요청 객체 생성
+      final request = StroopSubmitRequestModel(
+        childId: dynamicChildId,
+        sessionId: _stroopData!.sessionId, // 시작 시 받은 sessionId 사용
+        answers: userAnswers,
+      );
+
+      // Repository를 통해 API 호출
+      final response = await _repository.submitStroopGame(_testToken, request);
+
+      if (response != null) {
+        _stroopResult = response;
+        _message = "게임 완료! 보상을 획득했습니다.";
+        print("[ViewModel] Stroop 결과 제출 성공: ${response.score}점");
+        return true;
+      } else {
+        _message = "결과 저장에 실패했습니다.";
+        return false;
+      }
+    } catch (e) {
+      print("[ViewModel 에러] Stroop 제출 실패: $e");
+      _message = "서버 연결에 실패했어요.";
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

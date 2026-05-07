@@ -2,6 +2,11 @@ import 'dart:convert'; // jsonEncode를 위해 추가
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/quest/feeling_request_model.dart'; // import 확인!
 import 'package:frontend/models/quest/n_back_start_request_model.dart';
+import 'package:frontend/models/quest/n_back_submit_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_start_request_model.dart';
+import 'package:frontend/models/quest/go_nogo_submit_request_model.dart';
+import 'package:frontend/models/quest/stroop_start_request_model.dart';
+import 'package:frontend/models/quest/stroop_submit_request_model.dart';
 
 class QuestApiService {
   static const String baseUrl = "http://100.27.204.252:8080";
@@ -75,6 +80,75 @@ class QuestApiService {
   Future<http.Response> startNBackGame(String token, NBackStartRequestModel request) async {
     final url = Uri.parse('$baseUrl/api/v1/minigames/n-back/start');
 
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+  }
+
+  // N-Back 정답 제출
+  Future<http.Response> submitNBackGame(String token, NBackSubmitRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/n-back/submit');
+
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+  }
+
+  // Go/No-Go 게임 시작
+  Future<http.Response> startGoNoGoGame(String token, GoNoGoStartRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/go-no-go/start');
+
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+  }
+
+  // Go/No-Go 정답 제출
+  Future<http.Response> submitGoNoGoGame(String token, GoNoGoSubmitRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/go-no-go/submit');
+
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+  }
+
+  // stroop 게임 시작
+  Future<http.Response> startStroopGame(String token, StroopStartRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/stroop/start');
+
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token', // 아이 토큰
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(request.toJson()), // childId, totalCount, difficulty 포함
+    );
+  }
+
+  // stroop 정답 제출
+  Future<http.Response> submitStroopGame(String token, StroopSubmitRequestModel request) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigames/stroop/submit');
     return await http.post(
       url,
       headers: {
