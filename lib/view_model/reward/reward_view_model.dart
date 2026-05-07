@@ -36,29 +36,28 @@ class RewardViewModel extends ChangeNotifier {
     List<OfflineRewardListModel> filtered =
     _allOfflineRewards.where((r) => r.periodType == type).toList();
 
-    // 서버 데이터들을 먼저 리스트로 만듦 (최신순 정렬이 필요하면 여기서 정렬)
     _editingRewards = List.from(filtered);
 
-    // 리스트의 가장 앞(0번 인덱스)에 빈 입력 카드를 추가
+    // 리스트 상단에 새 입력을 위한 빈 카드 추가
     _editingRewards.insert(
       0,
       OfflineRewardListModel(
         rewardId: 0,
         periodType: type,
-        targetPercent: 0,
+        targetDays: 0, // 기본값 0일
         rewardPromiseText: "",
         status: "PENDING",
       ),
     );
   }
 
-  // 단계 추가: 리스트에 새 항목 추가
+  // 단계 추가
   void addRewardStep() {
     _editingRewards.add(
       OfflineRewardListModel(
         rewardId: 0,
         periodType: _isWeekly ? "WEEKLY" : "MONTHLY",
-        targetPercent: 0,
+        targetDays: 0,
         rewardPromiseText: "",
         status: "PENDING",
       ),
@@ -66,16 +65,15 @@ class RewardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 단계 삭제: 특정 인덱스의 항목 제거
+  // 단계 삭제
   void removeRewardStep(int index) {
     if (_editingRewards.length > 1) {
       _editingRewards.removeAt(index);
     } else {
-      // 마지막 남은 카드는 삭제 대신 내용 초기화
       _editingRewards[0] = OfflineRewardListModel(
         rewardId: 0,
         periodType: _isWeekly ? "WEEKLY" : "MONTHLY",
-        targetPercent: 0,
+        targetDays: 0,
         rewardPromiseText: "",
         status: "PENDING",
       );
@@ -83,21 +81,23 @@ class RewardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 데이터 업데이트 (입력 시 호출)
-  void updateRewardEntry(int index, {int? percent, String? text}) {
+  // 핵심 수정: 데이터 업데이트 (percent -> targetDays)
+  void updateRewardEntry(int index, {int? targetDays, String? text}) {
     if (index >= 0 && index < _editingRewards.length) {
       final current = _editingRewards[index];
       _editingRewards[index] = OfflineRewardListModel(
         rewardId: current.rewardId,
         periodType: current.periodType,
-        targetPercent: percent ?? current.targetPercent,
+        targetDays: targetDays ?? current.targetDays, // targetDays 사용
         rewardPromiseText: text ?? current.rewardPromiseText,
         status: current.status,
       );
+      // TextField 입력 중에는 notifyListeners()를 호출하지 않거나
+      // 필터링해서 호출해야 커서 튐 현상을 방지할 수 있습니다.
     }
   }
 
-  // 토큰에서 childId 추출
+  // 토큰 디코딩 로직 (기존과 동일)
   int _getChildIdFromToken(String token) {
     try {
       final parts = token.split('.');
@@ -108,28 +108,22 @@ class RewardViewModel extends ChangeNotifier {
       final Map<String, dynamic> json = jsonDecode(decoded);
       return int.parse(json['sub'].toString());
     } catch (e) {
-      print("토큰 디코딩 에러: $e");
       return 1;
     }
   }
 
-  // 오프라인 보상 목록 조회
+  // 보상 목록 조회
   Future<void> fetchOfflineRewards() async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final int dynamicChildId = _getChildIdFromToken(_testToken);
-      String currentType = _isWeekly ? "WEEKLY(주간)" : "MONTHLY(월간)";
-      print("[ViewModel] 오프라인 보상 목록 로드 시작 (childId: $dynamicChildId, 타입: $currentType)");
-
       final List<OfflineRewardListModel> rewards =
       await _repository.getOfflineRewards(dynamicChildId, _testToken);
 
       _allOfflineRewards = rewards;
       _updateEditingList();
-
-      print("[ViewModel] 보상 목록 로드 완료: ${_editingRewards.length}개 ($currentType 기준)");
     } catch (e) {
       print("[ViewModel 에러] 로드 실패: $e");
       _allOfflineRewards = [];
@@ -140,15 +134,15 @@ class RewardViewModel extends ChangeNotifier {
     }
   }
 
-  // 오프라인 보상 등록
+  // 핵심 수정: 보상 등록 (targetPercent -> targetDays)
   Future<void> saveRewardStep(int index) async {
     if (index < 0 || index >= _editingRewards.length) return;
 
     final reward = _editingRewards[index];
 
-    // 필수 입력값 체크
-    if (reward.rewardPromiseText.isEmpty || reward.targetPercent == 0) {
-      print("[ViewModel] 보상 내용과 달성률을 입력해주세요.");
+    // 필수 입력값 체크 (targetDays가 0보다 커야 함)
+    if (reward.rewardPromiseText.isEmpty || reward.targetDays <= 0) {
+      print("[ViewModel] 보상 내용과 목표 일수를 정확히 입력해주세요.");
       return;
     }
 
@@ -158,25 +152,18 @@ class RewardViewModel extends ChangeNotifier {
     try {
       final int dynamicChildId = _getChildIdFromToken(_testToken);
 
-      // API 명세에 따른 요청 모델 생성
+      // API 명세서 구조에 맞게 RequestModel 생성
       final request = OfflineRewardRequestModel(
         childId: dynamicChildId,
         periodType: _isWeekly ? "WEEKLY" : "MONTHLY",
-        targetPercent: reward.targetPercent,
+        targetDays: reward.targetDays, // targetDays로 전달
         rewardPromiseText: reward.rewardPromiseText,
       );
 
-      print("[ViewModel] 오프라인 보상 등록 시작: ${request.toJson()}");
-
-      // Repository를 통해 API 호출 (레포지토리에 registerOfflineReward 함수가 구현되어 있어야 함)
       final bool isSuccess = await _repository.registerOfflineReward(_testToken, request);
 
       if (isSuccess) {
-        print("[ViewModel] 보상 등록 성공");
-        // 등록 성공 후 최신 목록을 다시 불러와 화면을 동기화합니다.
-        await fetchOfflineRewards();
-      } else {
-        print("[ViewModel] 보상 등록 실패");
+        await fetchOfflineRewards(); // 목록 새로고침
       }
     } catch (e) {
       print("[ViewModel 에러] 등록 중 오류 발생: $e");

@@ -3,13 +3,13 @@
 class OfflineRewardRequestModel {
   final int childId;
   final String periodType; // "WEEKLY" 또는 "MONTHLY"
-  final int targetPercent;
+  final int targetDays;
   final String rewardPromiseText;
 
   OfflineRewardRequestModel({
     required this.childId,
     required this.periodType,
-    required this.targetPercent,
+    required this.targetDays,
     required this.rewardPromiseText,
   });
 
@@ -18,7 +18,7 @@ class OfflineRewardRequestModel {
     return {
       "childId": childId,
       "periodType": periodType,
-      "targetPercent": targetPercent,
+      "targetDays": targetDays,
       "rewardPromiseText": rewardPromiseText,
     };
   }
