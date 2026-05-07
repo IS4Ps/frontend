@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'routine_date_selector.dart';
+import 'package:provider/provider.dart';
+import '../../view_model/routine/preset_view_model.dart';
+import '../../view_model/routine/big_task_view_model.dart';
 
 Future<void> showRoutineSaveModal(
     BuildContext context, {
@@ -138,8 +141,23 @@ Future<void> showRoutineSaveModal(
                       SizedBox(
                         width: 110,
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
+                          onTap: () async {
+                            if (controller.text.isEmpty) return;
+
+                            final presetViewModel = Provider.of<PresetViewModel>(context, listen: false);
+                            final bigTaskViewModel = Provider.of<BigTaskViewModel>(context, listen: false);
+
+                            // 현재 빅태스크 ID 목록 가져오기
+                            final bigTaskIds = bigTaskViewModel.bigTasks.map((e) => e.bigTaskId).toList();
+
+                            final success = await presetViewModel.createPreset(
+                              title: controller.text,
+                              bigTaskIds: bigTaskIds,
+                            );
+
+                            if (success && context.mounted) {
+                              Navigator.pop(context);
+                            }
                           },
                           child: Container(
                             height: 28,
