@@ -457,13 +457,22 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                               );
 
                               if (success && context.mounted) {
+                                // 빅태스크 생성 후 미션 생성
+                                final now = DateTime.now();
+                                final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
+
+                                await viewModel.createMission(
+                                  bigTaskId: viewModel.bigTasks.last.bigTaskId,
+                                  childId: 5,
+                                  date: date,
+                                  startTime: _startTimeController.text.isEmpty ? '8:30' : _startTimeController.text,
+                                  endTime: _endTimeController.text.isEmpty ? '9:30' : _endTimeController.text,
+                                );
+
                                 _bigTaskController.clear();
                                 _startTimeController.clear();
                                 _endTimeController.clear();
                                 setState(() => _subTasks = []);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('저장됐어요!')),
-                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(
