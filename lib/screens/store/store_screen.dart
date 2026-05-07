@@ -143,7 +143,11 @@ class _StoreScreenState extends State<StoreScreen> {
                 item.isEquipped,
                 _activeIndex == index,
                     () => setState(() => _activeIndex = index),
-                    () => setState(() => _activeIndex = null),
+                    () async {
+                  await Provider.of<InventoryViewModel>(context, listen: false)
+                      .equipItem(item.inventoryId);
+                  setState(() => _activeIndex = null);
+                },
               );
             },
           ),
@@ -209,13 +213,13 @@ class _StoreScreenState extends State<StoreScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.redAccent,
+                    color: isEquipped ? Colors.redAccent : const Color(0xFF1586E2), // 장착 중이면 빨강, 아니면 파랑
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text(
-                    "장착 해제",
+                  child: Text(
+                    isEquipped ? "장착 해제" : "장착", // 장착 중이면 해제, 아니면 장착
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               )
