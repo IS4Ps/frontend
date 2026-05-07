@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'routine_date_selector.dart';
 import 'routine_load_modal.dart';
 import 'routine_save_modal.dart';
+import '../../view_model/routine/big_task_view_model.dart';
 
 class RoutineSettingScreen extends StatefulWidget {
   const RoutineSettingScreen({super.key});
@@ -14,7 +16,16 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
   bool isFullCalendarOpen = false;
   int selectedDay = 1;
   final TextEditingController _subTaskController = TextEditingController();
+  final TextEditingController _bigTaskController = TextEditingController();
+  final TextEditingController _startTimeController = TextEditingController();
+  final TextEditingController _endTimeController = TextEditingController();
   List<String> _subTasks = [];
+  String _selectedTag = '';
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +39,6 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── 상단 헤더 ──────────────────────────────────────
                 Container(
                   width: double.infinity,
                   color: Colors.white,
@@ -58,7 +68,6 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                                 icon: Icons.save_outlined,
                                 text: '반복 루틴 저장',
                                 backgroundColor: const Color(0x90E047FF),
-                                // ✅ 모달 호출
                                 onTap: () {
                                   showRoutineSaveModal(
                                     context,
@@ -85,13 +94,11 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                   ),
                 ),
 
-                // ── 본문 ───────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 15, 20, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 날짜 선택
                       const Padding(
                         padding: EdgeInsets.only(left: 15),
                         child: Text(
@@ -105,8 +112,6 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-
-                      // ✅ WeekCalendarWidget 사용
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: WeekCalendarWidget(
@@ -121,7 +126,6 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 시간 설정
                       const Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text(
@@ -139,23 +143,76 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                         padding: const EdgeInsets.only(left: 16),
                         child: Row(
                           children: [
-                            SizedBox(width: 65, child: _timeBox('8:30')),
-                            const SizedBox(width: 8),
-                            const Text(
-                              '~',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                            SizedBox(
+                              width: 65,
+                              child: Container(
+                                height: 40,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: const Color(0x607C7D7D)),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: TextField(
+                                  controller: _startTimeController,
+                                  style: const TextStyle(
+                                    color: Color(0xFF7C7D7D),
+                                    fontSize: 14,
+                                    fontFamily: 'JejuGothic',
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: '8:30',
+                                    hintStyle: TextStyle(
+                                      color: Color(0xFF7C7D7D),
+                                      fontSize: 14,
+                                      fontFamily: 'JejuGothic',
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            SizedBox(width: 65, child: _timeBox('9:30')),
+                            const Text('~', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: 65,
+                              child: Container(
+                                height: 40,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: const Color(0x607C7D7D)),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: TextField(
+                                  controller: _endTimeController,
+                                  style: const TextStyle(
+                                    color: Color(0xFF7C7D7D),
+                                    fontSize: 14,
+                                    fontFamily: 'JejuGothic',
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: '9:30',
+                                    hintStyle: TextStyle(
+                                      color: Color(0xFF7C7D7D),
+                                      fontSize: 14,
+                                      fontFamily: 'JejuGothic',
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
 
-// 미션 제목 → 큰 과제/태그선택/세부과제 영역
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         padding: const EdgeInsets.all(16),
@@ -173,7 +230,6 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 큰 과제
                             const Text(
                               '큰 과제',
                               style: TextStyle(
@@ -188,25 +244,32 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                               width: double.infinity,
                               height: 40,
                               padding: const EdgeInsets.symmetric(horizontal: 14),
-                              alignment: Alignment.centerLeft,
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 border: Border.all(color: const Color(0x607C7D7D)),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Text(
-                                '예: 등교 준비하기',
-                                style: TextStyle(
-                                  color: Color(0xFF7C7D7D),
+                              child: TextField(
+                                controller: _bigTaskController,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontFamily: 'JejuGothic',
-                                  fontWeight: FontWeight.w400,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: '예: 등교 준비하기',
+                                  hintStyle: TextStyle(
+                                    color: Color(0xFF7C7D7D),
+                                    fontSize: 16,
+                                    fontFamily: 'JejuGothic',
+                                  ),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 10),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 12),
 
-                            // 태그 선택
                             const Text(
                               '태그 선택',
                               style: TextStyle(
@@ -220,15 +283,34 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                             Wrap(
                               spacing: 12,
                               runSpacing: 12,
-                              children: const [
-                                _TagChip(label: '운동'),
-                                _TagChip(label: '공부'),
-                                _TagChip(label: '생활'),
-                              ],
+                              children: ['운동', '공부', '생활'].map((tag) {
+                                final isSelected = _selectedTag == tag;
+                                return GestureDetector(
+                                  onTap: () => setState(() => _selectedTag = tag),
+                                  child: Container(
+                                    width: 56,
+                                    height: 30,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? const Color(0xFF1586E2) : Colors.white,
+                                      border: Border.all(color: const Color(0x897C7D7D)),
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: Text(
+                                      tag,
+                                      style: TextStyle(
+                                        color: isSelected ? Colors.white : Colors.black,
+                                        fontSize: 12,
+                                        fontFamily: 'JejuGothic',
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                             const SizedBox(height: 12),
 
-                            // 세부 과제
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
@@ -350,14 +432,40 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // 미션 저장 버튼
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: SizedBox(
                           width: double.infinity,
                           height: 60,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () async {
+                              if (_bigTaskController.text.isEmpty) return;
+                              final viewModel = Provider.of<BigTaskViewModel>(context, listen: false);
+                              final smallTasks = _subTasks.asMap().entries.map((e) => {
+                                "title": e.value,
+                                "tags": _selectedTag,
+                                "difficultyLevel": "EASY",
+                                "orderIndex": e.key + 1,
+                              }).toList();
+
+                              final success = await viewModel.createBigTask(
+                                title: _bigTaskController.text,
+                                startTime: _startTimeController.text.isEmpty ? '8:30' : _startTimeController.text,
+                                endTime: _endTimeController.text.isEmpty ? '9:30' : _endTimeController.text,
+                                smallTasks: smallTasks,
+                                tag: _selectedTag,
+                              );
+
+                              if (success && context.mounted) {
+                                _bigTaskController.clear();
+                                _startTimeController.clear();
+                                _endTimeController.clear();
+                                setState(() => _subTasks = []);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('저장됐어요!')),
+                                );
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1586E2),
                               elevation: 0,
@@ -388,8 +496,6 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
     );
   }
 }
-
-// ── 공통 위젯 ────────────────────────────────────────────────────────────────
 
 Widget _topActionButton({
   required IconData icon,
@@ -424,55 +530,4 @@ Widget _topActionButton({
       ),
     ),
   );
-}
-
-Widget _timeBox(String text) {
-  return Container(
-    height: 40,
-    alignment: Alignment.centerLeft,
-    padding: const EdgeInsets.symmetric(horizontal: 14),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: const Color(0x607C7D7D)),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: Color(0xFF7C7D7D),
-        fontSize: 14,
-        fontFamily: 'JejuGothic',
-        fontWeight: FontWeight.w400,
-      ),
-    ),
-  );
-}
-
-class _TagChip extends StatelessWidget {
-  final String label;
-
-  const _TagChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      height: 30,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0x897C7D7D)),
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 12,
-          fontFamily: 'JejuGothic',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
 }

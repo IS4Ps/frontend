@@ -9,10 +9,31 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="[FEAT/#82] ui 수정">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
+    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="Merge remote-tracking branch 'origin/dev' into feat/#74-big-task-api&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;lib/screens/routine/routine_setting_screen.dart">
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_start_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_start_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_submit_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_submit_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/n_back_submit_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/n_back_submit_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_start_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_start_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_submit_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_submit_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/reward/offline_reward_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/screens/quest/go_nogo_game_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/screens/quest/stroop_game_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repository/quest/quest_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/quest/quest_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/screens/quest/mini_game_select_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/mini_game_select_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/screens/quest/n_back_game_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/n_back_game_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/quest/quest_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/quest/quest_api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/view_model/quest/quest_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/quest/quest_view_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +87,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "dev",
+    "git-widget-placeholder": "#75 on Merging feat/#74-big-task-api",
     "io.flutter.project.isFirstOpen": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
