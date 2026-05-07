@@ -9,10 +9,31 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="">
+    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="Merge remote-tracking branch 'origin/dev' into feat/#74-big-task-api&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;lib/screens/routine/routine_setting_screen.dart">
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_start_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_start_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_submit_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_submit_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/n_back_submit_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/n_back_submit_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_start_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_start_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_submit_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_submit_response_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/reward/offline_reward_request_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/screens/quest/go_nogo_game_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/screens/quest/stroop_game_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/view_model/routine/big_task_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/routine/big_task_view_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/view_model/routine/preset_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/routine/preset_view_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repository/quest/quest_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/quest/quest_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/screens/quest/mini_game_select_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/mini_game_select_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/screens/quest/n_back_game_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/n_back_game_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/quest/quest_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/quest/quest_api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/view_model/quest/quest_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/quest/quest_view_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,27 +74,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Flutter.main.dart.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feat/#76-preset-create-api&quot;,
-    &quot;io.flutter.project.isFirstOpen&quot;: &quot;true&quot;,
-    &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.tools&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Flutter.main.dart.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "#75 on Merging feat/#74-big-task-api",
+    "io.flutter.project.isFirstOpen": "true",
+    "io.flutter.reload.alreadyRun": "true",
+    "kotlin-language-version-configured": "true",
+    "settings.editor.selected.configurable": "flutter.settings",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
       <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
@@ -88,28 +109,28 @@
       <option name="presentableId" value="Default" />
       <updated>1777792656460</updated>
     </task>
-    <task id="LOCAL-00001" summary="[FEAT/#74] 빅태스크 조회 및 생성 API 연동 준비">
+    <task id="LOCAL-00001" summary="[FEAT/#82] stroop 게임 UI 구현하기">
       <option name="closed" value="true" />
-      <created>1777899269333</created>
+      <created>1777984485832</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1777899269333</updated>
+      <updated>1777984485832</updated>
     </task>
-    <task id="LOCAL-00002" summary="[FEAT/#76] 오류 수정">
+    <task id="LOCAL-00002" summary="[FEAT/#82] ui 수정">
       <option name="closed" value="true" />
-      <created>1777986030671</created>
+      <created>1777984864323</created>
       <option name="number" value="00002" />
       <option name="presentableId" value="LOCAL-00002" />
       <option name="project" value="LOCAL" />
-      <updated>1777986030671</updated>
+      <updated>1777984864323</updated>
     </task>
     <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[FEAT/#74] 빅태스크 조회 및 생성 API 연동 준비" />
-    <MESSAGE value="[FEAT/#76] 오류 수정" />
-    <option name="LAST_COMMIT_MESSAGE" value="[FEAT/#76] 오류 수정" />
+    <MESSAGE value="[FEAT/#82] stroop 게임 UI 구현하기" />
+    <MESSAGE value="[FEAT/#82] ui 수정" />
+    <option name="LAST_COMMIT_MESSAGE" value="[FEAT/#82] ui 수정" />
   </component>
 </project>
