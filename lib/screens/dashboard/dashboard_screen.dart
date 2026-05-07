@@ -20,6 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // 화면 빌드 후 현재 날짜 기준으로 월간 감정 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().fetchMonthlyMood();
+      context.read<DashboardViewModel>().fetchWeeklyStats();
     });
   }
 
@@ -49,7 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   child: Column(
                     children: [
-                      _buildProgressCard(),
+                      _buildProgressCard(viewModel),
                       const SizedBox(height: 24),
                       _buildActivityCard(),
                       const SizedBox(height: 24),
@@ -130,7 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildProgressCard() {
+  Widget _buildProgressCard(DashboardViewModel viewModel) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -169,13 +170,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 190,
               height: 180,
               child: CustomPaint(
-                painter: DonutChartPainter(progress: 0.85),
-                child: const Center(
+                painter: DonutChartPainter(progress: viewModel.avgCompletionRate / 100),
+                child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '85%',
+                        '${viewModel.avgCompletionRate.toStringAsFixed(1)}%',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -192,17 +193,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Center(
-            child: Text(
-              '+3% 추세',
-              style: TextStyle(
-                color: Color(0xFF53C516),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
               ),
             ),
           ),

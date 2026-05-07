@@ -16,6 +16,10 @@ class DashboardViewModel extends ChangeNotifier {
   MonthlyMoodModel? get monthlyMoodData => _monthlyMoodData;
   String get errorMessage => _errorMessage;
 
+  Map<String, dynamic>? _weeklyStats;
+  Map<String, dynamic>? get weeklyStats => _weeklyStats;
+  double get avgCompletionRate => (_weeklyStats?['avgCompletionRate'] ?? 0.0).toDouble();
+
   // 현재 테스트 중인 토큰 (dotenv 활용)
   final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
 
@@ -76,6 +80,18 @@ class DashboardViewModel extends ChangeNotifier {
       _errorMessage = "서버 연결 중 오류가 발생했습니다.";
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchWeeklyStats() async {
+    final int childId = _getChildIdFromToken(_testToken);
+    print("[ViewModel] 주간 통계 로드 시작 (childId: $childId)");
+
+    final data = await _repository.getWeeklyStats(childId);
+    if (data != null) {
+      _weeklyStats = data;
+      print("[ViewModel] 주간 통계 로드 완료: ${data['avgCompletionRate']}%");
       notifyListeners();
     }
   }

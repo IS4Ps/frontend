@@ -15,4 +15,9 @@ class DashboardApiService {
       },
     );
   }
+
+  Future<http.Response> fetchWeeklyStats(int childId) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId');
+    return await http.get(url);
+  }
 }
