@@ -157,9 +157,6 @@ Future<void> showRoutineSaveModal(
 
                             if (success && context.mounted) {
                               Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('반복루틴이 저장됐어요!')),
-                              );
                             }
                           },
                           child: Container(
