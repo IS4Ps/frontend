@@ -15,4 +15,9 @@ class PresetApiService {
       body: jsonEncode(body),
     );
   }
+
+  Future<http.Response> getPresets(int parentId) async {
+    final url = Uri.parse('$baseUrl/api/v1/presets?parentId=$parentId');
+    return await http.get(url);
+  }
 }
