@@ -14,7 +14,7 @@ class RoutineSettingScreen extends StatefulWidget {
 
 class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
   bool isFullCalendarOpen = false;
-  int selectedDay = 1;
+  int selectedDay = DateTime.now().day;
   final TextEditingController _subTaskController = TextEditingController();
   final TextEditingController _bigTaskController = TextEditingController();
   final TextEditingController _startTimeController = TextEditingController();
