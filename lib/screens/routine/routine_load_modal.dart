@@ -97,6 +97,43 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                                         ),
                                       ),
                                     ),
+                                    GestureDetector(
+                                      onTap: () async {
+                                        final TextEditingController editController =
+                                        TextEditingController(text: viewModel.presets[index]['title']);
+                                        await showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('프리셋 수정'),
+                                            content: TextField(controller: editController),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: const Text('취소'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                                                  await viewModel.updatePreset(
+                                                    presetId: viewModel.presets[index]['presetId'],
+                                                    title: editController.text,
+                                                  );
+                                                },
+                                                child: const Text('저장'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                      child: const Icon(Icons.edit, size: 18, color: Color(0xFF555555)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () async {
+                                        await viewModel.deletePreset(viewModel.presets[index]['presetId']);
+                                      },
+                                      child: const Icon(Icons.delete, size: 18, color: Color(0xFFE05555)),
+                                    ),
                                   ],
                                 ),
                               ),

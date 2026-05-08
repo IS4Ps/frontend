@@ -69,4 +69,42 @@ class PresetViewModel extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<bool> updatePreset({
+    required int presetId,
+    required String title,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final body = {
+      "title": title,
+      "description": "",
+      "icon": "default",
+      "durationDays": 1,
+    };
+
+    final bool isSuccess = await _repository.updatePreset(presetId, body);
+
+    if (isSuccess) await getPresets();
+
+    _isLoading = false;
+    notifyListeners();
+
+    return isSuccess;
+  }
+
+  Future<bool> deletePreset(int presetId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final bool isSuccess = await _repository.deletePreset(presetId);
+
+    if (isSuccess) await getPresets();
+
+    _isLoading = false;
+    notifyListeners();
+
+    return isSuccess;
+  }
 }

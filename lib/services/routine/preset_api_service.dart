@@ -20,4 +20,18 @@ class PresetApiService {
     final url = Uri.parse('$baseUrl/api/v1/presets?parentId=$parentId');
     return await http.get(url);
   }
+
+  Future<http.Response> updatePreset(int presetId, Map<String, dynamic> body) async {
+    final url = Uri.parse('$baseUrl/api/v1/presets/$presetId');
+    return await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+  }
+
+  Future<http.Response> deletePreset(int presetId) async {
+    final url = Uri.parse('$baseUrl/api/v1/presets/$presetId');
+    return await http.delete(url);
+  }
 }
