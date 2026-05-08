@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/routine/big_task_model.dart';
 import '../../repository/routine/big_task_repository.dart';
+import '../../repository/routine/mission_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BigTaskViewModel extends ChangeNotifier {
   final BigTaskRepository _repository = BigTaskRepository();
+  final MissionRepository _missionRepository = MissionRepository();
 
   bool _isLoading = false;
   List<BigTaskModel> _bigTasks = [];
@@ -77,5 +79,24 @@ class BigTaskViewModel extends ChangeNotifier {
     notifyListeners();
 
     return isSuccess;
+  }
+
+  Future<bool> createMission({
+    required int bigTaskId,
+    required int childId,
+    required String date,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final body = {
+      "childId": childId,
+      "originBigTaskId": bigTaskId,
+      "assignedExp": 20,
+      "date": date,
+      "startTime": startTime,
+      "endTime": endTime,
+    };
+
+    return await _missionRepository.createMission(body);
   }
 }

@@ -5,7 +5,7 @@ import '../../view_model/routine/preset_view_model.dart';
 
 Future<void> showRoutineLoadModal(BuildContext context) {
   int selectedIndex = 0;
-  int selectedDay = 1;
+  int selectedDay = DateTime.now().day;
   bool isFullCalendarOpen = false;
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
