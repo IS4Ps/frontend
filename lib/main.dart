@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/view_model/routine/big_task_view_model.dart';
+import 'package:frontend/view_model/setting/setting_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
         ChangeNotifierProvider(create: (_) => RewardViewModel()),
         ChangeNotifierProvider(create: (_) => BigTaskViewModel()),
+        ChangeNotifierProvider(create: (_) => SettingViewModel()),
       ],
       child: const MyApp(),
     ),

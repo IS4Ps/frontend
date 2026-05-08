@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Provider 임포트 확인
 import 'child_selection_dialog.dart';
+import '../../view_model/setting/setting_view_model.dart'; // ViewModel 경로 확인
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -10,7 +12,16 @@ class SettingScreen extends StatefulWidget {
 
 class _SettingScreenState extends State<SettingScreen> {
   String currentChildName = '준수';
-  String parentNickname = '준수철수맘'; // 이 값이 실제 데이터 역할을 합니다.
+  String parentNickname = '준수철수맘';
+
+  @override
+  void initState() {
+    super.initState();
+    // 화면 로드 시 API 데이터 호출
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SettingViewModel>().fetchParentInfo();
+    });
+  }
 
   void _openChildSelection() {
     showDialog(
@@ -28,9 +39,16 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("🎨 [SettingScreen] Build 실행됨 (로딩상태: ${context.read<SettingViewModel>().isLoading})");
+
+    final viewModel = context.watch<SettingViewModel>();
+    final parentData = viewModel.parentData;
+
     return Scaffold(
       backgroundColor: const Color(0xFFECF2F8),
-      body: Column(
+      body: viewModel.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           _buildCustomAppBar(),
           Expanded(
@@ -53,7 +71,11 @@ class _SettingScreenState extends State<SettingScreen> {
                                 children: [
                                   Text(parentNickname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                                   const SizedBox(height: 2),
-                                  const Text('susumom@example.com', style: TextStyle(fontSize: 12, color: Color(0XFF7C7D7D))),
+                                  // ✅ API에서 받아온 실제 이메일 표시
+                                  Text(
+                                      parentData?.email ?? '이메일 정보 없음',
+                                      style: const TextStyle(fontSize: 12, color: Color(0XFF7C7D7D))
+                                  ),
                                 ],
                               )
                             ],
@@ -65,11 +87,13 @@ class _SettingScreenState extends State<SettingScreen> {
                           height: 48,
                           child: ElevatedButton(
                             onPressed: () {
-                              // 현재 parentNickname을 넘겨줍니다.
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => EditProfileScreen(currentNickname: parentNickname),
+                                  builder: (context) => EditProfileScreen(
+                                    currentNickname: parentNickname,
+                                    currentEmail: parentData?.email ?? '', // 이메일 전달
+                                  ),
                                 ),
                               ).then((value) {
                                 if (value != null) {
@@ -165,10 +189,16 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget _buildLogoutButton() { return SizedBox(width: double.infinity, height: 46, child: TextButton(onPressed: () {}, style: TextButton.styleFrom(backgroundColor: const Color(0xFFF5E6E6), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [Icon(Icons.logout, color: Colors.redAccent, size: 16), SizedBox(width: 8), Text('로그아웃', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14))]))); }
 }
 
-//  프로필 수정 화면
+// --- 프로필 수정 화면 ---
 class EditProfileScreen extends StatefulWidget {
-  final String currentNickname; // 이전 화면에서 받아올 닉네임
-  const EditProfileScreen({super.key, required this.currentNickname});
+  final String currentNickname;
+  final String currentEmail; // ✅ 이메일 추가 수신
+
+  const EditProfileScreen({
+    super.key,
+    required this.currentNickname,
+    required this.currentEmail
+  });
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -176,13 +206,14 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nicknameController;
-  final TextEditingController _emailController = TextEditingController(text: 'susumom@example.com');
+  late TextEditingController _emailController;
 
   @override
   void initState() {
     super.initState();
-    // 위젯이 생성될 때 전달받은 이름으로 컨트롤러 초기화
     _nicknameController = TextEditingController(text: widget.currentNickname);
+    // ✅ 설정 화면에서 받아온 실제 이메일로 초기화
+    _emailController = TextEditingController(text: widget.currentEmail);
   }
 
   @override
@@ -196,7 +227,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFECF2F8),
-      appBar: AppBar( // app_bar -> appBar 수정됨
+      appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
