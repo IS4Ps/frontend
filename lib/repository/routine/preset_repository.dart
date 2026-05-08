@@ -34,6 +34,7 @@ class PresetRepository {
       if (response.statusCode == 200) {
         print("[API 성공] 프리셋 목록 조회 완료");
         final data = jsonDecode(response.body);
+        print("[목록 데이터] ${data['data']}");
         return data['data'] ?? [];
       } else {
         print("[API 실패] 상태 코드: ${response.statusCode}");
@@ -67,7 +68,7 @@ class PresetRepository {
 
   Future<bool> deletePreset(int presetId) async {
     try {
-      print("[API 호출] 프리셋 삭제 시작");
+      print("[API 호출] 프리셋 삭제 시작 (presetId: $presetId)");
 
       final response = await _apiService.deletePreset(presetId);
 

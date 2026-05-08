@@ -5,6 +5,8 @@ import '../../view_model/routine/preset_view_model.dart';
 
 Future<void> showRoutineLoadModal(BuildContext context) {
   int selectedIndex = 0;
+  int editingIndex = -1;
+  final Map<int, TextEditingController> editControllers = {};
   int selectedDay = DateTime.now().day;
   bool isFullCalendarOpen = false;
 
@@ -70,13 +72,18 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                       }
                       return Column(
                         children: List.generate(viewModel.presets.length, (index) {
+                          final preset = viewModel.presets[index];
+                          final isEditing = editingIndex == index;
+                          editControllers.putIfAbsent(
+                              index, () => TextEditingController(text: preset['title']));
+
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: GestureDetector(
                               onTap: () => setState(() => selectedIndex = index),
                               child: Container(
                                 height: 40,
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                padding: const EdgeInsets.only(left: 14),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   border: Border.all(color: const Color(0xFFCCCCCC)),
@@ -87,8 +94,30 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                                     const Icon(Icons.save_outlined, size: 20, color: Color(0xFF555555)),
                                     const SizedBox(width: 12),
                                     Expanded(
-                                      child: Text(
-                                        viewModel.presets[index]['title'] ?? '',
+                                      child: isEditing
+                                          ? TextField(
+                                        controller: editControllers[index],
+                                        autofocus: true,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'JejuGothic',
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        onSubmitted: (value) async {
+                                          await viewModel.updatePreset(
+                                            presetId: preset['presetId'],
+                                            title: value,
+                                          );
+                                          setState(() => editingIndex = -1);
+                                        },
+                                      )
+                                          : Text(
+                                        preset['title'] ?? '',
                                         style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 14,
@@ -97,42 +126,21 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                                         ),
                                       ),
                                     ),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        final TextEditingController editController =
-                                        TextEditingController(text: viewModel.presets[index]['title']);
-                                        await showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text('프리셋 수정'),
-                                            content: TextField(controller: editController),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                child: const Text('취소'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () async {
-                                                  Navigator.pop(context);
-                                                  await viewModel.updatePreset(
-                                                    presetId: viewModel.presets[index]['presetId'],
-                                                    title: editController.text,
-                                                  );
-                                                },
-                                                child: const Text('저장'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
+                                    PopupMenuButton<String>(
+                                      padding: EdgeInsets.zero,
+                                      icon: const Icon(Icons.more_vert, size: 18, color: Color(0xFF555555)),
+                                      onSelected: (result) async {
+                                        if (result == 'edit') {
+                                          setState(() => editingIndex = index);
+                                        } else if (result == 'delete') {
+                                          await viewModel.deletePreset(preset['presetId']);
+                                          setState(() {});
+                                        }
                                       },
-                                      child: const Icon(Icons.edit, size: 18, color: Color(0xFF555555)),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        await viewModel.deletePreset(viewModel.presets[index]['presetId']);
-                                      },
-                                      child: const Icon(Icons.delete, size: 18, color: Color(0xFFE05555)),
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem(value: 'edit', child: Text('수정')),
+                                        const PopupMenuItem(value: 'delete', child: Text('삭제')),
+                                      ],
                                     ),
                                   ],
                                 ),
