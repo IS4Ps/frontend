@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'routine_date_selector.dart';
+import '../../view_model/routine/preset_view_model.dart';
 
 Future<void> showRoutineLoadModal(BuildContext context) {
-  final List<String> routineList = [
-    '평일 아침 루틴',
-    '학기 중 평일 루틴',
-    '방학 아침 루틴',
-    '방학 중 평일 루틴',
-  ];
-
   int selectedIndex = 0;
   int selectedDay = 1;
   bool isFullCalendarOpen = false;
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final viewModel = Provider.of<PresetViewModel>(context, listen: false);
+    viewModel.getPresets();
+  });
 
   return showDialog(
     context: context,
@@ -63,52 +63,49 @@ Future<void> showRoutineLoadModal(BuildContext context) {
 
                   const SizedBox(height: 14),
 
-                  ...List.generate(routineList.length, (index) {
-                    final bool isSelected = selectedIndex == index;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedIndex = index;
-                          });
-                        },
-                        child: Container(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                              color: const Color(0xFFCCCCCC),
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.save_outlined,
-                                size: 20,
-                                color: const Color(0xFF555555),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  routineList[index],
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontFamily: 'JejuGothic',
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                  Consumer<PresetViewModel>(
+                    builder: (context, viewModel, _) {
+                      if (viewModel.isLoading) {
+                        return const CircularProgressIndicator();
+                      }
+                      return Column(
+                        children: List.generate(viewModel.presets.length, (index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: GestureDetector(
+                              onTap: () => setState(() => selectedIndex = index),
+                              child: Container(
+                                height: 40,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: const Color(0xFFCCCCCC)),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.save_outlined, size: 20, color: Color(0xFF555555)),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        viewModel.presets[index]['title'] ?? '',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontFamily: 'JejuGothic',
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
+                            ),
+                          );
+                        }),
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 10),
 
@@ -143,9 +140,6 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                         width: 110,
                         child: GestureDetector(
                           onTap: () {
-                            final selectedRoutine = routineList[selectedIndex];
-                            debugPrint('선택한 날짜: $selectedDay일');
-                            debugPrint('선택한 루틴: $selectedRoutine');
                             Navigator.pop(context);
                           },
                           child: Container(

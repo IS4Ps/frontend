@@ -9,6 +9,9 @@ class PresetViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  List<dynamic> _presets = [];
+  List<dynamic> get presets => _presets;
+
   final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
 
   int _getParentIdFromToken(String token) {
@@ -54,5 +57,16 @@ class PresetViewModel extends ChangeNotifier {
     notifyListeners();
 
     return isSuccess;
+  }
+
+  Future<void> getPresets() async {
+    _isLoading = true;
+    notifyListeners();
+
+    final int parentId = _getParentIdFromToken(_testToken);
+    _presets = await _repository.getPresets(parentId);
+
+    _isLoading = false;
+    notifyListeners();
   }
 }
