@@ -6,7 +6,8 @@ import 'routine_save_modal.dart';
 import '../../view_model/routine/big_task_view_model.dart';
 
 class RoutineSettingScreen extends StatefulWidget {
-  const RoutineSettingScreen({super.key});
+  final VoidCallback? onMissionManagementTap;
+  const RoutineSettingScreen({super.key, this.onMissionManagementTap});
 
   @override
   State<RoutineSettingScreen> createState() => _RoutineSettingScreenState();
@@ -99,16 +100,45 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 15),
-                        child: Text(
-                          '날짜 선택',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontFamily: 'JejuGothic',
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              '날짜 선택',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'JejuGothic',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: GestureDetector(
+                                onTap: () {
+                                  widget.onMissionManagementTap?.call();
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFD7E0FF),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    '미션 관리',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'JejuGothic',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 12),

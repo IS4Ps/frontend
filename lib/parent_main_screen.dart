@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/screens/dashboard/notification_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/routine/routine_setting_screen.dart';
+import 'screens/routine/mission_management_screen.dart';
 import 'screens/setting/setting_screen.dart';
 import 'screens/reward/reward_screen.dart';
 
@@ -18,11 +19,13 @@ class ParentMainScreen extends StatefulWidget {
 class _ParentMainScreenState extends State<ParentMainScreen> {
   int _selectedIndex = 0;
   bool _showNotification = false;
+  bool _showMissionManagement = false;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
       _showNotification = false;
+      _showMissionManagement = false;
     });
     if (index == 1) {
       Provider.of<BigTaskViewModel>(context, listen: false).loadBigTasks();
@@ -44,7 +47,13 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
                   });
                 },
               ),
-              const RoutineSettingScreen(),
+              RoutineSettingScreen(
+                onMissionManagementTap: () {
+                  setState(() {
+                    _showMissionManagement = true;
+                  });
+                },
+              ),
               const RewardScreen(),
               const SettingScreen(),
             ],
@@ -54,6 +63,14 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
               onBack: () {
                 setState(() {
                   _showNotification = false;
+                });
+              },
+            ),
+          if (_showMissionManagement)
+            MissionManagementScreen(
+              onBack: () {
+                setState(() {
+                  _showMissionManagement = false;
                 });
               },
             ),
