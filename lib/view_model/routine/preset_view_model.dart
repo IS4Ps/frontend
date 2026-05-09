@@ -34,24 +34,21 @@ class PresetViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> createPreset({
+  Future<bool> savePresetFromDate({
     required String title,
-    required List<int> bigTaskIds,
+    required String date,
   }) async {
     _isLoading = true;
     notifyListeners();
 
-    final int parentId = _getParentIdFromToken(_testToken);
     final body = {
-      "parentId": parentId,
+      "childId": 5,
+      "date": date,
       "title": title,
       "description": "",
-      "icon": "default",
-      "durationDays": 1,
-      "bigTaskIds": bigTaskIds,
     };
 
-    final bool isSuccess = await _repository.createPreset(body, _testToken);
+    final bool isSuccess = await _repository.savePresetFromDate(body);
 
     _isLoading = false;
     notifyListeners();

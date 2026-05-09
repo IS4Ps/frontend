@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'routine_date_selector.dart';
 import 'package:provider/provider.dart';
 import '../../view_model/routine/preset_view_model.dart';
-import '../../view_model/routine/big_task_view_model.dart';
 
 Future<void> showRoutineSaveModal(
     BuildContext context, {
@@ -145,14 +144,13 @@ Future<void> showRoutineSaveModal(
                             if (controller.text.isEmpty) return;
 
                             final presetViewModel = Provider.of<PresetViewModel>(context, listen: false);
-                            final bigTaskViewModel = Provider.of<BigTaskViewModel>(context, listen: false);
 
-                            // 현재 빅태스크 ID 목록 가져오기
-                            final bigTaskIds = bigTaskViewModel.bigTasks.map((e) => e.bigTaskId).toList();
+                            final now = DateTime.now();
+                            final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
 
-                            final success = await presetViewModel.createPreset(
+                            final success = await presetViewModel.savePresetFromDate(
                               title: controller.text,
-                              bigTaskIds: bigTaskIds,
+                              date: date,
                             );
 
                             if (success && context.mounted) {
