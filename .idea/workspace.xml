@@ -10,23 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1abf4ddb-3c79-45d3-b892-755474364f89" name="Changes" comment="[FEAT/#116] qr 코드 수정">
-      <change afterPath="$PROJECT_DIR$/lib/screens/dashboard/heatmap_card.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/screens/dashboard/minigame_score_card.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/view_model/routine/mission_view_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repository/routine/mission_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/routine/mission_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repository/routine/preset_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/routine/preset_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/dashboard/dashboard_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/dashboard/dashboard_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/routine/mission_management_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/routine/mission_management_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/routine/routine_load_modal.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/routine/routine_load_modal.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/routine/mission_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/routine/mission_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/routine/preset_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/routine/preset_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/view_model/routine/preset_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/routine/preset_view_model.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +62,7 @@
     "cidr.known.project.marker": "true",
     "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "#120 on Merging feat/#116-children-setting",
+    "git-widget-placeholder": "#120 on feat/#116-children-setting",
     "io.flutter.project.isFirstOpen": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
