@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/view_model/profile/profile_view_model.dart';
 import 'package:frontend/view_model/routine/big_task_view_model.dart';
 import 'package:frontend/view_model/routine/preset_view_model.dart';
 import 'package:frontend/view_model/setting/setting_view_model.dart';
@@ -41,6 +42,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => BigTaskViewModel()),
         ChangeNotifierProvider(create: (_) => PresetViewModel()),
         ChangeNotifierProvider(create: (_) => SettingViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
       ],
       child: const MyApp(),
     ),

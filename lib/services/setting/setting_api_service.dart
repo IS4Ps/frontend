@@ -3,6 +3,7 @@ import 'package:frontend/auth/token_manager.dart' as my_auth;
 class SettingApiService {
   static const String baseUrl = "http://100.27.204.252:8080";
 
+  // 내 정보 조회
   Future<http.Response> fetchParentInfo() async {
     final url = Uri.parse('$baseUrl/parents/me');
     final String? token = my_auth.TokenManager().token;
