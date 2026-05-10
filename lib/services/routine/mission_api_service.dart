@@ -12,4 +12,9 @@ class MissionApiService {
       body: jsonEncode(body),
     );
   }
+
+  Future<http.Response> getMissionsByDate(int childId, String date) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions?childId=$childId&date=$date');
+    return await http.get(url);
+  }
 }
