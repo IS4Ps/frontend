@@ -42,6 +42,7 @@ class PresetViewModel extends ChangeNotifier {
     notifyListeners();
 
     final body = {
+      "parentId": 5,
       "childId": 5,
       "date": date,
       "title": title,
@@ -98,6 +99,27 @@ class PresetViewModel extends ChangeNotifier {
     final bool isSuccess = await _repository.deletePreset(presetId);
 
     if (isSuccess) await getPresets();
+
+    _isLoading = false;
+    notifyListeners();
+
+    return isSuccess;
+  }
+
+  Future<bool> loadPreset({
+    required int presetId,
+    required String startDate,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final body = {
+      "childId": 5,
+      "startDate": startDate,
+      "assignedExpPerMission": 20,
+    };
+
+    final bool isSuccess = await _repository.loadPreset(presetId, body);
 
     _isLoading = false;
     notifyListeners();

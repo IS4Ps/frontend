@@ -31,4 +31,13 @@ class PresetApiService {
     final url = Uri.parse('$baseUrl/api/v1/presets/$presetId');
     return await http.delete(url);
   }
+
+  Future<http.Response> loadPreset(int presetId, Map<String, dynamic> body) async {
+    final url = Uri.parse('$baseUrl/api/v1/presets/$presetId/load');
+    return await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+  }
 }

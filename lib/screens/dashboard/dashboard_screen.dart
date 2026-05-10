@@ -1,13 +1,14 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'notification_screen.dart';
 import '../../view_model/dashboard/dashboard_view_model.dart';
 import '../../models/dashboard/monthly_mood_model.dart';
+import 'heatmap_card.dart';
+import 'minigame_score_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNotificationTap;
-  const DashboardScreen({super.key, this.onNotificationTap}); // 수정
+  const DashboardScreen({super.key, this.onNotificationTap});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -17,7 +18,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면 빌드 후 현재 날짜 기준으로 월간 감정 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().fetchMonthlyMood();
       context.read<DashboardViewModel>().fetchWeeklyStats();
@@ -30,7 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: const Color(0xFFEBF1F7),
       body: Consumer<DashboardViewModel>(
         builder: (context, viewModel, child) {
-          // 로딩 상태 처리
           if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -54,10 +53,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 24),
                       _buildActivityCard(),
                       const SizedBox(height: 24),
-                      // ViewModel 데이터를 전달하여 감정 카드 빌드
                       _buildEmotionCard(viewModel.monthlyMoodData),
                       const SizedBox(height: 24),
-                      _buildHeatmapCard(),
+                      const HeatmapCard(
+                        title: '루틴 습관 히트맵',
+                        subtitle: '3개월 일관성',
+                        data: [
+                          2,1,0,2,3,3,0,1,1,0,2,3,2,
+                          2,2,2,0,3,2,1,2,1,0,0,2,3,
+                          1,3,2,0,0,3,1,2,2,2,2,3,1,
+                          2,1,0,2,2,0,0,2,2,0,3,2,2,
+                          2,3,0,3,2,3,0,2,3,1,3,2,3,
+                          3,2,2,0,1,3,3,1,0,1,3,0,0,
+                          3,2,2,3,0,3,0,1,0,1,2,2,2,
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      const HeatmapCard(
+                        title: '미니게임 히트맵',
+                        subtitle: '3개월 일관성',
+                        data: [
+                          2,1,0,2,3,3,0,1,1,0,2,3,2,
+                          2,2,2,0,3,2,1,2,1,0,0,2,3,
+                          1,3,2,0,0,3,1,2,2,2,2,3,1,
+                          2,1,0,2,2,0,0,2,2,0,3,2,2,
+                          2,3,0,3,2,3,0,2,3,1,3,2,3,
+                          3,2,2,0,1,3,3,1,0,1,3,0,0,
+                          3,2,2,3,0,3,0,1,0,1,2,2,2,
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      const MinigameScoreCard(),
                     ],
                   ),
                 ),
@@ -177,13 +203,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         '${viewModel.avgCompletionRate.toStringAsFixed(1)}%',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
+                      const SizedBox(height: 2),
+                      const Text(
                         '평균',
                         style: TextStyle(
                           fontSize: 17,
@@ -231,21 +257,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: CustomPaint(
                 painter: PieChartPainter(
                   sections: const [
-                    PieSection(
-                      value: 0.53,
-                      color: Color(0xFFE05555),
-                      label: '운동',
-                    ),
-                    PieSection(
-                      value: 0.13,
-                      color: Color(0xFF1586E2),
-                      label: '예술',
-                    ),
-                    PieSection(
-                      value: 0.34,
-                      color: Color(0xFF4CAF50),
-                      label: '공부',
-                    ),
+                    PieSection(value: 0.53, color: Color(0xFFE05555), label: '운동'),
+                    PieSection(value: 0.13, color: Color(0xFF1586E2), label: '예술'),
+                    PieSection(value: 0.34, color: Color(0xFF4CAF50), label: '공부'),
                   ],
                 ),
               ),
@@ -356,8 +370,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final now = DateTime.now();
     final int year = moodData?.year ?? now.year;
     final int month = moodData?.month ?? now.month;
-
-    // 해당 월의 마지막 날짜 계산
     final int daysInMonth = DateTime(year, month + 1, 0).day;
 
     return Container(
@@ -379,9 +391,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         itemBuilder: (context, index) {
           final int day = index + 1;
-          // API Key 형식 생성: YYYY-MM-DD
           final String dateKey = "$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}";
-
           final log = moodData?.moodMap[dateKey];
           final bool isEmpty = log == null;
 
@@ -414,125 +424,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  Widget _buildHeatmapCard() {
-    final List<int> data = [
-      2,1,0,2,3,3,0,1,1,0,2,3,2,
-      2,2,2,0,3,2,1,2,1,0,0,2,3,
-      1,3,2,0,0,3,1,2,2,2,2,3,1,
-      2,1,0,2,2,0,0,2,2,0,3,2,2,
-      2,3,0,3,2,3,0,2,3,1,3,2,3,
-      3,2,2,0,1,3,3,1,0,1,3,0,0,
-      3,2,2,3,0,3,0,1,0,1,2,2,2,
-    ];
-
-    final colors = [
-      const Color(0xFFF1F3F5),
-      const Color(0xFFBDECC7),
-      const Color(0xFF2ED573),
-      const Color(0xFF138A36),
-    ];
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 10),
-            child: Text(
-              '루틴 습관 히트맵',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Padding(
-            padding: EdgeInsets.only(left: 10),
-            child: Text(
-              '3개월 일관성',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF3D3D3D),
-              ),
-            ),
-          ),
-          const SizedBox(height: 25),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: GridView.builder(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: data.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 13,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
-                childAspectRatio: 1,
-              ),
-              itemBuilder: (context, index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: colors[data[index]],
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text('1월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-                SizedBox(width: 76),
-                Text('2월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-                SizedBox(width: 60),
-                Text('3월', style: TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _TopEmotionItem extends StatelessWidget {
   final String emoji;
   final String label;
 
-  const _TopEmotionItem({
-    required this.emoji,
-    required this.label,
-  });
+  const _TopEmotionItem({required this.emoji, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 44),
-        ),
+        Text(emoji, style: const TextStyle(fontSize: 44)),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -562,16 +469,8 @@ class DonutChartPainter extends CustomPainter {
       ..color = const Color(0xFF1586E2);
 
     final rect = Rect.fromCircle(center: center, radius: radius);
-
     canvas.drawCircle(center, radius, trackPaint);
-
-    canvas.drawArc(
-      rect,
-      -pi / 2,
-      2 * pi * progress,
-      false,
-      progressPaint,
-    );
+    canvas.drawArc(rect, -pi / 2, 2 * pi * progress, false, progressPaint);
   }
 
   @override
@@ -585,11 +484,7 @@ class PieSection {
   final Color color;
   final String label;
 
-  const PieSection({
-    required this.value,
-    required this.color,
-    required this.label,
-  });
+  const PieSection({required this.value, required this.color, required this.label});
 }
 
 class PieChartPainter extends CustomPainter {
@@ -601,12 +496,10 @@ class PieChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-
     double startAngle = pi / 2;
 
     for (final section in sections) {
       final sweepAngle = 2 * pi * section.value;
-
       final paint = Paint()
         ..style = PaintingStyle.fill
         ..color = section.color;
@@ -641,15 +534,10 @@ class PieChartPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       )..layout();
 
-      Offset adjustedOffset =
-          labelOffset - Offset(tp.width / 2, tp.height / 2);
-
-      if (section.label == '예술') {
-        adjustedOffset += const Offset(5, -10);
-      }
+      Offset adjustedOffset = labelOffset - Offset(tp.width / 2, tp.height / 2);
+      if (section.label == '예술') adjustedOffset += const Offset(5, -10);
 
       tp.paint(canvas, adjustedOffset);
-
       startAngle += sweepAngle;
     }
   }
@@ -674,11 +562,7 @@ class EmotionLineChartPainter extends CustomPainter {
 
     for (int i = 0; i < 4; i++) {
       final y = size.height * (i / 4) + 8;
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        gridPaint,
-      );
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
     final path = Path();
@@ -696,7 +580,7 @@ class EmotionLineChartPainter extends CustomPainter {
     path.cubicTo(
       size.width * 0.72, size.height * 0.16,
       size.width * 0.82, size.height * 0.18,
-      size.width,        size.height * 0.42,
+      size.width, size.height * 0.42,
     );
     canvas.drawPath(path, linePaint);
   }
