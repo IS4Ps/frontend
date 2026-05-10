@@ -105,4 +105,25 @@ class PresetViewModel extends ChangeNotifier {
 
     return isSuccess;
   }
+
+  Future<bool> loadPreset({
+    required int presetId,
+    required String startDate,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final body = {
+      "childId": 5,
+      "startDate": startDate,
+      "assignedExpPerMission": 20,
+    };
+
+    final bool isSuccess = await _repository.loadPreset(presetId, body);
+
+    _isLoading = false;
+    notifyListeners();
+
+    return isSuccess;
+  }
 }

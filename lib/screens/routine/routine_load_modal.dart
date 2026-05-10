@@ -86,7 +86,12 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                                 padding: const EdgeInsets.only(left: 14),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  border: Border.all(color: const Color(0xFFCCCCCC)),
+                                  border: Border.all(
+                                    color: selectedIndex == index
+                                        ? const Color(0xFF1586E2)  // 선택됐을 때 파란색
+                                        : const Color(0xFFCCCCCC), // 기본 회색
+                                    width: selectedIndex == index ? 2 : 1,
+                                  ),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Row(
@@ -184,8 +189,20 @@ Future<void> showRoutineLoadModal(BuildContext context) {
                       SizedBox(
                         width: 110,
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
+                          onTap: () async {
+                            final presetViewModel = Provider.of<PresetViewModel>(context, listen: false);
+                            final preset = presetViewModel.presets[selectedIndex];
+                            final now = DateTime.now();
+                            final startDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
+                            print("[선택된 날짜] selectedDay: $selectedDay, startDate: $startDate");
+                            final success = await presetViewModel.loadPreset(
+                              presetId: preset['presetId'],
+                              startDate: startDate,
+                            );
+
+                            if (success && context.mounted) {
+                              Navigator.pop(context);
+                            }
                           },
                           child: Container(
                             height: 32,
