@@ -17,4 +17,9 @@ class MissionApiService {
     final url = Uri.parse('$baseUrl/api/v1/missions?childId=$childId&date=$date');
     return await http.get(url);
   }
+
+  Future<http.Response> deleteMission(int missionId) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/$missionId');
+    return await http.delete(url);
+  }
 }
