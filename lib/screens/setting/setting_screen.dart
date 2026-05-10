@@ -203,6 +203,8 @@ class _SettingScreenState extends State<SettingScreen> {
 
   // 자녀 계정 섹션 (연동하기 버튼 수정)
   Widget _buildChildAccountSection() {
+    final profileVM = context.watch<ProfileViewModel>(); // ProfileViewModel 관찰
+
     return _buildSectionCard(
       title: '자녀 계정',
       trailing: TextButton(
@@ -219,14 +221,28 @@ class _SettingScreenState extends State<SettingScreen> {
               children: [
                 const CircleAvatar(radius: 24, backgroundColor: Color(0XFFD9D9D9)),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(currentChildName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(height: 2),
-                    const Text('레벨 1 - 모험가', style: TextStyle(fontSize: 12, color: Color(0XFF7C7D7D))),
-                  ],
-                )
+                Expanded( // 텍스트 영역을 확장
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(currentChildName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(height: 2),
+                      const Text('레벨 1 - 모험가', style: TextStyle(fontSize: 12, color: Color(0XFF7C7D7D))),
+                    ],
+                  ),
+                ),
+                // --- [추가] 생성된 ID가 있을 때만 다시보기 버튼 표시 ---
+                if (profileVM.lastCreatedChildId != null)
+                  IconButton(
+                    onPressed: () {
+                      _showQRCodeDialog(
+                          profileVM.lastCreatedChildId.toString(),
+                          currentChildName
+                      );
+                    },
+                    icon: const Icon(Icons.qr_code, color: Color(0XFF1687E3), size: 24),
+                    tooltip: 'QR 코드 다시보기',
+                  ),
               ],
             ),
           ),
@@ -235,8 +251,8 @@ class _SettingScreenState extends State<SettingScreen> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
-              onPressed: _showAddChildDialog, // [수정된 부분] 팝업 호출
-              icon: const Icon(Icons.add_circle_outline, size: 20), // 아이콘 변경
+              onPressed: _showAddChildDialog,
+              icon: const Icon(Icons.add_circle_outline, size: 20),
               label: const Text('자녀 계정 연동하기', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1687E3),
