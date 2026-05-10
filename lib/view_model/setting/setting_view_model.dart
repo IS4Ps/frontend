@@ -13,25 +13,24 @@ class SettingViewModel extends ChangeNotifier {
   ParentModel? get parentData => _parentData;
   bool get isLoading => _isLoading;
 
-  // [수정] 외부(UI)에서 실제 토큰을 전달받도록 변경
-  // setting_view_model.dart 수정 확인
-  Future<void> fetchParentInfo(String realToken) async {
-    print("🚀 [ViewModel] fetchParentInfo 함수 진입!");
+  Future<void> fetchParentInfo() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 🚨 반드시 realToken(매개변수)을 Repository로 넘겨야 합니다!
-      final ParentModel? result = await _repository.getParentInfo(realToken);
+      final ParentModel? result = await _repository.getParentInfo();
 
       if (result != null) {
         _parentData = result;
-        print("✅ [ViewModel] 데이터 로드 성공: ${_parentData?.email}");
+
+        debugPrint('[SettingViewModel] 내 정보 조회 성공!');
+        debugPrint('🆔 Parent ID : ${_parentData?.parentId}');
+        debugPrint('📧 Email     : ${_parentData?.email}');
       } else {
-        print("⚠️ [ViewModel] 결과가 null입니다. 서버 DB에 유저가 있는지 확인하세요.");
+        debugPrint('[SettingViewModel] 결과 데이터가 null입니다.');
       }
     } catch (e) {
-      print("❌ [ViewModel 에러] 호출 실패: $e");
+      debugPrint('[SettingViewModel] 에러 발생: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
