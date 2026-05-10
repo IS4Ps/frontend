@@ -22,21 +22,19 @@ class _StartScreenState extends State<StartScreen> {
     _checkLoginStatus();
   }
 
-  // 1. 앱 시작 시 로그인 상태 체크 (자동 로그인 로직)
   Future<void> _checkLoginStatus() async {
-    // 💡 카카오 SDK 세션 확인 + 우리 TokenManager에 토큰이 있는지 확인
     bool hasKakaoToken = await AuthApi.instance.hasToken();
-    bool hasMyToken = my_auth.TokenManager().hasToken;
+    bool hasMyToken = my_auth
+        .TokenManager()
+        .hasToken;
 
     if (hasKakaoToken && hasMyToken) {
       try {
         await UserApi.instance.accessTokenInfo();
         if (mounted) setState(() => _isLoggedIn = true);
-        debugPrint('[자동 로그인] 기존 토큰이 유효합니다.');
       } catch (e) {
         my_auth.TokenManager().clear();
         if (mounted) setState(() => _isLoggedIn = false);
-        debugPrint('[자동 로그인] 토큰이 만료되어 삭제되었습니다.');
       }
     }
   }
@@ -55,17 +53,21 @@ class _StartScreenState extends State<StartScreen> {
                 '루틴 메이트',
                 style: TextStyle(
                   fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1D3A70),
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF000000),
                   letterSpacing: -2.5,
                 ),
               ),
               const SizedBox(height: 60),
+
+              // 1. 보호자로 가입하기 버튼
               _buildRoleButton(
-                title: '보호자로 시작하기',
-                subtitle: _isLoggedIn ? '이미 로그인됨 - 바로 입장' : '자녀의 루틴을 관리하세요',
+                title: '보호자로 가입하기',
+                subtitle: _isLoggedIn ? '이미 로그인됨 - 바로 입장' : '자녀의 진행 상황을 관리하세요',
+                icon: Icons.supervisor_account_rounded,
+                // 부모 관련 아이콘
+                iconColor: Colors.blueAccent,
                 onTap: () {
-                  // ✨ [수정 완료] 로그인 되어있으면 바로 메인으로, 아니면 팝업 띄우기
                   if (_isLoggedIn) {
                     _navigateToParentMain();
                   } else {
@@ -73,18 +75,111 @@ class _StartScreenState extends State<StartScreen> {
                   }
                 },
               ),
+
               const SizedBox(height: 20),
+
+              // 2. 아동으로 가입하기 버튼
               _buildRoleButton(
-                title: '아동으로 시작하기',
-                subtitle: '오늘의 퀘스트를 확인해요!',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ChildMainScreen()),
+                title: '아동으로 가입하기',
+                subtitle: '퀘스트를 완료하고 레벨업하세요!',
+                icon: Icons.child_care_rounded,
+                // 아동 관련 아이콘
+                iconColor: Colors.orangeAccent,
+                onTap: () =>
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ChildMainScreen()),
+                    ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // 3. 하단 안내 텍스트
+              const Text(
+                '처음 오셨나요? 보호자 계정을 먼저 만들어주세요!',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF9E9E9E),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
+
               const Spacer(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // 역할 선택 버튼 위젯
+  Widget _buildRoleButton({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // 이미지/아이콘 영역 (회색 박스)
+            Container(
+              width: 65,
+              height: 65,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEEEE),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(
+                icon,
+                size: 35,
+                color: iconColor.withOpacity(0.8),
+              ),
+            ),
+            const SizedBox(width: 20),
+            // 텍스트 영역
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF757575),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -100,101 +195,90 @@ class _StartScreenState extends State<StartScreen> {
   void _showKakaoLoginDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (innerContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text("간편 로그인", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            ),
-            GestureDetector(
-              onTap: () async {
-                try {
-                  debugPrint('🚀 [1단계] 카카오 인증 시작...');
-                  bool isInstalled = await isKakaoTalkInstalled();
-                  OAuthToken token = isInstalled
-                      ? await UserApi.instance.loginWithKakaoTalk()
-                      : await UserApi.instance.loginWithKakaoAccount();
+      builder: (innerContext) =>
+          AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            contentPadding: const EdgeInsets.all(25),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "간편 로그인",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "서비스 이용을 위해 로그인이 필요합니다.",
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 25),
+                GestureDetector(
+                  onTap: () async {
+                    try {
+                      bool isInstalled = await isKakaoTalkInstalled();
+                      OAuthToken token = isInstalled
+                          ? await UserApi.instance.loginWithKakaoTalk()
+                          : await UserApi.instance.loginWithKakaoAccount();
 
-                  debugPrint('✅ [2단계] 카카오 토큰 획득 성공');
+                      const String baseUrl = "http://100.27.204.252:8080";
+                      final response = await http.post(
+                        Uri.parse('$baseUrl/auth/kakao'),
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({'accessToken': token.accessToken}),
+                      );
 
-                  const String baseUrl = "http://100.27.204.252:8080";
-                  final response = await http.post(
-                    Uri.parse('$baseUrl/auth/kakao'),
-                    headers: {'Content-Type': 'application/json'},
-                    body: jsonEncode({'accessToken': token.accessToken}),
-                  );
+                      if (response.statusCode == 200 ||
+                          response.statusCode == 201) {
+                        final Map<String, dynamic> responseData = jsonDecode(
+                            response.body);
+                        final dynamic data = responseData['data'];
 
-                  debugPrint('📢 [3단계] 서버 응답 상태코드: ${response.statusCode}');
+                        if (data != null && data['accessToken'] != null) {
+                          my_auth.TokenManager().setToken(data['accessToken']);
+                        }
 
-                  if (response.statusCode == 200 || response.statusCode == 201) {
-                    final Map<String, dynamic> responseData = jsonDecode(response.body);
-                    final dynamic data = responseData['data'];
-
-                    if (data != null) {
-                      final String? jwtToken = data['accessToken'];
-                      if (jwtToken != null) {
-                        // 🔑 금고에 JWT 저장
-                        my_auth.TokenManager().setToken(jwtToken);
-                        debugPrint('💾 TokenManager 저장 완료!');
+                        if (mounted) {
+                          setState(() => _isLoggedIn = true);
+                          Navigator.pop(innerContext);
+                          _navigateToParentMain();
+                        }
                       }
+                    } catch (e) {
+                      debugPrint(' 로그인 에러: $e');
                     }
-
-                    if (mounted) {
-                      setState(() => _isLoggedIn = true);
-                      Navigator.pop(innerContext);
-                      _navigateToParentMain();
-                    }
-                  } else {
-                    debugPrint('❌ 서버 연동 실패: ${response.statusCode}');
-                  }
-                } catch (e) {
-                  debugPrint('❌ 로그인 로직 에러: $e');
-                }
-              },
-              child: Container(
-                width: double.infinity,
-                height: 55,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE500),
-                  borderRadius: BorderRadius.circular(12),
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEE500), // 카카오 시그니처 옐로우
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/icons/kakao.png',
+                          width: 20,
+                          height: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          '카카오로 로그인하기',
+                          style: TextStyle(
+                            color: Color(0xFF3C1E1E),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: const Center(
-                  child: Text('카카오로 로그인하기', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleButton({required String title, required String subtitle, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          ],
-        ),
-      ),
+          ),
     );
   }
 }
