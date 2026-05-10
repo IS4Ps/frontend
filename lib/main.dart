@@ -14,6 +14,8 @@ import 'view_model/quest/quest_view_model.dart';
 import 'view_model/reward/reward_view_model.dart';
 import 'start_screen.dart';
 
+import 'ai_test_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -63,7 +65,9 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const StartScreen(),
+      //home: const StartScreen(),
+      // 👇 테스트 위해 변경
+      home: AiTestScreen(),
     );
   }
 }
