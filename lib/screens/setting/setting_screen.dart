@@ -31,16 +31,12 @@ class _SettingScreenState extends State<SettingScreen> {
   // --- [수정] 실제 토큰을 꺼내서 서버 데이터를 불러오는 함수 ---
   Future<void> _loadUserInfo() async {
     try {
-      // 1. 카카오 매니저에서 현재 토큰 꺼내기
-      var token = await TokenManagerProvider.instance.manager.getToken();
-      String? accessToken = token?.accessToken;
-
-      if (accessToken != null && mounted) {
-        // 2. 꺼낸 진짜 토큰을 ViewModel에 전달!
-        await context.read<SettingViewModel>().fetchParentInfo(accessToken);
+      if (mounted) {
+        // 복잡하게 토큰 꺼낼 필요 없이 그냥 '가져와!'라고만 하면 됨
+        await context.read<SettingViewModel>().fetchParentInfo();
       }
     } catch (e) {
-      debugPrint('토큰 로드 에러: $e');
+      debugPrint('로드 에러: $e');
     }
   }
 

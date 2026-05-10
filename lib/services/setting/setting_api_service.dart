@@ -1,17 +1,17 @@
 import 'package:http/http.dart' as http;
-
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 class SettingApiService {
   static const String baseUrl = "http://100.27.204.252:8080";
 
-  // 내 정보 조회 (부모 계정)
-  Future<http.Response> fetchParentInfo(String token) async {
+  Future<http.Response> fetchParentInfo() async {
     final url = Uri.parse('$baseUrl/parents/me');
+    final String? token = my_auth.TokenManager().token;
 
     return await http.get(
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // 부모 토큰 인증
+        'Authorization': 'Bearer $token',
       },
     );
   }
