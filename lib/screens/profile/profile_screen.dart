@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/auth/token_manager.dart';
-import 'package:frontend/view_model/profile/profile_view_model.dart'; // 뷰모델 임포트
+import 'package:frontend/view_model/profile/profile_view_model.dart';
 import 'package:frontend/screens/profile/parent_link.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,38 +16,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면에 진입할 때 서버 데이터를 새로 고칩니다.
     _refreshProfileData();
   }
 
   Future<void> _refreshProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     final childId = prefs.getString('selectedChildId');
-    final token = TokenManager().token ?? "";
+    final deviceId = prefs.getString('lastConnectedDeviceId') ?? "device-001";
 
     if (childId != null && mounted) {
-      // ProfileViewModel을 통해 서버 데이터 호출
       final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
-      await profileVM.fetchChildInformation(childId, token);
+      await profileVM.fetchChildInformation(childId, deviceId);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-
-    // ProfileViewModel의 상태를 구독합니다.
     final profileVM = Provider.of<ProfileViewModel>(context);
     final info = profileVM.childInfo;
 
-    // 서버 데이터 매핑 (데이터가 없으면 기본값 표시)
+    // --- 데이터 매핑 및 계산 로직 ---
     String nickname = info?.nickname ?? "이름 없음";
     int level = info?.level ?? 1;
     int gold = info?.gold ?? 0;
-    int currentExp = info?.currentExp ?? 0;
 
-    // 경험치 퍼센트 계산 (예시: 1000이 만점일 때)
-    double expPercent = (currentExp / 1000).clamp(0.0, 1.0);
+    // 경험치 관련 (서버 데이터가 null이면 0으로 처리)
+    int currentExp = info?.currentExp ?? 0;
+    int maxExp = 1000; // 레벨업 기준 (기획에 맞게 수정 가능)
+
+    // 게이지 비율 (0.0 ~ 1.0)
+    double expFactor = (currentExp / maxExp).clamp(0.0, 1.0);
+    // 표시용 퍼센트 (정수)
+    int expPercent = (expFactor * 100).toInt();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -75,7 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        // 로그아웃 버튼 (데이터 삭제 로직 추가 가능)
                         GestureDetector(
                           onTap: () async {
                             final prefs = await SharedPreferences.getInstance();
@@ -100,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
-                  // 프로필 카드 (실제 데이터 반영)
+                  // 프로필 카드
                   Container(
                     margin: const EdgeInsets.fromLTRB(16, 0, 16, 18),
                     padding: const EdgeInsets.all(20),
@@ -126,12 +126,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  nickname, // ★ 실제 닉네임
+                                  nickname,
                                   style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '레벨 $level - 모험가', // ★ 실제 레벨
+                                  '레벨 $level - 모험가',
                                   style: const TextStyle(color: Colors.black54, fontSize: 14),
                                 ),
                               ],
@@ -140,11 +140,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 18),
 
-                        // 경험치 바
+                        // ✅ 수정된 경험치 바 디자인 (요청하신 이미지 반영)
                         LayoutBuilder(
                           builder: (context, constraints) {
                             return Stack(
                               children: [
+                                // 배경 바 (연회색)
                                 Container(
                                   width: double.infinity,
                                   height: 18,
@@ -153,12 +154,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
+                                // 실제 경험치 바 (연두색)
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 500),
-                                  width: constraints.maxWidth * expPercent,
+                                  width: constraints.maxWidth * expFactor,
                                   height: 18,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFA1FF6F),
+                                    color: const Color(0xFFA1FF6F), // 사진 속 연두색
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
@@ -168,10 +170,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
 
                         const SizedBox(height: 10),
+                        // ✅ 수정된 경험치 텍스트 (다음 레벨까지 % 표시)
                         Text(
-                          '경험치: $currentExp / 1000', // ★ 실제 경험치
-                          style: const TextStyle(color: Colors.black, fontSize: 14),
+                          '다음 레벨까지 $expPercent%',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
+
                         const SizedBox(height: 18),
                         const Text(
                           '예상 직업: 마법사',
@@ -184,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // 통계 카드 (골드 데이터 반영)
+            // 통계 카드
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Row(
@@ -192,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const _StatCard(value: '47', label: '완료한 퀘스트'),
                   const SizedBox(width: 12),
-                  _StatCard(value: '$gold', label: '보유한 골드'), // ★ 실제 골드
+                  _StatCard(value: '$gold', label: '보유한 골드'),
                   const SizedBox(width: 12),
                   const _StatCard(value: '5일', label: '연속 달성'),
                 ],
@@ -207,7 +215,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // 업적 그리드 (생략 가능)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: GridView.count(
@@ -228,7 +235,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            // 보호자 연동 버튼
             Padding(
               padding: const EdgeInsets.only(bottom: 40),
               child: Center(
@@ -253,7 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// 하단 보조 위젯들은 기존과 동일하게 유지하되 디자인 살짝 정돈
 class _StatCard extends StatelessWidget {
   final String value;
   final String label;

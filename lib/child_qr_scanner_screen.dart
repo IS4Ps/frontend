@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/child_main_screen.dart';
+import 'auth/token_manager.dart';
+import 'child_main_screen.dart';
 
 class ChildQrScannerScreen extends StatefulWidget {
   const ChildQrScannerScreen({super.key});
@@ -82,16 +84,24 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
 
   Future<void> _handleQrSuccess(String rawData) async {
     try {
-      // 1. QR 데이터 분리 ("17,device-001" -> ["17", "device-001"])
+      // 1. QR 데이터 분리 ("ID,DeviceId,ParentToken")
       final List<String> parts = rawData.split(',');
       final String childId = parts[0];
-      final String deviceId = parts.length > 1 ? parts[1] : "device-001"; // 없을 경우 대비 기본값
+      final String deviceId = parts.length > 1 ? parts[1] : "device-001";
+      final String? parentToken = parts.length > 2 ? parts[2] : null;
 
-      // 2. [저장 로직] 기기에 정보 저장
+      // 2. 기기에 정보 저장
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isChildMode', true);
       await prefs.setString('selectedChildId', childId);
-      await prefs.setString('lastConnectedDeviceId', deviceId); // ✅ deviceId도 같이 저장
+      await prefs.setString('lastConnectedDeviceId', deviceId);
+
+      // 3. ✅ 핵심: 부모 토큰이 있다면 즉시 세팅 및 백업
+      if (parentToken != null && parentToken.isNotEmpty) {
+        TokenManager().setToken(parentToken);
+        await prefs.setString('parentTokenBackup', parentToken);
+        debugPrint('부모 토큰 연동 성공 및 백업 완료');
+      }
 
       if (!mounted) return;
 
@@ -99,36 +109,47 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('연동 성공!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('자녀 ID $childId번 계정과 연결되었습니다.'),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ChildMainScreen()),
-                        (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1687E3),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+        builder: (context) =>
+            AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: const Text(
+                  '연동 성공!', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Text('자녀 ID $childId번 계정과 연결되었습니다.'),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ChildMainScreen()),
+                            (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1687E3),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
+                    child: const Text('시작하기', style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
                 ),
-                child: const Text('시작하기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
+              ],
             ),
-          ],
-        ),
       );
     } catch (e) {
       debugPrint('스캔 처리 에러: $e');
-      setState(() => isScanned = false);
+      if (mounted) {
+        setState(() => isScanned = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR 코드 형식이 올바르지 않습니다.')),
+        );
+      }
     }
   }
 }

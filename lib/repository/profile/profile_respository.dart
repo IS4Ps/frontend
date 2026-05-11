@@ -46,27 +46,22 @@ class ProfileRepository {
   }
 
   // --- [2. 아동 로그인 (토큰 발급)] ---
-  // ProfileRepository.dart 수정
-  // ProfileRepository.dart
-
-  Future<Map<String, dynamic>?> loginAsChild(String childId, String deviceId) async {
+  Future<Map<String, dynamic>?> loginAsChild(String deviceId, int childId) async {
     try {
-      // 1. 여기서 String인 childId를 int로 변환합니다.
-      // ProfileRepository.dart
-      int parsedId = int.parse(childId.toString()); // 확실하게 숫자로 변환
-      final response = await _apiService.loginAsChild(deviceId, parsedId);
+      debugPrint('🚀 [Repository] 로그인 시도 - deviceId: $deviceId, childId: $childId');
 
-      // 2. ApiService에 넘겨줄 때 int 타입을 기대하는지 확인하세요.
+      // ApiService에 전달 (이미 childId가 int이므로 그대로 전달)
+      final response = await _apiService.loginAsChild(deviceId, childId);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final body = jsonDecode(utf8.decode(response.bodyBytes));
-        return body['data'];
+        return body['data']; // accessToken이 담긴 data 객체 반환
       } else {
         debugPrint('❌ [로그인 실패] 상태코드: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      debugPrint('❌ [타입 변환 또는 통신 에러]: $e');
+      debugPrint('❌ [Repository 로그인 에러]: $e');
       return null;
     }
   }

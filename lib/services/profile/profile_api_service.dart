@@ -7,23 +7,19 @@ class ProfileApiService {
   static const String baseUrl = "http://100.27.204.252:8080";
 
   // 아이 로그인 API
-  // ProfileApiService.dart
-  Future<http.Response> loginAsChild(String deviceId, int childId) async { // childId를 int로 받음
+  Future<http.Response> loginAsChild(String deviceId, int childId) async {
     final url = Uri.parse('$baseUrl/auth/child/login');
 
-    // 보내기 직전 데이터를 로그로 정확히 확인
     final bodyData = jsonEncode({
-      "deviceId": deviceId,
-      "childId": childId, // 확실한 숫자 타입
+      "deviceId": deviceId, // 여기에 토큰이 들어가지 않도록 체크!
+      "childId": childId,
     });
-
-    debugPrint('🚀 [최종 확인] 전송 데이터: $bodyData');
 
     return await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json', // 서버에게 JSON 응답을 원한다고 명시
+        'Accept': 'application/json',
       },
       body: bodyData,
     );

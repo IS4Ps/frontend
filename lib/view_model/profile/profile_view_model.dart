@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/profile/child_profile_request_model.dart';
 import '../../models/profile/child_information_response_model.dart';
-import '../../models/profile/child_profile_response_model.dart'; // 모델 임포트 확인
+import '../../models/profile/child_profile_response_model.dart';
 import '../../repository/profile/profile_respository.dart';
 import '../../auth/token_manager.dart' as my_auth;
 
@@ -20,36 +21,52 @@ class ProfileViewModel extends ChangeNotifier {
 
   String? get currentNickname => _childInfo?.nickname;
 
-  /// [자녀 전용] QR 스캔 후 또는 자녀 앱 실행 시 호출
+  /// [자녀 전용] 정보 조회 프로세스 (최종 안정화 버전)
   Future<void> fetchChildInformation(String childId, String deviceId) async {
+    // 이미 데이터를 성공적으로 불러왔다면, 불필요한 재호출 및 403 에러 방지를 위해 리턴 고려 가능
+    // if (_childInfo != null) return;
+
     _isLoading = true;
     notifyListeners();
 
     try {
-      debugPrint('[ProfileViewModel] 아동 로그인 시도 (ID: $childId)');
+      final prefs = await SharedPreferences.getInstance();
 
-      // 1. 아동 로그인 (accessToken 발급)
-      final loginResponse = await _repository.loginAsChild(childId, deviceId);
+      // 1. 메모리(TokenManager)에 토큰이 없으면 저장소에서 복구
+      String? parentToken = my_auth.TokenManager().token;
+      if (parentToken == null || parentToken.isEmpty) {
+        parentToken = prefs.getString('parentTokenBackup');
+        if (parentToken != null) {
+          my_auth.TokenManager().setToken(parentToken);
+        }
+      }
+
+      debugPrint('[ProfileViewModel] 토큰 복구 상태: ${parentToken != null}');
+
+      // 2. 아동 로그인 (부모 권한 사용)
+      final loginResponse = await _repository.loginAsChild(deviceId, int.parse(childId));
 
       if (loginResponse != null && loginResponse['accessToken'] != null) {
         final String childToken = loginResponse['accessToken'];
 
-        // 2. 아동 전용 토큰 저장 (기존 부모 토큰 덮어쓰기)
-        my_auth.TokenManager().setToken(childToken);
-        debugPrint('[ProfileViewModel] 아동 전용 토큰 갱신 완료');
-
-        // 3. 발급받은 토큰으로 정보 상세 조회
-        final result = await _repository.getChildInformation(childId, childToken);
+        // 3. 정보 조회 (부모 토큰 사용)
+        // 만약 부모 토큰이 만료되었다면 발급받은 childToken을 fallback으로 사용
+        final result = await _repository.getChildInformation(childId, parentToken ?? childToken);
 
         if (result != null) {
+          // ✅ 성공 시 데이터 업데이트
           _childInfo = result;
           debugPrint('[ProfileViewModel] 정보 조회 성공: ${_childInfo?.nickname}');
+
+          // 4. 조회가 성공했을 때만 앱 전역 토큰을 [아동 토큰]으로 변경
+          // 이후부터는 다른 아동용 API(퀘스트 등)를 사용할 수 있습니다.
+          my_auth.TokenManager().setToken(childToken);
+        } else {
+          debugPrint('[ProfileViewModel] 정보 조회 결과가 null입니다.');
         }
-      } else {
-        debugPrint('[ProfileViewModel] 아동 로그인 실패: 응답이 없거나 토큰이 없습니다.');
       }
     } catch (e) {
-      debugPrint('[ProfileViewModel] 전체 프로세스 에러 발생: $e');
+      debugPrint('[ProfileViewModel] 에러 발생: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -77,16 +94,9 @@ class ProfileViewModel extends ChangeNotifier {
       if (result != null && result.success) {
         _lastCreatedChildId = result.childId;
         debugPrint('[ProfileViewModel] 아이 프로필 생성 성공! ID: $_lastCreatedChildId');
-
-        // ⚠️ 주의: 여기서 fetchChildInformation을 호출하면 안 됩니다!
-        // 부모 앱에서는 아동 로그인이 필요 없으며, 호출 시 403 에러가 발생할 수 있습니다.
-        // 부모 앱은 생성된 _lastCreatedChildId를 가지고 QR 코드만 보여주면 됩니다.
-
         return true;
-      } else {
-        debugPrint('[ProfileViewModel] 생성 실패');
-        return false;
       }
+      return false;
     } catch (e) {
       debugPrint('[ProfileViewModel] 생성 에러: $e');
       return false;

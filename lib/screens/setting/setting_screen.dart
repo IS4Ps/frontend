@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:qr_flutter/qr_flutter.dart'; // QR 패키지 추가
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../start_screen.dart';
 import '../../view_model/setting/setting_view_model.dart';
-import '../../view_model/profile/profile_view_model.dart'; // ProfileViewModel 임포트
-import '../../auth/token_manager.dart' as my_auth; // TokenManager 경로에 맞춰 수정
+import '../../view_model/profile/profile_view_model.dart';
+import '../../auth/token_manager.dart' as my_auth;
 import 'child_selection_dialog.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -54,7 +54,7 @@ class _SettingScreenState extends State<SettingScreen> {
     }
   }
 
-  // --- [신규] 자녀 등록 이름 입력 팝업 ---
+  // 자녀 등록 이름 입력 팝업
   void _showAddChildDialog() {
     final TextEditingController nameController = TextEditingController();
 
@@ -91,18 +91,17 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // --- [신규] API 호출 및 결과 처리 ---
+  // API 호출 및 결과 처리
   Future<void> _registerChildAction(String nickname) async {
     final profileVM = context.read<ProfileViewModel>();
 
-    // API 호출 (기기 ID는 필요에 따라 수정 가능)
     bool success = await profileVM.createChildProfile(
       nickname: nickname,
       deviceId: "device-001",
     );
 
     if (success && mounted) {
-      // 등록 성공 시 QR 코드 팝업 띄우기 (ViewModel에 저장된 childId 사용)
+      // 등록 성공 시 QR 코드 팝업 띄우기
       _showQRCodeDialog(profileVM.lastCreatedChildId.toString(), nickname);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,13 +110,13 @@ class _SettingScreenState extends State<SettingScreen> {
     }
   }
 
-  // --- [신규] QR 코드 표시 팝업 ---
-  // SettingScreen.dart 내부 _showQRCodeDialog 함수 수정
-
+  // ✅ [수정] QR 코드 표시 팝업 (부모 토큰 포함)
   void _showQRCodeDialog(String childId, String nickname) {
-    // ✅ 404 방지 핵심: 생성 시 사용했던 기기 ID를 QR 데이터에 포함합니다.
-    // 현재 _registerChildAction에서 "device-001"을 썼으므로 동일하게 맞춥니다.
-    final String qrData = "$childId,device-001";
+    // TokenManager에서 현재 부모의 인증 토큰을 가져옵니다.
+    final String? parentToken = my_auth.TokenManager().token;
+
+    // ✅ 403 에러 해결 핵심: "아이ID,기기ID,부모토큰" 형태로 데이터를 합칩니다.
+    final String qrData = "$childId,device-001,$parentToken";
 
     showDialog(
       context: context,
@@ -142,7 +141,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: QrImageView(
-                  data: qrData, // ✅ childId만 보내지 않고 "ID,deviceId" 형태로 전송
+                  data: qrData, // ✅ 이제 부모 토큰이 실린 데이터가 전송됩니다.
                   version: QrVersions.auto,
                   size: 180.0,
                 ),
@@ -177,7 +176,6 @@ class _SettingScreenState extends State<SettingScreen> {
     final settingVM = context.watch<SettingViewModel>();
     final profileVM = context.watch<ProfileViewModel>();
 
-    // 두 ViewModel 중 하나라도 로딩 중이면 인디케이터 표시
     bool isLoading = settingVM.isLoading || profileVM.isLoading;
 
     return Scaffold(
@@ -206,9 +204,8 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // 자녀 계정 섹션 (연동하기 버튼 수정)
   Widget _buildChildAccountSection() {
-    final profileVM = context.watch<ProfileViewModel>(); // ProfileViewModel 관찰
+    final profileVM = context.watch<ProfileViewModel>();
 
     return _buildSectionCard(
       title: '자녀 계정',
@@ -226,7 +223,7 @@ class _SettingScreenState extends State<SettingScreen> {
               children: [
                 const CircleAvatar(radius: 24, backgroundColor: Color(0XFFD9D9D9)),
                 const SizedBox(width: 12),
-                Expanded( // 텍스트 영역을 확장
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -236,7 +233,6 @@ class _SettingScreenState extends State<SettingScreen> {
                     ],
                   ),
                 ),
-                // --- [추가] 생성된 ID가 있을 때만 다시보기 버튼 표시 ---
                 if (profileVM.lastCreatedChildId != null)
                   IconButton(
                     onPressed: () {
@@ -339,7 +335,6 @@ class _SettingScreenState extends State<SettingScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
           TextButton(onPressed: () async {
             await UserApi.instance.logout();
-            // TokenManager clear 로직 추가 필요
             if (mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const StartScreen()), (route) => false);
           }, child: const Text('확인', style: TextStyle(color: Colors.redAccent))),
         ],
