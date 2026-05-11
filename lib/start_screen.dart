@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'child_qr_scanner_screen.dart';
+import 'child_qr_scanner_screen.dart'; // QR 스캐너 화면
 
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
@@ -21,22 +21,19 @@ class _StartScreenState extends State<StartScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. 아동 자동 로그인 상태 먼저 체크
-    _checkChildStatus();
-    // 2. 부모 로그인 상태 체크
+    // 자동 로그인 체크 활성화
+    // _checkChildStatus();
     _checkLoginStatus();
   }
 
-  // [신규] 저장된 아동 연동 정보가 있는지 확인하는 함수
+  // 저장된 아동 연동 정보가 있는지 확인 (자동 로그인)
   Future<void> _checkChildStatus() async {
     final prefs = await SharedPreferences.getInstance();
     bool isChildMode = prefs.getBool('isChildMode') ?? false;
     String? childId = prefs.getString('selectedChildId');
 
     if (isChildMode && childId != null) {
-      debugPrint('[자동 로그인] 아동 모드 연동 확인됨 (Child ID: $childId)');
       if (mounted) {
-        // 이미 연동되어 있다면 아동 메인 화면으로 즉시 이동
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const ChildMainScreen()),
@@ -81,7 +78,7 @@ class _StartScreenState extends State<StartScreen> {
               ),
               const SizedBox(height: 60),
 
-              // 1. 보호자로 가입하기 버튼
+              // 1. 보호자로 가입하기
               _buildRoleButton(
                 title: '보호자로 가입하기',
                 subtitle: _isLoggedIn ? '이미 로그인됨 - 바로 입장' : '자녀의 진행 상황을 관리하세요',
@@ -98,14 +95,14 @@ class _StartScreenState extends State<StartScreen> {
 
               const SizedBox(height: 20),
 
-              // 2. 아동으로 가입하기 버튼
+              // 2. 아동으로 가입하기 (하드코딩 제거됨)
               _buildRoleButton(
                 title: '아동으로 가입하기',
                 subtitle: '퀘스트를 완료하고 레벨업하세요!',
                 icon: Icons.child_care_rounded,
                 iconColor: Colors.orangeAccent,
                 onTap: () {
-                  // QR 스캔 화면으로 이동
+                  // 이제 바로 ChildMainScreen으로 가지 않고, QR 스캐너로 이동합니다.
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const ChildQrScannerScreen()),
@@ -114,7 +111,6 @@ class _StartScreenState extends State<StartScreen> {
               ),
 
               const SizedBox(height: 30),
-
               const Text(
                 '처음 오셨나요? 보호자 계정을 먼저 만들어주세요!',
                 style: TextStyle(
@@ -123,7 +119,6 @@ class _StartScreenState extends State<StartScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
               const Spacer(),
             ],
           ),
@@ -132,7 +127,6 @@ class _StartScreenState extends State<StartScreen> {
     );
   }
 
-  // 역할 선택 버튼 위젯
   Widget _buildRoleButton({
     required String title,
     required String subtitle,
@@ -219,6 +213,7 @@ class _StartScreenState extends State<StartScreen> {
                       ? await UserApi.instance.loginWithKakaoTalk()
                       : await UserApi.instance.loginWithKakaoAccount();
 
+                  // baseUrl도 나중에 환경 변수나 공통 상수로 빼는 것을 권장합니다.
                   const String baseUrl = "http://100.27.204.252:8080";
                   final response = await http.post(
                     Uri.parse('$baseUrl/auth/kakao'),

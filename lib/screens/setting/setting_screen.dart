@@ -112,10 +112,16 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   // --- [신규] QR 코드 표시 팝업 ---
+  // SettingScreen.dart 내부 _showQRCodeDialog 함수 수정
+
   void _showQRCodeDialog(String childId, String nickname) {
+    // ✅ 404 방지 핵심: 생성 시 사용했던 기기 ID를 QR 데이터에 포함합니다.
+    // 현재 _registerChildAction에서 "device-001"을 썼으므로 동일하게 맞춥니다.
+    final String qrData = "$childId,device-001";
+
     showDialog(
       context: context,
-      barrierDismissible: false, // QR은 중요하므로 쉽게 닫히지 않게 설정 가능
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: SizedBox(
@@ -129,7 +135,6 @@ class _SettingScreenState extends State<SettingScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 13, color: Color(0xFF7C7D7D))),
               const SizedBox(height: 25),
-              // QR 코드 생성 부분
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -137,7 +142,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: QrImageView(
-                  data: childId, // QR에 담길 데이터 (childId)
+                  data: qrData, // ✅ childId만 보내지 않고 "ID,deviceId" 형태로 전송
                   version: QrVersions.auto,
                   size: 180.0,
                 ),

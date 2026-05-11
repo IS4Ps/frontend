@@ -78,34 +78,41 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
   }
 
   // 데이터 저장 및 화면 이동 처리
-  Future<void> _handleQrSuccess(String childId) async {
+  // ChildQrScannerScreen.dart 내부 _handleQrSuccess 함수 수정
+
+  Future<void> _handleQrSuccess(String rawData) async {
     try {
-      // [저장 로직] 기기에 아동 모드 여부와 ID 저장
+      // 1. QR 데이터 분리 ("17,device-001" -> ["17", "device-001"])
+      final List<String> parts = rawData.split(',');
+      final String childId = parts[0];
+      final String deviceId = parts.length > 1 ? parts[1] : "device-001"; // 없을 경우 대비 기본값
+
+      // 2. [저장 로직] 기기에 정보 저장
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isChildMode', true);
       await prefs.setString('selectedChildId', childId);
+      await prefs.setString('lastConnectedDeviceId', deviceId); // ✅ deviceId도 같이 저장
 
       if (!mounted) return;
 
       // 성공 알림 팝업
       showDialog(
         context: context,
-        barrierDismissible: false, // 팝업 밖을 눌러도 안 닫히게 설정
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('연동 성공!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('자녀 ID $childId번 계정과 연결되었습니다.\n이제 모험을 시작해볼까요?'),
+          content: Text('자녀 ID $childId번 계정과 연결되었습니다.'),
           actions: [
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // 팝업 닫고 아동 메인으로 이동 (스택 초기화)
                   Navigator.pop(context);
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const ChildMainScreen()),
-                        (route) => false, // 뒤로가기 방지
+                        (route) => false,
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -113,18 +120,15 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
-                child: const Text(
-                  '시작하기',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
+                child: const Text('시작하기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
         ),
       );
     } catch (e) {
-      debugPrint('저장 에러: $e');
-      setState(() => isScanned = false); // 실패 시 다시 스캔 가능하게 변경
+      debugPrint('스캔 처리 에러: $e');
+      setState(() => isScanned = false);
     }
   }
 }
