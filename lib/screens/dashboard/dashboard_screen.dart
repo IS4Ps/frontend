@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../view_model/dashboard/dashboard_view_model.dart';
+import '../../view_model/profile/profile_view_model.dart';
 import '../../models/dashboard/monthly_mood_model.dart';
 import 'heatmap_card.dart';
 import 'minigame_score_card.dart';
@@ -15,87 +17,108 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  // DashboardScreen.dart 의 initState 부분
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DashboardViewModel>().fetchMonthlyMood();
-      context.read<DashboardViewModel>().fetchWeeklyStats();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final dashboardVM = context.read<DashboardViewModel>();
+      final profileVM = context.read<ProfileViewModel>();
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. 대시보드 기본 데이터 로드
+      dashboardVM.fetchMonthlyMood();
+      dashboardVM.fetchWeeklyStats();
+
+      // 2. 저장된 아이 ID 가져오기
+      String? savedChildId = prefs.getString('selectedChildId');
+      String? deviceId = prefs.getString('lastConnectedDeviceId') ?? "device-001";
+
+      // 저장된 ID가 있다면 프로필 정보를 명시적으로 요청
+      if (savedChildId != null) {
+        debugPrint('[Dashboard] 저장된 아이 ID($savedChildId)로 정보 조회 시작');
+        await profileVM.fetchChildInformation(savedChildId, deviceId);
+      } else {
+        debugPrint('[Dashboard] 저장된 아이 ID가 없습니다.');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // 두 ViewModel의 상태를 모두 지켜봅니다.
+    final dashboardVM = context.watch<DashboardViewModel>();
+    final profileVM = context.watch<ProfileViewModel>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFEBF1F7),
-      body: Consumer<DashboardViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return Column(
-            children: [
-              Container(
-                color: Colors.white,
-                child: SafeArea(
-                  bottom: false,
-                  child: _buildHeader(),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  child: Column(
-                    children: [
-                      _buildProgressCard(viewModel),
-                      const SizedBox(height: 24),
-                      _buildActivityCard(),
-                      const SizedBox(height: 24),
-                      _buildEmotionCard(viewModel.monthlyMoodData),
-                      const SizedBox(height: 24),
-                      const HeatmapCard(
-                        title: '루틴 습관 히트맵',
-                        subtitle: '3개월 일관성',
-                        data: [
-                          2,1,0,2,3,3,0,1,1,0,2,3,2,
-                          2,2,2,0,3,2,1,2,1,0,0,2,3,
-                          1,3,2,0,0,3,1,2,2,2,2,3,1,
-                          2,1,0,2,2,0,0,2,2,0,3,2,2,
-                          2,3,0,3,2,3,0,2,3,1,3,2,3,
-                          3,2,2,0,1,3,3,1,0,1,3,0,0,
-                          3,2,2,3,0,3,0,1,0,1,2,2,2,
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      const HeatmapCard(
-                        title: '미니게임 히트맵',
-                        subtitle: '3개월 일관성',
-                        data: [
-                          2,1,0,2,3,3,0,1,1,0,2,3,2,
-                          2,2,2,0,3,2,1,2,1,0,0,2,3,
-                          1,3,2,0,0,3,1,2,2,2,2,3,1,
-                          2,1,0,2,2,0,0,2,2,0,3,2,2,
-                          2,3,0,3,2,3,0,2,3,1,3,2,3,
-                          3,2,2,0,1,3,3,1,0,1,3,0,0,
-                          3,2,2,3,0,3,0,1,0,1,2,2,2,
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      const MinigameScoreCard(),
+      body: dashboardVM.isLoading || profileVM.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+        children: [
+          Container(
+            color: Colors.white,
+            child: SafeArea(
+              bottom: false,
+              child: _buildHeader(profileVM), // ✅ profileVM 전달
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: Column(
+                children: [
+                  _buildProgressCard(dashboardVM),
+                  const SizedBox(height: 24),
+                  _buildActivityCard(),
+                  const SizedBox(height: 24),
+                  _buildEmotionCard(dashboardVM.monthlyMoodData),
+                  const SizedBox(height: 24),
+                  const HeatmapCard(
+                    title: '루틴 습관 히트맵',
+                    subtitle: '3개월 일관성',
+                    data: [
+                      2,1,0,2,3,3,0,1,1,0,2,3,2,
+                      2,2,2,0,3,2,1,2,1,0,0,2,3,
+                      1,3,2,0,0,3,1,2,2,2,2,3,1,
+                      2,1,0,2,2,0,0,2,2,0,3,2,2,
+                      2,3,0,3,2,3,0,2,3,1,3,2,3,
+                      3,2,2,0,1,3,3,1,0,1,3,0,0,
+                      3,2,2,3,0,3,0,1,0,1,2,2,2,
                     ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  const HeatmapCard(
+                    title: '미니게임 히트맵',
+                    subtitle: '3개월 일관성',
+                    data: [
+                      2,1,0,2,3,3,0,1,1,0,2,3,2,
+                      2,2,2,0,3,2,1,2,1,0,0,2,3,
+                      1,3,2,0,0,3,1,2,2,2,2,3,1,
+                      2,1,0,2,2,0,0,2,2,0,3,2,2,
+                      2,3,0,3,2,3,0,2,3,1,3,2,3,
+                      3,2,2,0,1,3,3,1,0,1,3,0,0,
+                      3,2,2,3,0,3,0,1,0,1,2,2,2,
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const MinigameScoreCard(),
+                ],
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  // ✅ 닉네임을 동적으로 반영하도록 수정
+  Widget _buildHeader(ProfileViewModel profileVM) {
+    // 서버에서 받아온 닉네임, 없으면 "아이"로 표시
+    final String nickname = profileVM.childInfo?.nickname ?? "아이";
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: const BoxDecoration(
@@ -107,18 +130,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '준수의 진행 상황',
-                style: TextStyle(
+                '$nickname의 진행 상황', // ★ "준수" 대신 실제 닉네임 반영
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                 '진행 상황을 한 눈에 볼 수 있는 대시보드',
                 style: TextStyle(
                   fontSize: 16,

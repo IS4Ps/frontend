@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart'; // 3D 뷰어 패키지 추가
+import '../../view_model/profile/profile_view_model.dart';
 import '../../view_model/quest/quest_view_model.dart';
 import 'grow_screen.dart';
 import 'speech_bubble.dart';
@@ -69,24 +70,50 @@ class _QuestScreenState extends State<QuestScreen> {
   }
 
   Widget _buildLevelSection() {
+    // 1. ProfileViewModel의 데이터를 구독합니다.
+    final profileVM = Provider.of<ProfileViewModel>(context);
+    final info = profileVM.childInfo;
+
+    // 2. 서버 데이터 매핑 (null일 경우 기본값 설정)
+    int level = info?.level ?? 1;
+
+    // 직업 판별 로직 (현재는 기본이 모험가, 스탯에 따라 동적 변경 가능)
+    String jobTitle = "모험가";
+
+    // 경험치 계산 (1000 기준)
+    int currentExp = info?.currentExp ?? 0;
+    int maxExp = 1000;
+    double expFactor = (currentExp / maxExp).clamp(0.0, 1.0);
+    int expPercent = (expFactor * 100).toInt();
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Level 1 모험가", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+          // ✅ 닉네임 없이 "Level X 직업명" 형식으로 깔끔하게 표시
+          Text(
+              "Level $level $jobTitle",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)
+          ),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(30),
-            child: const LinearProgressIndicator(
-              value: 0.7,
-              backgroundColor: Color(0xFFE2E2E2),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA1FF6F)),
+            child: LinearProgressIndicator(
+              value: expFactor, // ✅ 실제 서버 경험치 반영
+              backgroundColor: const Color(0xFFE2E2E2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFA1FF6F)),
               minHeight: 18,
             ),
           ),
           const SizedBox(height: 10),
-          const Center(child: Text("70%", style: TextStyle(color: Colors.black, fontSize: 22))),
+          // ✅ 진행도를 퍼센트로 표시
+          Center(
+              child: Text(
+                  "$expPercent%",
+                  style: const TextStyle(color: Colors.black, fontSize: 22)
+              )
+          ),
         ],
       ),
     );
