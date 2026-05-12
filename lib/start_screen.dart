@@ -54,7 +54,7 @@ class _StartScreenState extends State<StartScreen> {
         await UserApi.instance.accessTokenInfo();
         if (mounted) setState(() => _isLoggedIn = true);
       } catch (e) {
-        my_auth.TokenManager().clear();
+        await my_auth.TokenManager().clear();
         if (mounted) setState(() => _isLoggedIn = false);
       }
     }
@@ -231,7 +231,7 @@ class _StartScreenState extends State<StartScreen> {
                     final dynamic data = responseData['data'];
 
                     if (data != null && data['accessToken'] != null) {
-                      my_auth.TokenManager().setToken(data['accessToken']);
+                      await my_auth.TokenManager().setToken(data['accessToken']);
                     }
 
                     if (mounted) {

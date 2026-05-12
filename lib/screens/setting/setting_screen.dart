@@ -334,7 +334,7 @@ class _SettingScreenState extends State<SettingScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
           TextButton(onPressed: () async {
             await UserApi.instance.logout();
-            // TokenManager clear 로직 추가 필요
+            await my_auth.TokenManager().clear();
             if (mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const StartScreen()), (route) => false);
           }, child: const Text('확인', style: TextStyle(color: Colors.redAccent))),
         ],

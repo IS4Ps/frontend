@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import '../common/dio_client.dart';
 
 class QuizApiService {
-  static const String baseUrl = "http://100.27.204.252:8080";
-
   Future<List<Map<String, dynamic>>> generateQuiz(
-      List<XFile> images, int childId, String token) async {
+      List<XFile> images, int childId) async {
     final List<Map<String, String>> imageList = [];
     for (final image in images) {
       final bytes = await File(image.path).readAsBytes();
@@ -15,23 +14,19 @@ class QuizApiService {
       imageList.add({'imageBase64': base64Str});
     }
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/v1/ai-quizzes/generate'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
+    final response = await DioClient.dio.post(
+      '/api/v1/ai-quizzes/generate',
+      data: {
         'childId': childId,
         'category': '일반',
         'images': imageList,
-      }),
+      },
     );
 
     print('[API 호출] AI 퀴즈 생성');
-    print('[응답 데이터] ${response.body}');
+    print('[응답 데이터] ${response.data}');
 
-    final data = jsonDecode(response.body);
+    final data = response.data;
     return List<Map<String, dynamic>>.from(data['data']['quizzes']);
   }
 }

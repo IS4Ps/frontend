@@ -1,21 +1,21 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:frontend/models/store/inventory_model.dart';
 import '../../services/store/inventory_api_service.dart';
 
 class InventoryRepository {
   final InventoryApiService _apiService = InventoryApiService();
 
-  Future<List<InventoryModel>?> getInventory(int childId, String token) async {
+  Future<List<InventoryModel>?> getInventory(int childId) async {
     try {
       print("[API 호출] 인벤토리 조회 시작 (childId: $childId)");
 
-      final response = await _apiService.fetchInventory(childId, token);
+      final response = await _apiService.fetchInventory(childId);
 
       if (response.statusCode == 200) {
         print("[API 성공] 상태 코드: ${response.statusCode}");
-        print("[응답 데이터] ${response.body}");
+        print("[응답 데이터] ${response.data}");
 
-        final body = jsonDecode(response.body);
+        final body = response.data;
 
         if (body['data'] != null) {
           return (body['data'] as List)
@@ -29,27 +29,35 @@ class InventoryRepository {
         return null;
       }
     } catch (e) {
-      print("[Repository 에러] 네트워크/런타임 문제 발생: $e");
+      if (e is DioException) {
+        print("[Repository 에러] DioException: ${e.response?.statusCode} - ${e.response?.data}");
+      } else {
+        print("[Repository 에러] 네트워크/런타임 문제 발생: $e");
+      }
       return null;
     }
   }
 
-  Future<bool> equipItem(int inventoryId, String token) async {
+  Future<bool> equipItem(int inventoryId) async {
     try {
       print("[API 호출] 아이템 장착/해제 시작 (inventoryId: $inventoryId)");
 
-      final response = await _apiService.equipItem(inventoryId, token);
+      final response = await _apiService.equipItem(inventoryId);
 
       if (response.statusCode == 200) {
         print("[API 성공] 아이템 장착/해제 완료");
-        print("[응답 데이터] ${response.body}");
+        print("[응답 데이터] ${response.data}");
         return true;
       } else {
         print("[API 실패] 상태 코드: ${response.statusCode}");
         return false;
       }
     } catch (e) {
-      print("[Repository 에러] 네트워크/런타임 문제 발생: $e");
+      if (e is DioException) {
+        print("[Repository 에러] DioException: ${e.response?.statusCode} - ${e.response?.data}");
+      } else {
+        print("[Repository 에러] 네트워크/런타임 문제 발생: $e");
+      }
       return false;
     }
   }

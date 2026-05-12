@@ -1,7 +1,7 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../../models/profile/child_profile_request_model.dart';
 import '../../models/profile/child_profile_response_model.dart';
-import '../../services/profile/profile_api_service.dart'; // API 서비스 경로에 맞게 수정하세요
+import '../../services/profile/profile_api_service.dart';
 
 class ProfileRepository {
   final ProfileApiService _apiService = ProfileApiService();
@@ -12,34 +12,37 @@ class ProfileRepository {
       final response = await _apiService.postChildProfile(requestModel.toJson());
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        String originalBody = utf8.decode(response.bodyBytes);
-        print("[API 응답 원문]: $originalBody");
+        final dynamic data = response.data;
+        print("[API 응답 원문]: $data");
 
-        // 만약 응답이 JSON 형태({로 시작)가 아니라면 수동으로 모델을 생성
-        if (!originalBody.trim().startsWith('{')) {
-          // 문자열에서 숫자만 추출 (아이 ID: 8 에서 8 추출)
+        // Dio는 이미 JSON을 Map으로 변환해서 주거나 String으로 줌
+        if (data is String) {
           final RegExp regExp = RegExp(r'\d+');
-          final match = regExp.firstMatch(originalBody);
+          final match = regExp.firstMatch(data);
           int? extractedId = match != null ? int.parse(match.group(0)!) : null;
 
           return ChildProfileResponseModel(
             success: true,
-            code: response.statusCode,
-            message: originalBody,
-            childId: extractedId, // 추출한 ID 삽입
+            code: response.statusCode ?? 200,
+            message: data,
+            childId: extractedId,
           );
         }
 
-        // 응답이 정상적인 JSON인 경우
-        final body = jsonDecode(originalBody);
-        return ChildProfileResponseModel.fromJson(body);
+        // 응답이 Map인 경우
+        return ChildProfileResponseModel.fromJson(data);
       } else {
-        // 실패 처리
-        return ChildProfileResponseModel(success: false, code: response.statusCode, message: "서버 오류");
+        return ChildProfileResponseModel(success: false, code: response.statusCode ?? 500, message: "서버 오류");
       }
     } catch (e) {
-      print("[Repository 에러] 상세: $e");
+      if (e is DioException) {
+        print("[Repository 에러] DioException: ${e.response?.statusCode} - ${e.response?.data}");
+      } else {
+        print("[Repository 에러] 상세: $e");
+      }
       return null;
     }
+  }
+}
   }
 }

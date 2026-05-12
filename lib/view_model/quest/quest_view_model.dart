@@ -74,7 +74,7 @@ class QuestViewModel extends ChangeNotifier {
     notifyListeners();
 
     final int dynamicChildId = _getChildIdFromToken(_testToken);
-    _feelingData = await _repository.getTodayMood(dynamicChildId, _testToken);
+    _feelingData = await _repository.getTodayMood(dynamicChildId);
 
     if (_feelingData != null) {
       if (_feelingData!.primaryEmotion == "NONE" ||
@@ -98,7 +98,7 @@ class QuestViewModel extends ChangeNotifier {
 
     final int dynamicChildId = _getChildIdFromToken(_testToken);
     final bool isSuccess = await _repository.registerTodayMood(
-        _testToken, dynamicChildId, selectedEmotion);
+        dynamicChildId, selectedEmotion);
 
     if (isSuccess) {
       await loadTodayMood();
@@ -119,7 +119,7 @@ class QuestViewModel extends ChangeNotifier {
       print("[ViewModel] 미션 목록 로드 시작 (childId: $dynamicChildId)");
 
       final List<TodayMissionModel> missions =
-      await _repository.getTodayMissions(dynamicChildId, _testToken);
+      await _repository.getTodayMissions(dynamicChildId);
 
       _todayMissions = missions;
     } catch (e) {
@@ -141,7 +141,7 @@ class QuestViewModel extends ChangeNotifier {
       print("[ViewModel] 주간 통계 로드 시작 (childId: $dynamicChildId)");
 
       // Repository에 getWeeklyStats 메서드를 구현해야 함
-      final WeeklyStatsModel? stats = await _repository.getWeeklyStats(dynamicChildId, _testToken);
+      final WeeklyStatsModel? stats = await _repository.getWeeklyStats(dynamicChildId);
 
       if (stats != null) {
         _weeklyStats = stats;
@@ -165,7 +165,7 @@ class QuestViewModel extends ChangeNotifier {
 
     try {
       final int dynamicChildId = _getChildIdFromToken(_testToken);
-      final List<EquippedItemModel> items = await _repository.getEquippedItems(dynamicChildId, _testToken);
+      final List<EquippedItemModel> items = await _repository.getEquippedItems(dynamicChildId);
 
       // 장착된 아이템만 필터링해서 저장 (isEquipped가 true인 것만)
       _equippedItems = items.where((item) => item.isEquipped).toList();
@@ -199,7 +199,7 @@ class QuestViewModel extends ChangeNotifier {
       );
 
       // Repository로부터 데이터를 받아와 직접 할당
-      final response = await _repository.startNBackGame(_testToken, request);
+      final response = await _repository.startNBackGame(request);
 
       if (response != null) {
         _nBackData = response;
@@ -246,7 +246,7 @@ class QuestViewModel extends ChangeNotifier {
       );
 
       // Repository를 통해 API 호출 (NBackSubmitResponseModel 반환 가정)
-      final response = await _repository.submitNBackGame(_testToken, request);
+      final response = await _repository.submitNBackGame(request);
 
       if (response != null) {
         _nBackResult = response;
@@ -286,7 +286,7 @@ class QuestViewModel extends ChangeNotifier {
       );
 
       // Repository를 통해 API 호출
-      final response = await _repository.startGoNoGoGame(_testToken, request);
+      final response = await _repository.startGoNoGoGame(request);
 
       if (response != null) {
         _goNoGoData = response;
@@ -330,7 +330,7 @@ class QuestViewModel extends ChangeNotifier {
         answers: userAnswers,
       );
 
-      final response = await _repository.submitGoNoGoGame(_testToken, request);
+      final response = await _repository.submitGoNoGoGame(request);
 
       if (response != null) {
         _goNoGoResult = response;
@@ -371,7 +371,7 @@ class QuestViewModel extends ChangeNotifier {
       );
 
       // Repository 호출
-      final response = await _repository.startStroopGame(_testToken, request);
+      final response = await _repository.startStroopGame(request);
 
       if (response != null) {
         _stroopData = response;
@@ -419,7 +419,7 @@ class QuestViewModel extends ChangeNotifier {
       );
 
       // Repository를 통해 API 호출
-      final response = await _repository.submitStroopGame(_testToken, request);
+      final response = await _repository.submitStroopGame(request);
 
       if (response != null) {
         _stroopResult = response;

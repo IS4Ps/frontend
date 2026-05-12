@@ -1,27 +1,12 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import '../common/dio_client.dart';
 
 class InventoryApiService {
-  static const String baseUrl = "http://100.27.204.252:8080";
-
-  Future<http.Response> fetchInventory(int childId, String token) async {
-    final url = Uri.parse('$baseUrl/api/v1/inventory/$childId');
-    return await http.get(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+  Future<Response> fetchInventory(int childId) async {
+    return await DioClient.dio.get('/api/v1/inventory/$childId');
   }
 
-  Future<http.Response> equipItem(int inventoryId, String token) async {
-    final url = Uri.parse('$baseUrl/api/v1/inventory/$inventoryId/equip');
-    return await http.patch(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+  Future<Response> equipItem(int inventoryId) async {
+    return await DioClient.dio.patch('/api/v1/inventory/$inventoryId/equip');
   }
 }

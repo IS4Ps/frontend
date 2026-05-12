@@ -62,7 +62,6 @@ class DashboardViewModel extends ChangeNotifier {
 
       final MonthlyMoodModel? data = await _repository.getMonthlyMood(
           dynamicChildId,
-          _testToken,
           targetYear,
           targetMonth
       );
