@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ✅ SharedPreferences 추가
-import 'package:frontend/auth/token_manager.dart'; // ✅ TokenManager 추가
+import 'package:shared_preferences/shared_preferences.dart';
+// ✅ 카카오 SDK와 이름 충돌 방지를 위해 별칭 추가
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'package:frontend/models/dashboard/monthly_mood_model.dart';
 import '../../repository/dashboard/dashboard_repository.dart';
 
@@ -27,21 +28,21 @@ class DashboardViewModel extends ChangeNotifier {
   /// SharedPreferences에서 현재 선택된 자녀 ID 가져오기
   Future<int> _getChildId() async {
     final prefs = await SharedPreferences.getInstance();
-    // SettingScreen에서 저장한 'selectedChildId'를 읽어옵니다.
     String? savedId = prefs.getString('selectedChildId');
 
-    if (savedId != null && savedId != "null") {
+    debugPrint('🔍 [DashboardViewModel] SharedPreferences ID 체크: $savedId');
+
+    if (savedId != null && savedId != "null" && savedId.isNotEmpty) {
       return int.parse(savedId);
     }
 
-    // ID가 없을 경우 에러를 던져서 fetch 로직이 중단되게 합니다. (1로 고정하지 않음)
-    throw Exception("선택된 자녀 ID가 없습니다. 설정에서 자녀를 등록하거나 선택해주세요.");
+    throw Exception("선택된 자녀 ID가 없습니다.");
   }
 
-  /// TokenManager에서 현재 활성화된 토큰 가져오기
+  /// ✅ 별칭(my_auth)을 사용하여 우리쪽 TokenManager 호출
   String _getAccessToken() {
-    // 현재 모드(부모/아이)에 맞는 토큰을 TokenManager가 알아서 반환합니다.
-    return TokenManager().token ?? "";
+    final manager = my_auth.TokenManager();
+    return manager.token ?? "";
   }
 
   // --- ✅ [API 호출 로직] ---
@@ -53,18 +54,15 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. 실제 저장된 ID와 토큰 확보
       final int childId = await _getChildId();
       final String token = _getAccessToken();
 
-      // 2. 날짜 설정
       final now = DateTime.now();
       final int targetYear = year ?? now.year;
       final int targetMonth = month ?? now.month;
 
       debugPrint("[DashboardViewModel] 월간 감정 로드 시작 (childId: $childId, year: $targetYear, month: $targetMonth)");
 
-      // 3. 레포지토리 호출
       final MonthlyMoodModel? data = await _repository.getMonthlyMood(
           childId,
           token,

@@ -14,9 +14,14 @@ import 'view_model/dashboard/dashboard_view_model.dart';
 import 'view_model/quest/quest_view_model.dart';
 import 'view_model/reward/reward_view_model.dart';
 import 'start_screen.dart';
+import 'auth/token_manager.dart' as my_auth;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ 1. TokenManager 초기화 (로컬에 저장된 토큰/ID 복구)
+  // 이 코드가 있어야 앱 재실행 시에도 데이터가 유지됩니다.
+  await my_auth.TokenManager().init();
 
   // 카카오 SDK 초기화
   KakaoSdk.init(

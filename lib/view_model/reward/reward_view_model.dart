@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ✅ 추가
-import 'package:frontend/auth/token_manager.dart'; // ✅ 추가
+import 'package:shared_preferences/shared_preferences.dart';
+// ✅ 'as my_auth' 별칭을 반드시 추가해야 카카오 TokenManager와 안 겹칩니다.
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'package:frontend/models/reward/offline_reward_list_model.dart';
 import 'package:frontend/models/reward/offline_reward_request_model.dart';
 import '../../repository/reward/reward_repository.dart';
@@ -18,30 +19,29 @@ class RewardViewModel extends ChangeNotifier {
   bool get isWeekly => _isWeekly;
   List<OfflineRewardListModel> get editingRewards => _editingRewards;
 
-  // --- ✅ [핵심] 실제 데이터 소스 통합 로직 ---
-
-  /// SharedPreferences에서 현재 선택된 자녀 ID 가져오기
+  /// ✅ SharedPreferences에서 자녀 ID 가져오기
   Future<int> _getChildId() async {
     final prefs = await SharedPreferences.getInstance();
-    // SettingScreen에서 아이 등록/선택 시 저장한 'selectedChildId'를 사용합니다.
+    // SettingScreen에서 저장한 키값 'selectedChildId'를 읽어옵니다.
     String? savedId = prefs.getString('selectedChildId');
 
-    if (savedId != null && savedId != "null") {
+    debugPrint('🔍 [RewardViewModel] SharedPreferences ID 체크: $savedId');
+
+    if (savedId != null && savedId != "null" && savedId.isNotEmpty) {
       return int.parse(savedId);
     }
 
-    // ID가 없을 경우 에러를 던져서 fetch 로직이 중단되게 합니다.
+    // 여기서 Exception이 발생하면 로그에 "선택된 자녀가 없습니다."가 찍힙니다.
     throw Exception("선택된 자녀가 없습니다.");
   }
 
-  /// TokenManager에서 부모 토큰 가져오기
+  /// ✅ 별칭(my_auth)을 사용하여 우리쪽 TokenManager 호출
   String _getAccessToken() {
-    // 보상 설정은 부모의 권한이므로 parentToken을 명시적으로 사용하거나
-    // 상황에 맞는 활성 토큰을 가져옵니다.
-    return TokenManager().parentToken ?? TokenManager().token ?? "";
+    final manager = my_auth.TokenManager();
+    return manager.parentToken ?? manager.token ?? "";
   }
 
-  // --- ✅ [기존 UI 로직 유지] ---
+  // --- UI 로직 (기존과 동일) ---
 
   void togglePeriod(bool isWeekly) {
     _isWeekly = isWeekly;
@@ -68,15 +68,13 @@ class RewardViewModel extends ChangeNotifier {
   }
 
   void addRewardStep() {
-    _editingRewards.add(
-      OfflineRewardListModel(
-        rewardId: 0,
-        periodType: _isWeekly ? "WEEKLY" : "MONTHLY",
-        targetDays: 0,
-        rewardPromiseText: "",
-        status: "PENDING",
-      ),
-    );
+    _editingRewards.add(OfflineRewardListModel(
+      rewardId: 0,
+      periodType: _isWeekly ? "WEEKLY" : "MONTHLY",
+      targetDays: 0,
+      rewardPromiseText: "",
+      status: "PENDING",
+    ));
     notifyListeners();
   }
 
@@ -108,19 +106,17 @@ class RewardViewModel extends ChangeNotifier {
     }
   }
 
-  // --- ✅ [API 호출 로직 수정] ---
+  // --- API 통신 로직 ---
 
-  // 보상 목록 조회
   Future<void> fetchOfflineRewards() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // ✅ 하드코딩된 토큰 대신 실제 ID와 토큰 사용
       final int childId = await _getChildId();
       final String token = _getAccessToken();
 
-      debugPrint("[RewardViewModel] 보상 목록 로드 시작 (childId: $childId)");
+      debugPrint("[RewardViewModel] API 호출 시작 (childId: $childId)");
 
       final List<OfflineRewardListModel> rewards =
       await _repository.getOfflineRewards(childId, token);
@@ -137,14 +133,12 @@ class RewardViewModel extends ChangeNotifier {
     }
   }
 
-  // 보상 등록
   Future<void> saveRewardStep(int index) async {
     if (index < 0 || index >= _editingRewards.length) return;
 
     final reward = _editingRewards[index];
-
     if (reward.rewardPromiseText.isEmpty || reward.targetDays <= 0) {
-      debugPrint("[RewardViewModel] 입력값이 올바르지 않습니다.");
+      debugPrint("[RewardViewModel] 유효하지 않은 입력값");
       return;
     }
 
@@ -162,16 +156,13 @@ class RewardViewModel extends ChangeNotifier {
         rewardPromiseText: reward.rewardPromiseText,
       );
 
-      debugPrint("[RewardViewModel] 보상 등록 시도 (childId: $childId)");
-
       final bool isSuccess = await _repository.registerOfflineReward(token, request);
 
       if (isSuccess) {
-        debugPrint("[RewardViewModel] 보상 등록 성공");
         await fetchOfflineRewards();
       }
     } catch (e) {
-      debugPrint("[RewardViewModel 에러] 등록 중 오류 발생: $e");
+      debugPrint("[RewardViewModel 에러] 등록 실패: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
