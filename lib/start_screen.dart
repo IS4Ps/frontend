@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/child_main_screen.dart';
 import 'package:frontend/parent_main_screen.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' hide TokenManager;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:frontend/auth/token_manager.dart' as my_auth;
+import 'package:frontend/auth/token_manager.dart'; // 별칭 제거하여 사용 권장
 import 'package:shared_preferences/shared_preferences.dart';
-import 'child_qr_scanner_screen.dart'; // QR 스캐너 화면
+import 'child_qr_scanner_screen.dart';
 
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
@@ -16,43 +16,49 @@ class StartScreen extends StatefulWidget {
 }
 
 class _StartScreenState extends State<StartScreen> {
-  bool _isLoggedIn = false;
+  bool _isLoggedInParent = false;
 
   @override
   void initState() {
     super.initState();
-    // 자동 로그인 체크 활성화
-    // _checkChildStatus();
-    _checkLoginStatus();
+    _checkAutoLogin();
   }
 
-  // 저장된 아동 연동 정보가 있는지 확인 (자동 로그인)
-  Future<void> _checkChildStatus() async {
+  /// ✅ [수정] 자동 로그인 체크 로직 통합
+  Future<void> _checkAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    bool isChildMode = prefs.getBool('isChildMode') ?? false;
-    String? childId = prefs.getString('selectedChildId');
 
-    if (isChildMode && childId != null) {
+    // 1. 아이 모드 우선 체크
+    bool isChildMode = prefs.getBool('isChildMode') ?? false;
+    String? childToken = prefs.getString('childToken');
+
+    if (isChildMode && childToken != null) {
+      TokenManager().setChildToken(childToken);
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const ChildMainScreen()),
         );
       }
+      return;
     }
-  }
 
-  Future<void> _checkLoginStatus() async {
-    bool hasKakaoToken = await AuthApi.instance.hasToken();
-    bool hasMyToken = my_auth.TokenManager().hasToken;
-
-    if (hasKakaoToken && hasMyToken) {
+    // 2. 부모 토큰 체크
+    String? parentToken = prefs.getString('parentTokenBackup');
+    if (parentToken != null && parentToken.isNotEmpty) {
       try {
-        await UserApi.instance.accessTokenInfo();
-        if (mounted) setState(() => _isLoggedIn = true);
+        // 카카오 토큰 정보가 실제로 유효한지 확인
+        AccessTokenInfo tokenInfo = await UserApi.instance.accessTokenInfo();
+
+        // ✅ 서버 토큰과 카카오 토큰이 모두 유효할 때만 true
+        TokenManager().setParentToken(parentToken);
+        if (mounted) setState(() => _isLoggedInParent = true);
       } catch (e) {
-        my_auth.TokenManager().clear();
-        if (mounted) setState(() => _isLoggedIn = false);
+        // 카카오 세션이 만료되었으면 부모 로그인 상태를 false로 강제 변경
+        debugPrint('세션 만료로 인한 자동 로그인 해제');
+        await prefs.remove('parentTokenBackup');
+        TokenManager().clear();
+        if (mounted) setState(() => _isLoggedInParent = false);
       }
     }
   }
@@ -78,14 +84,14 @@ class _StartScreenState extends State<StartScreen> {
               ),
               const SizedBox(height: 60),
 
-              // 1. 보호자로 가입하기
+              // 1. 보호자로 시작하기
               _buildRoleButton(
-                title: '보호자로 가입하기',
-                subtitle: _isLoggedIn ? '이미 로그인됨 - 바로 입장' : '자녀의 진행 상황을 관리하세요',
+                title: '보호자로 시작하기',
+                subtitle: _isLoggedInParent ? '이미 로그인됨 - 바로 입장' : '자녀의 진행 상황을 관리하세요',
                 icon: Icons.supervisor_account_rounded,
                 iconColor: Colors.blueAccent,
                 onTap: () {
-                  if (_isLoggedIn) {
+                  if (_isLoggedInParent) {
                     _navigateToParentMain();
                   } else {
                     _showKakaoLoginDialog(context);
@@ -95,14 +101,13 @@ class _StartScreenState extends State<StartScreen> {
 
               const SizedBox(height: 20),
 
-              // 2. 아동으로 가입하기 (하드코딩 제거됨)
+              // 2. 아동으로 시작하기
               _buildRoleButton(
-                title: '아동으로 가입하기',
+                title: '아동으로 시작하기',
                 subtitle: '퀘스트를 완료하고 레벨업하세요!',
                 icon: Icons.child_care_rounded,
                 iconColor: Colors.orangeAccent,
                 onTap: () {
-                  // 이제 바로 ChildMainScreen으로 가지 않고, QR 스캐너로 이동합니다.
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const ChildQrScannerScreen()),
@@ -127,6 +132,7 @@ class _StartScreenState extends State<StartScreen> {
     );
   }
 
+  // ... _buildRoleButton 위젯 코드는 기존과 동일 ...
   Widget _buildRoleButton({
     required String title,
     required String subtitle,
@@ -213,7 +219,6 @@ class _StartScreenState extends State<StartScreen> {
                       ? await UserApi.instance.loginWithKakaoTalk()
                       : await UserApi.instance.loginWithKakaoAccount();
 
-                  // baseUrl도 나중에 환경 변수나 공통 상수로 빼는 것을 권장합니다.
                   const String baseUrl = "http://100.27.204.252:8080";
                   final response = await http.post(
                     Uri.parse('$baseUrl/auth/kakao'),
@@ -226,11 +231,17 @@ class _StartScreenState extends State<StartScreen> {
                     final dynamic data = responseData['data'];
 
                     if (data != null && data['accessToken'] != null) {
-                      my_auth.TokenManager().setToken(data['accessToken']);
+                      final String parentToken = data['accessToken'];
+                      // 1. TokenManager에 부모 토큰 저장
+                      TokenManager().setParentToken(parentToken);
+                      // 2. 로컬 백업 저장
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('parentTokenBackup', parentToken);
+                      await prefs.setBool('isChildMode', false);
                     }
 
                     if (mounted) {
-                      setState(() => _isLoggedIn = true);
+                      setState(() => _isLoggedInParent = true);
                       Navigator.pop(innerContext);
                       _navigateToParentMain();
                     }

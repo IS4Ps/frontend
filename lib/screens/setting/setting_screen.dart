@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:qr_flutter/qr_flutter.dart'; // QR 패키지 추가
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../start_screen.dart';
 import '../../view_model/setting/setting_view_model.dart';
-import '../../view_model/profile/profile_view_model.dart'; // ProfileViewModel 임포트
-import '../../auth/token_manager.dart' as my_auth; // TokenManager 경로에 맞춰 수정
+import '../../view_model/profile/profile_view_model.dart';
+import '../../auth/token_manager.dart' as my_auth;
 import 'child_selection_dialog.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -30,7 +30,6 @@ class _SettingScreenState extends State<SettingScreen> {
     });
   }
 
-  // 서버에서 부모 정보 로드
   Future<void> _loadUserInfo() async {
     try {
       if (mounted) {
@@ -41,7 +40,6 @@ class _SettingScreenState extends State<SettingScreen> {
     }
   }
 
-  // 카카오 프로필 로드
   Future<void> _loadKakaoProfile() async {
     try {
       User user = await UserApi.instance.me();
@@ -54,7 +52,7 @@ class _SettingScreenState extends State<SettingScreen> {
     }
   }
 
-  // --- [신규] 자녀 등록 이름 입력 팝업 ---
+  // --- 자녀 등록 이름 입력 팝업 ---
   void _showAddChildDialog() {
     final TextEditingController nameController = TextEditingController();
 
@@ -91,33 +89,43 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // --- [신규] API 호출 및 결과 처리 ---
+  // --- [수정] 자녀 등록 및 QR 토큰 발급 로직 ---
   Future<void> _registerChildAction(String nickname) async {
     final profileVM = context.read<ProfileViewModel>();
 
-    // API 호출 (기기 ID는 필요에 따라 수정 가능)
+    // 1. 프로필 생성
     bool success = await profileVM.createChildProfile(
       nickname: nickname,
       deviceId: "device-001",
     );
 
     if (success && mounted) {
-      // 등록 성공 시 QR 코드 팝업 띄우기 (ViewModel에 저장된 childId 사용)
-      _showQRCodeDialog(profileVM.lastCreatedChildId.toString(), nickname);
+      // 2. 연동용 linkToken 발급 (서버 명세 반영)
+      final int? newChildId = profileVM.lastCreatedChildId;
+      if (newChildId != null) {
+        String? linkToken = await profileVM.fetchLinkToken(newChildId);
+
+        if (linkToken != null && mounted) {
+          // 3. 인자 3개 전달 (토큰, 닉네임, 아이디)
+          _showQRCodeDialog(linkToken, nickname, newChildId.toString());
+        }
+      }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('등록 실패: ${profileVM.isLoading ? "연결 지연" : "오류 발생"}')),
+        const SnackBar(content: Text('아이 등록에 실패했습니다.')),
       );
     }
   }
 
-  // --- [신규] QR 코드 표시 팝업 ---
+  // --- [수정] QR 코드 팝업 (인자 3개 정의) ---
   // SettingScreen.dart 내부 _showQRCodeDialog 함수 수정
 
-  void _showQRCodeDialog(String childId, String nickname) {
-    // ✅ 404 방지 핵심: 생성 시 사용했던 기기 ID를 QR 데이터에 포함합니다.
-    // 현재 _registerChildAction에서 "device-001"을 썼으므로 동일하게 맞춥니다.
-    final String qrData = "$childId,device-001";
+  void _showQRCodeDialog(String linkToken, String nickname, String childId) {
+    // ✅ 현재 부모의 실제 토큰을 가져옵니다.
+    final String parentToken = my_auth.TokenManager().parentToken ?? "";
+
+    // ✅ QR 데이터에 "링크토큰,부모토큰" 형태로 묶어서 넣습니다.
+    final String combinedData = "$linkToken,$parentToken";
 
     showDialog(
       context: context,
@@ -142,13 +150,15 @@ class _SettingScreenState extends State<SettingScreen> {
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: QrImageView(
-                  data: qrData, // ✅ childId만 보내지 않고 "ID,deviceId" 형태로 전송
+                  data: combinedData, // ✅ linkToken 대신 combinedData 사용
                   version: QrVersions.auto,
                   size: 180.0,
                 ),
               ),
               const SizedBox(height: 20),
-              Text('ID: $childId', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1687E3))),
+              Text('ID: $childId',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1687E3))
+              ),
             ],
           ),
         ),
@@ -177,7 +187,6 @@ class _SettingScreenState extends State<SettingScreen> {
     final settingVM = context.watch<SettingViewModel>();
     final profileVM = context.watch<ProfileViewModel>();
 
-    // 두 ViewModel 중 하나라도 로딩 중이면 인디케이터 표시
     bool isLoading = settingVM.isLoading || profileVM.isLoading;
 
     return Scaffold(
@@ -193,7 +202,7 @@ class _SettingScreenState extends State<SettingScreen> {
               child: Column(
                 children: [
                   _buildProfileSection(settingVM),
-                  _buildChildAccountSection(),
+                  _buildChildAccountSection(profileVM),
                   _buildMenuSection(),
                   const SizedBox(height: 10),
                   _buildLogoutButton(),
@@ -206,16 +215,12 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // 자녀 계정 섹션 (연동하기 버튼 수정)
-  Widget _buildChildAccountSection() {
-    final profileVM = context.watch<ProfileViewModel>(); // ProfileViewModel 관찰
-
+  Widget _buildChildAccountSection(ProfileViewModel profileVM) {
     return _buildSectionCard(
       title: '자녀 계정',
       trailing: TextButton(
         onPressed: _openChildSelection,
-        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(40, 20)),
-        child: const Text('선택하기', style: TextStyle(color: Color(0XFF1687E3), fontSize: 13, fontWeight: FontWeight.bold)),
+        child: const Text('선택하기', style: TextStyle(color: Color(0XFF1687E3), fontWeight: FontWeight.bold)),
       ),
       child: Column(
         children: [
@@ -226,7 +231,7 @@ class _SettingScreenState extends State<SettingScreen> {
               children: [
                 const CircleAvatar(radius: 24, backgroundColor: Color(0XFFD9D9D9)),
                 const SizedBox(width: 12),
-                Expanded( // 텍스트 영역을 확장
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -236,17 +241,16 @@ class _SettingScreenState extends State<SettingScreen> {
                     ],
                   ),
                 ),
-                // --- [추가] 생성된 ID가 있을 때만 다시보기 버튼 표시 ---
+                // --- [수정] 다시보기 시에도 새 토큰을 받아오도록 설정 ---
                 if (profileVM.lastCreatedChildId != null)
                   IconButton(
-                    onPressed: () {
-                      _showQRCodeDialog(
-                          profileVM.lastCreatedChildId.toString(),
-                          currentChildName
-                      );
+                    onPressed: () async {
+                      String? linkToken = await profileVM.fetchLinkToken(profileVM.lastCreatedChildId!);
+                      if (linkToken != null && mounted) {
+                        _showQRCodeDialog(linkToken, currentChildName, profileVM.lastCreatedChildId.toString());
+                      }
                     },
                     icon: const Icon(Icons.qr_code, color: Color(0XFF1687E3), size: 24),
-                    tooltip: 'QR 코드 다시보기',
                   ),
               ],
             ),
@@ -258,11 +262,10 @@ class _SettingScreenState extends State<SettingScreen> {
             child: ElevatedButton.icon(
               onPressed: _showAddChildDialog,
               icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('자녀 계정 연동하기', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              label: const Text('자녀 계정 연동하기', style: TextStyle(fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1687E3),
                 foregroundColor: Colors.white,
-                elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
@@ -272,31 +275,27 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
+  // --- 기존 헬퍼 위젯들 ---
   Widget _buildProfileSection(SettingViewModel viewModel) {
     final parentData = viewModel.parentData;
     return _buildSectionCard(
       title: '프로필',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0XFFD9D9D9),
-              backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
-              child: profileImageUrl == null ? const Icon(Icons.person, color: Colors.white, size: 30) : null,
-            ),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(parentNickname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
-                const SizedBox(height: 4),
-                Text(parentData?.email ?? '이메일 정보 없음', style: const TextStyle(fontSize: 13, color: Color(0XFF7C7D7D))),
-              ],
-            )
-          ],
-        ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
+            child: profileImageUrl == null ? const Icon(Icons.person) : null,
+          ),
+          const SizedBox(width: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(parentNickname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+              Text(parentData?.email ?? '이메일 정보 없음', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            ],
+          )
+        ],
       ),
     );
   }
@@ -307,9 +306,9 @@ class _SettingScreenState extends State<SettingScreen> {
       child: Column(
         children: [
           _buildListMenu('도움말 및 지원'),
-          const Divider(height: 1, indent: 15, endIndent: 15),
+          const Divider(height: 1),
           _buildListMenu('서비스 이용약관'),
-          const Divider(height: 1, indent: 15, endIndent: 15),
+          const Divider(height: 1),
           _buildListMenu('개인정보 처리방침'),
         ],
       ),
@@ -321,9 +320,9 @@ class _SettingScreenState extends State<SettingScreen> {
       width: double.infinity,
       height: 46,
       child: TextButton(
-        onPressed: () => _handleLogout(),
+        onPressed: _handleLogout,
         style: TextButton.styleFrom(backgroundColor: const Color(0xFFF5E6E6), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [Icon(Icons.logout, color: Colors.redAccent, size: 16), SizedBox(width: 8), Text('로그아웃', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14))]),
+        child: const Text('로그아웃', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -332,14 +331,12 @@ class _SettingScreenState extends State<SettingScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('로그아웃'),
         content: const Text('정말 로그아웃하시겠습니까?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
           TextButton(onPressed: () async {
             await UserApi.instance.logout();
-            // TokenManager clear 로직 추가 필요
             if (mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const StartScreen()), (route) => false);
           }, child: const Text('확인', style: TextStyle(color: Colors.redAccent))),
         ],
@@ -348,6 +345,6 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   Widget _buildCustomAppBar() { return Container(width: double.infinity, padding: const EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 15), color: Colors.white, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [Text('설정', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)), Text('부모님 계정 관리', style: TextStyle(color: Color(0XFF7C7D7D), fontSize: 12))])); }
-  Widget _buildSectionCard({String? title, Widget? trailing, required Widget child, EdgeInsets? padding}) { return Container(margin: const EdgeInsets.only(bottom: 15), padding: padding ?? const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))]), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (title != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)), if (trailing != null) trailing])), child])); }
-  Widget _buildListMenu(String title) { return ListTile(dense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 20), title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)), trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20), onTap: () {}); }
+  Widget _buildSectionCard({String? title, Widget? trailing, required Widget child, EdgeInsets? padding}) { return Container(margin: const EdgeInsets.only(bottom: 15), padding: padding ?? const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (title != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)), if (trailing != null) trailing])), child])); }
+  Widget _buildListMenu(String title) { return ListTile(dense: true, title: Text(title, style: const TextStyle(fontSize: 14)), trailing: const Icon(Icons.chevron_right, size: 20), onTap: () {}); }
 }

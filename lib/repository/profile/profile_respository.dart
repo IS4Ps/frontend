@@ -8,7 +8,7 @@ import '../../services/profile/profile_api_service.dart';
 class ProfileRepository {
   final ProfileApiService _apiService = ProfileApiService();
 
-  // --- [1. 아이 프로필 생성] ---
+  // --- [1. 아이 프로필 생성] (부모 앱 전용) ---
   Future<ChildProfileResponseModel?> createChildProfile(ChildProfileRequestModel requestModel) async {
     try {
       final response = await _apiService.postChildProfile(requestModel.toJson());
@@ -17,6 +17,7 @@ class ProfileRepository {
         String originalBody = utf8.decode(response.bodyBytes);
         debugPrint("[Repository] 프로필 생성 응답: $originalBody");
 
+        // 응답이 JSON 형식이 아닐 경우(텍스트 포함 ID만 올 경우)를 대비한 파싱
         if (!originalBody.trim().startsWith('{')) {
           final RegExp regExp = RegExp(r'\d+');
           final match = regExp.firstMatch(originalBody);
@@ -45,40 +46,63 @@ class ProfileRepository {
     }
   }
 
-  // --- [2. 아동 로그인 (토큰 발급)] ---
-  Future<Map<String, dynamic>?> loginAsChild(String deviceId, int childId) async {
+  // --- [2. QR 연동용 링크 토큰 발급] (부모 앱 전용) ---
+  Future<String?> getLinkToken(int childId) async {
     try {
-      debugPrint('🚀 [Repository] 로그인 시도 - deviceId: $deviceId, childId: $childId');
+      final response = await _apiService.getLinkToken(childId);
 
-      // ApiService에 전달 (이미 childId가 int이므로 그대로 전달)
-      final response = await _apiService.loginAsChild(deviceId, childId);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final body = jsonDecode(utf8.decode(response.bodyBytes));
-        return body['data']; // accessToken이 담긴 data 객체 반환
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+        return body['data'] as String?;
       } else {
-        debugPrint('❌ [로그인 실패] 상태코드: ${response.statusCode}');
+        debugPrint('❌ [링크 토큰 발급 실패] 상태코드: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      debugPrint('❌ [Repository 로그인 에러]: $e');
+      debugPrint('❌ [Repository getLinkToken 에러]: $e');
       return null;
     }
   }
 
-  // --- [3. 아이 정보 상세 조회] ---
+  // --- [3. QR 스캔 후 최종 기기 등록 및 로그인] (아이 앱 전용) ---
+  // ✅ 403 에러 방지를 위해 아이 전용 토큰을 반환받는 핵심 API
+  Future<Map<String, dynamic>?> registerChildByQr(String linkToken, String deviceId) async {
+    try {
+      debugPrint('🚀 [Repository] 최종 연동 시도 - linkToken: $linkToken, deviceId: $deviceId');
+
+      final response = await _apiService.registerChildByQr(linkToken, deviceId);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        // 성공 시 데이터 안의 { accessToken, childId, nickname } 맵 반환
+        return body['data'];
+      } else {
+        debugPrint('❌ 최종 연동 실패: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('❌ Repository 연동 에러: $e');
+      return null;
+    }
+  }
+
+  // --- [4. 아이 정보 상세 조회] (공통) ---
+  // ✅ childId 타입을 String으로 변경하여 UUID(cc5e3eb0...) 파싱 에러 방지
   Future<ChildInformationResponseModel?> getChildInformation(String childId, String token) async {
     try {
+      debugPrint('🚀 [Repository] 정보 조회 시도 - ID: $childId');
+
       final response = await _apiService.getChildInfo(childId, token);
 
       if (response.statusCode == 200) {
         String originalBody = utf8.decode(response.bodyBytes);
-        debugPrint("[Repository] 아이 정보 조회 결과: $originalBody");
+        debugPrint("[Repository] 아이 정보 조회 성공");
 
         final Map<String, dynamic> body = jsonDecode(originalBody);
         return ChildInformationResponseModel.fromJson(body);
       } else {
-        debugPrint("[Repository] 정보 조회 실패 (상태코드: ${response.statusCode})");
+        // 403 에러 발생 시 로그 출력
+        debugPrint("[Repository] 정보 조회 권한 없음 (상태코드: ${response.statusCode})");
         return null;
       }
     } catch (e) {

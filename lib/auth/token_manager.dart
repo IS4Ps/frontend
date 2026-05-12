@@ -1,26 +1,41 @@
 class TokenManager {
-  // 싱글톤 패턴 설정
   static final TokenManager _instance = TokenManager._internal();
   factory TokenManager() => _instance;
   TokenManager._internal();
 
-  String? _accessToken;
+  String? _parentToken; // 부모 전용
+  String? _childToken;  // 아이 전용
+  bool _isChildMode = false; // 현재 아이 모드 여부
 
-  // 토큰 저장
-  void setToken(String token) {
-    _accessToken = token;
-    print("[TokenManager] 토큰 저장 완료: $_accessToken");
+  // --- 토큰 저장 ---
+  void setParentToken(String token) {
+    _parentToken = token;
+    _isChildMode = false;
+    print("[TokenManager] 부모 토큰 저장 완료");
   }
 
-  // 토큰 가져오기
-  String? get token => _accessToken;
+  void setChildToken(String token) {
+    _childToken = token;
+    _isChildMode = true;
+    print("[TokenManager] 아이 토큰 저장 완료 (아이 모드 활성화)");
+  }
 
-  // 로그인 여부 확인
-  bool get hasToken => _accessToken != null;
+  // --- 토큰 가져오기 ---
+  // 현재 모드에 맞는 토큰을 자동으로 반환합니다.
+  String? get token => _isChildMode ? _childToken : _parentToken;
 
-  // 🔥 [추가] 토큰 삭제 (로그아웃 시 사용)
+  String? get parentToken => _parentToken;
+  String? get childToken => _childToken;
+
+  // --- 상태 확인 ---
+  bool get hasToken => token != null;
+  bool get isChildMode => _isChildMode;
+
+  // --- 초기화 ---
   void clear() {
-    _accessToken = null;
-    print("[TokenManager] 토큰이 삭제되었습니다.");
+    _parentToken = null;
+    _childToken = null;
+    _isChildMode = false;
+    print("[TokenManager] 모든 토큰 및 모드 초기화");
   }
 }

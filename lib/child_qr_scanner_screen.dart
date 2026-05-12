@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart'; // Provider 추가
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/child_main_screen.dart';
+import '../view_model/profile/profile_view_model.dart'; // ViewModel 경로 확인
+import '../child_main_screen.dart';
 import 'auth/token_manager.dart';
-import 'child_main_screen.dart';
 
 class ChildQrScannerScreen extends StatefulWidget {
   const ChildQrScannerScreen({super.key});
@@ -26,7 +27,6 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
       ),
       body: Stack(
         children: [
-          // 1. QR 스캐너 카메라 뷰
           MobileScanner(
             onDetect: (capture) {
               if (isScanned) return;
@@ -35,19 +35,17 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
               for (final barcode in barcodes) {
                 if (barcode.rawValue != null) {
                   setState(() => isScanned = true);
+                  final String scannedData = barcode.rawValue!;
+                  debugPrint('스캔된 데이터: $scannedData');
 
-                  final String childId = barcode.rawValue!;
-                  debugPrint('스캔된 자녀 ID: $childId');
-
-                  // 스캔 성공 후 저장 및 화면 전환 로직 실행
-                  _handleQrSuccess(childId);
+                  // ✅ 수정된 연동 로직 호출
+                  _handleQrSuccess(scannedData);
                   break;
                 }
               }
             },
           ),
-
-          // 2. 스캔 가이드 라인 (디자인 요소)
+          // 가이드 라인 디자인
           Center(
             child: Container(
               width: 250,
@@ -58,8 +56,6 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
               ),
             ),
           ),
-
-          // 3. 하단 설명 텍스트
           Positioned(
             bottom: 80,
             left: 0,
@@ -79,77 +75,76 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
     );
   }
 
-  // 데이터 저장 및 화면 이동 처리
+  /// ✅ 새로운 연동 로직: linkToken을 사용하여 서버에 최종 연동 요청
   // ChildQrScannerScreen.dart 내부 _handleQrSuccess 함수 수정
 
-  Future<void> _handleQrSuccess(String rawData) async {
+  Future<void> _handleQrSuccess(String combinedData) async {
+    final profileVM = context.read<ProfileViewModel>();
+    const String deviceId = "device-001";
+
     try {
-      // 1. QR 데이터 분리 ("ID,DeviceId,ParentToken")
-      final List<String> parts = rawData.split(',');
-      final String childId = parts[0];
-      final String deviceId = parts.length > 1 ? parts[1] : "device-001";
-      final String? parentToken = parts.length > 2 ? parts[2] : null;
+      // ✅ 쉼표로 데이터 분리 (linkToken, parentToken)
+      final List<String> parts = combinedData.split(',');
+      final String linkToken = parts[0];
 
-      // 2. 기기에 정보 저장
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isChildMode', true);
-      await prefs.setString('selectedChildId', childId);
-      await prefs.setString('lastConnectedDeviceId', deviceId);
+      if (parts.length >= 2) {
+        final String parentToken = parts[1];
 
-      // 3. ✅ 핵심: 부모 토큰이 있다면 즉시 세팅 및 백업
-      if (parentToken != null && parentToken.isNotEmpty) {
-        TokenManager().setToken(parentToken);
+        // ✅ 403 에러 방지를 위해 부모 토큰을 미리 SharedPreferences에 저장
+        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('parentTokenBackup', parentToken);
-        debugPrint('부모 토큰 연동 성공 및 백업 완료');
+        debugPrint('✅ 부모 토큰 백업 완료');
       }
 
-      if (!mounted) return;
+      // 1. 서버에 linkToken으로 최종 연동 요청
+      bool success = await profileVM.linkDeviceAndLogin(linkToken, deviceId);
 
-      // 성공 알림 팝업
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) =>
-            AlertDialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              title: const Text(
-                  '연동 성공!', style: TextStyle(fontWeight: FontWeight.bold)),
-              content: Text('자녀 ID $childId번 계정과 연결되었습니다.'),
-              actions: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ChildMainScreen()),
-                            (route) => false,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1687E3),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: const Text('시작하기', style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-      );
+      if (success && mounted) {
+        _showSuccessDialog();
+      } else {
+        throw Exception("연동 실패");
+      }
     } catch (e) {
-      debugPrint('스캔 처리 에러: $e');
+      debugPrint('연동 처리 에러: $e');
       if (mounted) {
-        setState(() => isScanned = false);
+        setState(() => isScanned = false); // 다시 스캔 가능하게 변경
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('QR 코드 형식이 올바르지 않습니다.')),
+          const SnackBar(content: Text('연동에 실패했습니다. 다시 시도해주세요.')),
         );
       }
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('연동 성공!', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('부모님 기기와 성공적으로 연결되었습니다.\n이제 모험을 시작해볼까요?'),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChildMainScreen()),
+                      (route) => false,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1687E3),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+              child: const Text('시작하기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
