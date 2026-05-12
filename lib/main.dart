@@ -10,7 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:frontend/auth/token_manager.dart';
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'view_model/dashboard/dashboard_view_model.dart';
 import 'view_model/quest/quest_view_model.dart';
 import 'view_model/reward/reward_view_model.dart';
@@ -72,5 +72,4 @@ class MyApp extends StatelessWidget {
       home: const StartScreen(),
     );
   }
-}}
 }

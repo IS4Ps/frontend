@@ -12,9 +12,6 @@
     <list default="true" id="1abf4ddb-3c79-45d3-b892-755474364f89" name="Changes" comment="[FEAT/#116] qr 코드 수정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repository/profile/profile_respository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/profile/profile_respository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/quest/ox_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/ox_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/profile/profile_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/profile/profile_api_service.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
