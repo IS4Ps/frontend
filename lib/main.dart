@@ -36,7 +36,7 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
 
   // TokenManager 초기화
-  await TokenManager().init();
+  await my_auth.TokenManager().init();
 
   runApp(
     MultiProvider(
@@ -72,4 +72,5 @@ class MyApp extends StatelessWidget {
       home: const StartScreen(),
     );
   }
+}}
 }

@@ -163,7 +163,7 @@ class _OxScreenState extends State<OxScreen> {
                   try {
                     final token = dotenv.env['TEST_TOKEN'] ?? '';
                     final service = QuizApiService();
-                    final quizzes = await service.generateQuiz(_selectedImages, 5, token);
+                    final quizzes = await service.generateQuiz(_selectedImages, 5);
 
                     if (mounted) {
                       Navigator.push(
