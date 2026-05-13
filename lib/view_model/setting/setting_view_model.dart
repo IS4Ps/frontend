@@ -24,8 +24,8 @@ class SettingViewModel extends ChangeNotifier {
         _parentData = result;
 
         debugPrint('[SettingViewModel] 내 정보 조회 성공!');
-        debugPrint('🆔 Parent ID : ${_parentData?.parentId}');
-        debugPrint('📧 Email     : ${_parentData?.email}');
+        debugPrint('Parent ID : ${_parentData?.parentId}');
+        debugPrint('Email     : ${_parentData?.email}');
       } else {
         debugPrint('[SettingViewModel] 결과 데이터가 null입니다.');
       }

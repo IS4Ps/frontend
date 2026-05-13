@@ -40,7 +40,7 @@ class InventoryViewModel extends ChangeNotifier {
     notifyListeners();
 
     final int childId = _getChildIdFromToken(_testToken);
-    _items = await _repository.getInventory(childId, _testToken) ?? [];
+    _items = await _repository.getInventory(childId) ?? [];
 
     _isLoading = false;
     notifyListeners();
@@ -50,7 +50,7 @@ class InventoryViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final bool isSuccess = await _repository.equipItem(inventoryId, _testToken);
+    final bool isSuccess = await _repository.equipItem(inventoryId);
 
     if (isSuccess) {
       print("[장착/해제 성공]");

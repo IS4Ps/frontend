@@ -1,43 +1,24 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:dio/dio.dart';
+import '../common/dio_client.dart';
 
 class PresetApiService {
-  static const String baseUrl = "http://100.27.204.252:8080";
-
-  Future<http.Response> savePresetFromDate(Map<String, dynamic> body) async {
-    final url = Uri.parse('$baseUrl/api/v1/presets/save-from-date');
-    return await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+  Future<Response> savePresetFromDate(Map<String, dynamic> body) async {
+    return await DioClient.dio.post('/api/v1/presets/save-from-date', data: body);
   }
 
-  Future<http.Response> getPresets(int parentId) async {
-    final url = Uri.parse('$baseUrl/api/v1/presets?parentId=$parentId');
-    return await http.get(url);
+  Future<Response> getPresets(int parentId) async {
+    return await DioClient.dio.get('/api/v1/presets', queryParameters: {'parentId': parentId});
   }
 
-  Future<http.Response> updatePreset(int presetId, Map<String, dynamic> body) async {
-    final url = Uri.parse('$baseUrl/api/v1/presets/$presetId');
-    return await http.put(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+  Future<Response> updatePreset(int presetId, Map<String, dynamic> body) async {
+    return await DioClient.dio.put('/api/v1/presets/$presetId', data: body);
   }
 
-  Future<http.Response> deletePreset(int presetId) async {
-    final url = Uri.parse('$baseUrl/api/v1/presets/$presetId');
-    return await http.delete(url);
+  Future<Response> deletePreset(int presetId) async {
+    return await DioClient.dio.delete('/api/v1/presets/$presetId');
   }
 
-  Future<http.Response> loadPreset(int presetId, Map<String, dynamic> body) async {
-    final url = Uri.parse('$baseUrl/api/v1/presets/$presetId/load');
-    return await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+  Future<Response> loadPreset(int presetId, Map<String, dynamic> body) async {
+    return await DioClient.dio.post('/api/v1/presets/$presetId/load', data: body);
   }
 }

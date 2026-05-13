@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/view_model/profile/profile_view_model.dart';
 import 'package:frontend/view_model/routine/big_task_view_model.dart';
 import 'package:frontend/view_model/routine/mission_view_model.dart';
 import 'package:frontend/view_model/routine/preset_view_model.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'view_model/dashboard/dashboard_view_model.dart';
 import 'view_model/quest/quest_view_model.dart';
 import 'view_model/reward/reward_view_model.dart';
@@ -33,6 +35,9 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
 
+  // TokenManager 초기화
+  await my_auth.TokenManager().init();
+
   runApp(
     MultiProvider(
       providers: [
@@ -42,6 +47,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => BigTaskViewModel()),
         ChangeNotifierProvider(create: (_) => PresetViewModel()),
         ChangeNotifierProvider(create: (_) => SettingViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         ChangeNotifierProvider(create: (_) => MissionViewModel()),
       ],
       child: const MyApp(),

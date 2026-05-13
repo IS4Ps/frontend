@@ -120,7 +120,7 @@ class RewardViewModel extends ChangeNotifier {
     try {
       final int dynamicChildId = _getChildIdFromToken(_testToken);
       final List<OfflineRewardListModel> rewards =
-      await _repository.getOfflineRewards(dynamicChildId, _testToken);
+      await _repository.getOfflineRewards(dynamicChildId);
 
       _allOfflineRewards = rewards;
       _updateEditingList();
@@ -160,7 +160,7 @@ class RewardViewModel extends ChangeNotifier {
         rewardPromiseText: reward.rewardPromiseText,
       );
 
-      final bool isSuccess = await _repository.registerOfflineReward(_testToken, request);
+      final bool isSuccess = await _repository.registerOfflineReward(request);
 
       if (isSuccess) {
         await fetchOfflineRewards(); // 목록 새로고침

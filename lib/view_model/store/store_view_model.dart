@@ -43,7 +43,7 @@ class StoreViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _items = await _repository.getStoreItems(childLevel, childJobId, _testToken) ?? [];
+    _items = await _repository.getStoreItems(childLevel, childJobId) ?? [];
 
     _isLoading = false;
     notifyListeners();
@@ -53,7 +53,7 @@ class StoreViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final bool isSuccess = await _repository.purchaseItem(itemId, childId, _testToken);
+    final bool isSuccess = await _repository.purchaseItem(itemId, childId);
 
     if (isSuccess) {
       print("[구매 성공] 아이템 구매 완료");

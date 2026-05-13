@@ -42,7 +42,7 @@ class BigTaskViewModel extends ChangeNotifier {
     notifyListeners();
 
     final int parentId = _getParentIdFromToken(_testToken);
-    _bigTasks = await _repository.getBigTasks(parentId, _testToken) ?? [];
+    _bigTasks = await _repository.getBigTasks(parentId) ?? [];
 
     _isLoading = false;
     notifyListeners();
@@ -69,7 +69,7 @@ class BigTaskViewModel extends ChangeNotifier {
       "smallTasks": smallTasks,
     };
 
-    final bool isSuccess = await _repository.createBigTask(body, _testToken);
+    final bool isSuccess = await _repository.createBigTask(body);
 
     if (isSuccess) {
       await loadBigTasks();
