@@ -230,8 +230,8 @@ class _StartScreenState extends State<StartScreen> {
                     final Map<String, dynamic> responseData = jsonDecode(response.body);
                     final dynamic data = responseData['data'];
 
-                    if (data != null && data['accessToken'] != null) {
-                      await my_auth.TokenManager().setToken(data['accessToken']);
+                    if (data != null && data['accessToken'] != null && data['refreshToken'] != null) {
+                      await my_auth.TokenManager().setTokens(data['accessToken'], data['refreshToken']);
                     }
 
                     if (mounted) {

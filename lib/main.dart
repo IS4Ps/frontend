@@ -16,6 +16,7 @@ import 'view_model/quest/quest_view_model.dart';
 import 'view_model/reward/reward_view_model.dart';
 import 'start_screen.dart';
 
+import 'parent_main_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -69,7 +70,9 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const StartScreen(),
+      //home: const StartScreen(),
+      // TO-BE (테스트용 강제 하이패스 코드!)
+            home: const ParentMainScreen(), // 부모 메인 화면 클래스명으로 변경! 삭제시 임포트도 삭제
     );
   }
 }

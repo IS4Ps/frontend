@@ -11,8 +11,12 @@
   <component name="ChangeListManager">
     <list default="true" id="1abf4ddb-3c79-45d3-b892-755474364f89" name="Changes" comment="[FEAT/#116] qr 코드 수정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repository/profile/profile_respository.dart" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/view_model/profile/profile_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/profile/profile_view_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Podfile" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Podfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/auth/token_manager.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/auth/token_manager.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/common/dio_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/common/dio_client.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/start_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/start_screen.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +64,7 @@
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "com.google.services.firebase.aqiPopupShown": "true",
@@ -70,7 +75,8 @@
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/heewo/AndroidStudioProjects/frontend/assets/icons",
     "settings.editor.selected.configurable": "device.screenshot",
-    "show.migrate.to.gradle.popup": "false"
+    "show.migrate.to.gradle.popup": "false",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -83,6 +89,14 @@
       <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
       <method v="2" />
     </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.138" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.29346.138" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="TaskManager">
     <task id="LOCAL-00001" summary="[FEAT/#104] 내 정보 조회 연동">
@@ -99,6 +113,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1778316938911</updated>
+      <workItem from="1778638791250" duration="11589000" />
     </task>
     <task id="LOCAL-00002" summary="[FEAT/#104] 이메일 연동">
       <option name="closed" value="true" />
@@ -142,6 +157,9 @@
     </task>
     <option name="localTasksCounter" value="7" />
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="[FEAT/#103] 카카오 로그인" />
