@@ -3,7 +3,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:frontend/services/quest/quiz_api_service.dart';
 import 'ox_quiz_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OxScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -161,9 +160,8 @@ class _OxScreenState extends State<OxScreen> {
                   });
 
                   try {
-                    final token = dotenv.env['TEST_TOKEN'] ?? '';
                     final service = QuizApiService();
-                    final quizzes = await service.generateQuiz(_selectedImages, 5, token);
+                    final quizzes = await service.generateQuiz(_selectedImages);
 
                     if (mounted) {
                       Navigator.push(
