@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'routine_date_selector.dart';
 import 'routine_load_modal.dart';
 import 'routine_save_modal.dart';
@@ -491,9 +492,12 @@ class _RoutineSettingScreenState extends State<RoutineSettingScreen> {
                                 final now = DateTime.now();
                                 final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
 
+                                final prefs = await SharedPreferences.getInstance();
+                                final childId = int.parse(prefs.getString('selectedChildId') ?? '5');
+
                                 await viewModel.createMission(
                                   bigTaskId: viewModel.bigTasks.last.bigTaskId,
-                                  childId: 5,
+                                  childId: childId,
                                   date: date,
                                   startTime: _startTimeController.text.isEmpty ? '8:30' : _startTimeController.text,
                                   endTime: _endTimeController.text.isEmpty ? '9:30' : _endTimeController.text,
