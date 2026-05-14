@@ -1,0 +1,78 @@
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+// ✅ TokenManager를 직접 참조하여 최신 토큰을 가져옵니다.
+import 'package:frontend/auth/token_manager.dart';
+
+class ProfileApiService {
+  static const String baseUrl = "http://100.27.204.252:8080";
+
+  // 1. [부모 권한] 아이 프로필 생성
+  Future<http.Response> postChildProfile(Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/children');
+    // ✅ 부모 토큰 사용
+    final String? token = TokenManager().parentToken;
+
+    return await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+  }
+
+  // 2. [부모 권한] 연동용 링크 토큰 발급
+  Future<http.Response> getLinkToken(int childId) async {
+    final url = Uri.parse('$baseUrl/children/$childId/link-token');
+    // ✅ 부모 토큰 사용
+    final String? token = TokenManager().parentToken;
+
+    return await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  // --- [중략: linkChildDevice 등은 명세에 따라 유지] ---
+
+  // 3. ✅ [아이 권한] QR 스캔을 통한 최종 연동 및 로그인
+  Future<http.Response> registerChildByQr(String linkToken, String deviceId) async {
+    final url = Uri.parse('$baseUrl/auth/child/register-by-qr')
+        .replace(queryParameters: {
+      'linkToken': linkToken,
+      'deviceId': deviceId,
+    });
+
+    return await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        // 기기 등록 시점에는 아직 토큰이 없으므로 비워둠 (명세서 기준)
+      },
+    );
+  }
+
+  // 4. 🔥 [공통/아이 권한] 아이 정보 상세 조회 (403 해결 지점)
+  Future<http.Response> getChildInfo(String childId, String? token) async {
+    final url = Uri.parse('$baseUrl/children/$childId');
+
+    // ✅ 핵심: 매개변수로 받은 token보다 TokenManager의 최신 토큰을 우선시합니다.
+    // 연동 직후라면 TokenManager().childToken에 '아이 토큰'이 들어있을 것입니다.
+    final String? activeToken = TokenManager().token ?? token;
+
+    debugPrint('📡 [API Call] getChildInfo 호출 - 사용 토큰: ${activeToken?.substring(0, 15)}...');
+
+    return await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $activeToken',
+      },
+    );
+  }
+}

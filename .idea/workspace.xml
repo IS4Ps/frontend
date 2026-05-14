@@ -9,31 +9,8 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="Merge remote-tracking branch 'origin/dev' into feat/#74-big-task-api&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;lib/screens/routine/routine_setting_screen.dart">
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_start_request_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_start_response_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_submit_request_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/go_nogo_submit_response_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/n_back_submit_request_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/n_back_submit_response_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_start_request_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_start_response_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_submit_request_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/quest/stroop_submit_response_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/models/reward/offline_reward_request_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/screens/quest/go_nogo_game_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/screens/quest/stroop_game_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+    <list default="true" id="1abf4ddb-3c79-45d3-b892-755474364f89" name="Changes" comment="[FEAT/#116] qr 코드 수정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repository/quest/quest_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/quest/quest_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repository/reward/reward_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/quest/mini_game_select_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/mini_game_select_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/quest/n_back_game_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/quest/n_back_game_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/reward/reward_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/quest/quest_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/quest/quest_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/reward/reward_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/view_model/quest/quest_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/quest/quest_view_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/view_model/reward/reward_view_model.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,10 +43,9 @@
   }
 }</component>
   <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 8
+  &quot;associatedIndex&quot;: 3
 }</component>
-  <component name="ProjectId" id="3DCis83B5ygHE8Qn8fyLkECRacB" />
+  <component name="ProjectId" id="3DTrWzF1V0EBb2AUN5dTToFjrgX" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -77,60 +53,107 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Flutter.main.dart.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "#75 on Merging feat/#74-big-task-api",
+    "git-widget-placeholder": "#120 on feat/#116-children-setting",
     "io.flutter.project.isFirstOpen": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
-    "settings.editor.selected.configurable": "flutter.settings",
+    "last_opened_file_path": "C:/Users/heewo/AndroidStudioProjects/frontend/assets/icons",
+    "settings.editor.selected.configurable": "device.screenshot",
     "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\heewo\AndroidStudioProjects\frontend\assets\icons" />
+    </key>
+  </component>
   <component name="RunManager">
-    <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter" temporary="true" nameIsGenerated="true">
       <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
       <method v="2" />
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Flutter.main.dart" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="TaskManager">
-    <task active="true" id="Default" summary="Default task">
-      <changelist id="a4781811-151e-4254-81cf-fdbf64eebe10" name="Changes" comment="" />
-      <created>1777792656460</created>
-      <option name="number" value="Default" />
-      <option name="presentableId" value="Default" />
-      <updated>1777792656460</updated>
-    </task>
-    <task id="LOCAL-00001" summary="[FEAT/#82] stroop 게임 UI 구현하기">
+    <task id="LOCAL-00001" summary="[FEAT/#104] 내 정보 조회 연동">
       <option name="closed" value="true" />
-      <created>1777984485832</created>
+      <created>1778309205353</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1777984485832</updated>
+      <updated>1778309205353</updated>
     </task>
-    <task id="LOCAL-00002" summary="[FEAT/#82] ui 수정">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1abf4ddb-3c79-45d3-b892-755474364f89" name="Changes" comment="[FEAT/#104] 내 정보 조회 연동" />
+      <created>1778316938911</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1778316938911</updated>
+    </task>
+    <task id="LOCAL-00002" summary="[FEAT/#104] 이메일 연동">
       <option name="closed" value="true" />
-      <created>1777984864323</created>
+      <created>1778330551420</created>
       <option name="number" value="00002" />
       <option name="presentableId" value="LOCAL-00002" />
       <option name="project" value="LOCAL" />
-      <updated>1777984864323</updated>
+      <updated>1778330551420</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="[REFACTOR/#112] 카카오 로그인 수정 및 내 정보 조회 API 수정">
+      <option name="closed" value="true" />
+      <created>1778401395618</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1778401395618</updated>
+    </task>
+    <task id="LOCAL-00004" summary="[REFACTOR/#112] 카카오 이미지 및 ui 수정">
+      <option name="closed" value="true" />
+      <created>1778402415641</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1778402415641</updated>
+    </task>
+    <task id="LOCAL-00005" summary="[FEAT/#116] 아이 프로필 생성 API 연동하기">
+      <option name="closed" value="true" />
+      <created>1778417314193</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1778417314193</updated>
+    </task>
+    <task id="LOCAL-00006" summary="[FEAT/#116] qr 코드 수정">
+      <option name="closed" value="true" />
+      <created>1778419517196</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1778419517196</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[FEAT/#82] stroop 게임 UI 구현하기" />
-    <MESSAGE value="[FEAT/#82] ui 수정" />
-    <option name="LAST_COMMIT_MESSAGE" value="[FEAT/#82] ui 수정" />
+    <MESSAGE value="[FEAT/#103] 카카오 로그인" />
+    <MESSAGE value="[FEAT/#104] 내 정보 조회 연동" />
+    <MESSAGE value="[FEAT/#104] 이메일 연동" />
+    <MESSAGE value="[REFACTOR/#112] 카카오 로그인 수정 및 내 정보 조회 API 수정" />
+    <MESSAGE value="[REFACTOR/#112] 카카오 이미지 및 ui 수정" />
+    <MESSAGE value="[FEAT/#116] 아이 프로필 생성 API 연동하기" />
+    <MESSAGE value="[FEAT/#116] qr 코드 수정" />
+    <option name="LAST_COMMIT_MESSAGE" value="[FEAT/#116] qr 코드 수정" />
   </component>
 </project>

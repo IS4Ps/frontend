@@ -5,7 +5,7 @@ import 'package:frontend/models/setting/parent_model.dart';
 class SettingRepository {
   final SettingApiService _apiService = SettingApiService();
 
-  // 1. (String token)을 지워서 인자를 받지 않게 만듭니다. (에러 해결 핵심!)
+  // 내 정보 조회
   Future<ParentModel?> getParentInfo() async {
     try {
       print("[API 호출] 내 정보 조회 시작");
