@@ -1,5 +1,25 @@
 // 오늘의 미션 목록 조회
 
+class SmallTaskModel {
+  final int smallTaskId;
+  final String title;
+  final int orderIndex;
+
+  SmallTaskModel({
+    required this.smallTaskId,
+    required this.title,
+    required this.orderIndex,
+  });
+
+  factory SmallTaskModel.fromJson(Map<String, dynamic> json) {
+    return SmallTaskModel(
+      smallTaskId: json['smallTaskId'] ?? 0,
+      title: json['title'] ?? '',
+      orderIndex: json['orderIndex'] ?? 0,
+    );
+  }
+}
+
 class TodayMissionModel {
   final int missionId;
   final String presetTitle;
@@ -8,10 +28,11 @@ class TodayMissionModel {
   final String date;
   final String startTime;
   final String endTime;
-  final String status; // "PENDING", "STARTED", "COMPLETED" 등
+  final String status;
   final String? startedAt;
   final String? completedAt;
   final String? approvedAt;
+  final List<SmallTaskModel> smallTasks;
 
   TodayMissionModel({
     required this.missionId,
@@ -25,22 +46,25 @@ class TodayMissionModel {
     this.startedAt,
     this.completedAt,
     this.approvedAt,
+    required this.smallTasks,
   });
 
-  // JSON 데이터를 객체로 변환하는 팩토리 생성자
   factory TodayMissionModel.fromJson(Map<String, dynamic> json) {
     return TodayMissionModel(
-      missionId: json['missionId'],
-      presetTitle: json['presetTitle'],
-      bigTaskTitle: json['bigTaskTitle'],
-      assignedExp: json['assignedExp'],
-      date: json['date'],
-      startTime: json['startTime'],
-      endTime: json['endTime'],
-      status: json['status'],
+      missionId: json['missionId'] ?? 0,
+      presetTitle: json['presetTitle'] ?? '',
+      bigTaskTitle: json['bigTaskTitle'] ?? '',
+      assignedExp: json['assignedExp'] ?? 0,
+      date: json['date'] ?? '',
+      startTime: json['startTime'] ?? '',
+      endTime: json['endTime'] ?? '',
+      status: json['status'] ?? 'PENDING',
       startedAt: json['startedAt'],
       completedAt: json['completedAt'],
       approvedAt: json['approvedAt'],
+      smallTasks: (json['smallTasks'] as List? ?? [])
+          .map((e) => SmallTaskModel.fromJson(e))
+          .toList(),
     );
   }
 }
