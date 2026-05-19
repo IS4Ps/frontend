@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import '../../services/quest/quiz_api_service.dart';
+
 class OxQuizScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final List<Map<String, dynamic>> quizzes;
@@ -15,6 +17,8 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
   int _seconds = 60;
   Timer? _timer;
   String? _selected;
+  bool _isSubmitted = false;
+  Map<String, dynamic>? _submitResult;
   int _currentIndex = 0;
 
   @override
@@ -40,6 +44,8 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     setState(() {
       _seconds = 60;
       _selected = null;
+      _isSubmitted = false;
+      _submitResult = null;
       if (_currentIndex < widget.quizzes.length - 1) {
         _currentIndex++;
       }
@@ -86,7 +92,32 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
                     _buildOxButtons(),
                     const SizedBox(height: 25),
                     _buildSelectButton(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
+                    if (_isSubmitted)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _submitResult == null || _submitResult!['isCorrect'] == true
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFFF5252),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _submitResult == null || _submitResult!['isCorrect'] == true
+                                ? '정답!'
+                                : '오답! 정답은 ${_submitResult!['correctAnswer']}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'JejuGothic',
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 10),
                     _buildExplanationBox(currentQuiz),
                     const SizedBox(height: 25),
                     _buildNextButton(),
@@ -296,22 +327,37 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
   }
 
   Widget _buildSelectButton() {
-    return Container(
-      width: 200,
-      height: 44,
-      decoration: BoxDecoration(
-        color: const Color(0xFF8AC5F5),
-        border: Border.all(color: const Color(0xFF2F44E1), width: 2),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: const Center(
-        child: Text(
-          '선택 완료',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontFamily: 'JejuGothic',
-            fontWeight: FontWeight.w600,
+    final currentQuiz = widget.quizzes.isNotEmpty ? widget.quizzes[_currentIndex] : null;
+
+    return GestureDetector(
+      onTap: (_selected == null || _isSubmitted) ? null : () async {
+        if (currentQuiz == null) return;
+        print('[선택한 답] $_selected');
+        final service = QuizApiService();
+        final result = await service.submitAnswer(currentQuiz['quizId'], _selected!);
+        print('[정답 제출 결과] $result');
+        setState(() {
+          _isSubmitted = true;
+          _submitResult = result;
+        });
+      },
+      child: Container(
+        width: 200,
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFF8AC5F5),
+          border: Border.all(color: const Color(0xFF2F44E1), width: 2),
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: const Center(
+          child: Text(
+            '선택 완료',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontFamily: 'JejuGothic',
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -338,7 +384,9 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              quiz?['explanation'] ?? '해설',
+              _submitResult != null
+                  ? (_submitResult!['explanation'] ?? '해설 없음')
+                  : '',
               style: const TextStyle(
                 color: Colors.black,
                 fontSize: 20,

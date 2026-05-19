@@ -50,7 +50,7 @@ class QuizApiService {
     return List<Map<String, dynamic>>.from(data['data']['quizzes']);
   }
 
-  Future<Map<String, dynamic>> submitAnswer(int quizId, String answer) async {
+  Future<Map<String, dynamic>?> submitAnswer(int quizId, String answer) async {
     final String token = _getAccessToken();
     final response = await http.post(
       Uri.parse('$baseUrl/api/v1/ai-quizzes/$quizId/answer'),
@@ -60,6 +60,8 @@ class QuizApiService {
       },
       body: jsonEncode({'answer': answer}),
     );
+    print('[API 호출] 정답 제출 (quizId: $quizId)');
+    print('[응답 코드] ${response.statusCode}');
     final data = jsonDecode(response.body);
     return data['data'];
   }
