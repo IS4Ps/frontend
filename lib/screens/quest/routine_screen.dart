@@ -18,11 +18,15 @@ class _RoutineScreenState extends State<RoutineScreen> {
   int _selectedSubTaskIndex = 0;
 
   // 하위 태스크 (API 응답에 하위 목록이 없을 경우를 대비한 샘플 데이터)
-  final List<Map<String, dynamic>> subTasks = [
-    {"title": "양치하기", "isDone": true},
-    {"title": "세수하기", "isDone": false},
-    {"title": "옷 입기", "isDone": false},
-  ];
+  List<Map<String, dynamic>> get subTasks {
+    final mission = context.read<QuestViewModel>().todayMissions.isNotEmpty
+        ? context.read<QuestViewModel>().todayMissions.first
+        : null;
+    if (mission == null) return [];
+    return mission.smallTasks
+        .map((e) => {"title": e.title, "isDone": false})
+        .toList();
+  }
 
   @override
   void initState() {

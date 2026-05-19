@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'package:frontend/models/store/inventory_model.dart';
 import '../../repository/store/inventory_repository.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class InventoryViewModel extends ChangeNotifier {
   final InventoryRepository _repository = InventoryRepository();
@@ -13,34 +13,24 @@ class InventoryViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<InventoryModel> get items => _items;
 
-  final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
+  Future<int> _getChildId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedId = prefs.getString('selectedChildId');
+    if (savedId != null) return int.parse(savedId);
+    throw Exception("자녀 ID가 없습니다.");
+  }
 
-  int _getChildIdFromToken(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return 1;
-
-      String payload = parts[1];
-      while (payload.length % 4 != 0) {
-        payload += '=';
-      }
-
-      final String decoded = utf8.decode(base64Url.decode(payload));
-      final Map<String, dynamic> json = jsonDecode(decoded);
-
-      return int.parse(json['sub'].toString());
-    } catch (e) {
-      print("토큰 디코딩 에러: $e");
-      return 1;
-    }
+  String _getAccessToken() {
+    return my_auth.TokenManager().token ?? "";
   }
 
   Future<void> loadInventory() async {
     _isLoading = true;
     notifyListeners();
 
-    final int childId = _getChildIdFromToken(_testToken);
-    _items = await _repository.getInventory(childId, _testToken) ?? [];
+    final int childId = await _getChildId();
+    final String token = _getAccessToken();
+    _items = await _repository.getInventory(childId, token) ?? [];
 
     _isLoading = false;
     notifyListeners();
@@ -50,11 +40,12 @@ class InventoryViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final bool isSuccess = await _repository.equipItem(inventoryId, _testToken);
+    final String token = _getAccessToken();
+    final bool isSuccess = await _repository.equipItem(inventoryId, token);
 
     if (isSuccess) {
       print("[장착/해제 성공]");
-      await loadInventory(); // 장비 목록 새로고침
+      await loadInventory();
     } else {
       print("[장착/해제 실패]");
     }

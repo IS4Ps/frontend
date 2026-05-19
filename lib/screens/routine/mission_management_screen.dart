@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../routine/routine_date_selector.dart';
 import '../../view_model/routine/mission_view_model.dart';
 
@@ -24,10 +25,12 @@ class _MissionManagementScreenState extends State<MissionManagementScreen> {
     });
   }
 
-  void _fetchMissions() {
+  void _fetchMissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final childId = int.parse(prefs.getString('selectedChildId') ?? '5');
     final now = DateTime.now();
     final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
-    context.read<MissionViewModel>().getMissionsByDate(5, date);
+    context.read<MissionViewModel>().getMissionsByDate(childId, date);
   }
 
   @override

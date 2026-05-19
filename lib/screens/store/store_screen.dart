@@ -348,7 +348,7 @@ class _StoreScreenState extends State<StoreScreen> {
                         _purchasedItemIds.add(item.itemId);
                         _activeIndex = null;
                       });
-                      final childId = viewModel.getChildId();
+                      final childId = await viewModel.getChildId();
                       await viewModel.purchaseItem(item.itemId, childId);
                       if (context.mounted) {
                         await Provider.of<InventoryViewModel>(context, listen: false).loadInventory();

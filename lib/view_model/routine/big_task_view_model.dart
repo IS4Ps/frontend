@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/routine/big_task_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import '../../repository/routine/big_task_repository.dart';
 import '../../repository/routine/mission_repository.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BigTaskViewModel extends ChangeNotifier {
   final BigTaskRepository _repository = BigTaskRepository();
@@ -15,34 +15,24 @@ class BigTaskViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<BigTaskModel> get bigTasks => _bigTasks;
 
-  final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
+  Future<int> _getParentId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedId = prefs.getString('parentId');
+    if (savedId != null) return int.parse(savedId);
+    throw Exception("부모 ID가 없습니다.");
+  }
 
-  int _getParentIdFromToken(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return 1;
-
-      String payload = parts[1];
-      while (payload.length % 4 != 0) {
-        payload += '=';
-      }
-
-      final String decoded = utf8.decode(base64Url.decode(payload));
-      final Map<String, dynamic> json = jsonDecode(decoded);
-
-      return int.parse(json['sub'].toString());
-    } catch (e) {
-      print("토큰 디코딩 에러: $e");
-      return 1;
-    }
+  String _getAccessToken() {
+    return my_auth.TokenManager().parentToken ?? my_auth.TokenManager().token ?? "";
   }
 
   Future<void> loadBigTasks() async {
     _isLoading = true;
     notifyListeners();
 
-    final int parentId = _getParentIdFromToken(_testToken);
-    _bigTasks = await _repository.getBigTasks(parentId, _testToken) ?? [];
+    final int parentId = await _getParentId();
+    final String token = _getAccessToken();
+    _bigTasks = await _repository.getBigTasks(parentId, token) ?? [];
 
     _isLoading = false;
     notifyListeners();
@@ -58,7 +48,8 @@ class BigTaskViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final int parentId = _getParentIdFromToken(_testToken);
+    final int parentId = await _getParentId();
+    final String token = _getAccessToken();
     final body = {
       "parentId": parentId,
       "title": title,
@@ -69,7 +60,7 @@ class BigTaskViewModel extends ChangeNotifier {
       "smallTasks": smallTasks,
     };
 
-    final bool isSuccess = await _repository.createBigTask(body, _testToken);
+    final bool isSuccess = await _repository.createBigTask(body, token);
 
     if (isSuccess) {
       await loadBigTasks();

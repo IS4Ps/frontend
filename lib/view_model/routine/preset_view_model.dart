@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/auth/token_manager.dart' as my_auth;
 import '../../repository/routine/preset_repository.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PresetViewModel extends ChangeNotifier {
   final PresetRepository _repository = PresetRepository();
@@ -12,26 +12,22 @@ class PresetViewModel extends ChangeNotifier {
   List<dynamic> _presets = [];
   List<dynamic> get presets => _presets;
 
-  final String _testToken = dotenv.env['TEST_TOKEN'] ?? "";
+  Future<int> _getParentId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedId = prefs.getString('parentId');
+    if (savedId != null) return int.parse(savedId);
+    throw Exception("부모 ID가 없습니다.");
+  }
 
-  int _getParentIdFromToken(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return 1;
+  Future<int> _getChildId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedId = prefs.getString('selectedChildId');
+    if (savedId != null) return int.parse(savedId);
+    throw Exception("자녀 ID가 없습니다.");
+  }
 
-      String payload = parts[1];
-      while (payload.length % 4 != 0) {
-        payload += '=';
-      }
-
-      final String decoded = utf8.decode(base64Url.decode(payload));
-      final Map<String, dynamic> json = jsonDecode(decoded);
-
-      return int.parse(json['sub'].toString());
-    } catch (e) {
-      print("토큰 디코딩 에러: $e");
-      return 1;
-    }
+  String _getAccessToken() {
+    return my_auth.TokenManager().parentToken ?? my_auth.TokenManager().token ?? "";
   }
 
   Future<bool> savePresetFromDate({
@@ -41,9 +37,12 @@ class PresetViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    final int parentId = await _getParentId();
+    final int childId = await _getChildId();
+
     final body = {
-      "parentId": 5,
-      "childId": 5,
+      "parentId": parentId,
+      "childId": childId,
       "date": date,
       "title": title,
       "description": "",
@@ -61,7 +60,7 @@ class PresetViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final int parentId = _getParentIdFromToken(_testToken);
+    final int parentId = await _getParentId();
     _presets = await _repository.getPresets(parentId);
 
     _isLoading = false;
@@ -113,8 +112,10 @@ class PresetViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    final int childId = await _getChildId();
+
     final body = {
-      "childId": 5,
+      "childId": childId,
       "startDate": startDate,
       "assignedExpPerMission": 20,
     };
