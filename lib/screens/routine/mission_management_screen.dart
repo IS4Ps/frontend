@@ -96,7 +96,7 @@ class _MissionManagementScreenState extends State<MissionManagementScreen> {
                     itemBuilder: (context, index) {
                       final mission = viewModel.missions[index];
                       final missionId = mission['missionId'];
-                      final isExpanded = _expandedState[missionId] ?? false;
+                      final isExpanded = _expandedState[missionId] ?? true;
                       final smallTasks = mission['smallTasks'] as List<dynamic>? ?? [];
 
                       return Container(
@@ -122,8 +122,14 @@ class _MissionManagementScreenState extends State<MissionManagementScreen> {
                                     ),
                                   ),
                                   GestureDetector(
-                                    onTap: () {
-                                      // 삭제 기능은 다음 이슈에서
+                                    onTap: () async {
+                                      final now = DateTime.now();
+                                      final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
+                                      await context.read<MissionViewModel>().deleteMission(
+                                        mission['missionId'],
+                                        5,
+                                        date,
+                                      );
                                     },
                                     child: Container(
                                       width: 14,
@@ -157,15 +163,6 @@ class _MissionManagementScreenState extends State<MissionManagementScreen> {
                                             fontFamily: 'JejuGothic',
                                             fontWeight: FontWeight.w600,
                                           ),
-                                        ),
-                                        Container(
-                                          width: 14,
-                                          height: 14,
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: const Icon(Icons.close, size: 12, color: Colors.white),
                                         ),
                                       ],
                                     ),

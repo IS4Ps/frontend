@@ -19,4 +19,20 @@ class MissionViewModel extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<bool> deleteMission(int missionId, int childId, String date) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final bool isSuccess = await _repository.deleteMission(missionId);
+
+    if (isSuccess) {
+      await getMissionsByDate(childId, date);
+    }
+
+    _isLoading = false;
+    notifyListeners();
+
+    return isSuccess;
+  }
 }
