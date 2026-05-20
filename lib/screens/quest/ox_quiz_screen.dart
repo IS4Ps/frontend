@@ -409,20 +409,17 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _submitResult != null
-                  ? (_submitResult!['explanation'] ?? '해설 없음')
-                  : '',
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontFamily: 'JejuGothic',
-              ),
+        child: SingleChildScrollView(
+          child: Text(
+            _submitResult != null
+                ? (_submitResult!['explanation'] ?? '해설 없음')
+                : '',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontFamily: 'JejuGothic',
             ),
-          ],
+          ),
         ),
       ),
     );
