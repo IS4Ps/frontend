@@ -18,6 +18,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
   Timer? _timer;
   String? _selected;
   bool _isSubmitted = false;
+  bool _isTimeOut = false;
   Map<String, dynamic>? _submitResult;
   int _currentIndex = 0;
 
@@ -31,6 +32,9 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_seconds == 0) {
         timer.cancel();
+        setState(() {
+          _isTimeOut = true;
+        });
       } else {
         setState(() {
           _seconds--;
@@ -45,9 +49,12 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
       _seconds = 60;
       _selected = null;
       _isSubmitted = false;
+      _isTimeOut = false;
       _submitResult = null;
       if (_currentIndex < widget.quizzes.length - 1) {
         _currentIndex++;
+      } else {
+        Navigator.pop(context);
       }
     });
     _startTimer();
@@ -109,6 +116,27 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
                                 ? '정답!'
                                 : '오답! 정답은 ${_submitResult!['correctAnswer']}',
                             style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'JejuGothic',
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 10),
+                    if (_isTimeOut)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF5252),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '시간 초과! 다음 문제로 넘어가세요',
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -336,6 +364,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
         final service = QuizApiService();
         final result = await service.submitAnswer(currentQuiz['quizId'], _selected!);
         print('[정답 제출 결과] $result');
+        _timer?.cancel();
         setState(() {
           _isSubmitted = true;
           _submitResult = result;
@@ -412,10 +441,10 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
             border: Border.all(color: const Color(0xFF2F44E1), width: 2),
             borderRadius: BorderRadius.circular(25),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              '다음 문제',
-              style: TextStyle(
+              _currentIndex == widget.quizzes.length - 1 ? '종료하기' : '다음 문제',
+              style: const TextStyle(
                 color: Colors.black,
                 fontSize: 20,
                 fontFamily: 'JejuGothic',
