@@ -429,7 +429,7 @@ class _OxQuizScreenState extends State<OxQuizScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: GestureDetector(
-        onTap: _nextQuestion,
+        onTap: (_isSubmitted || _isTimeOut) ? _nextQuestion : null,
         child: Container(
           width: double.infinity,
           height: 45,
