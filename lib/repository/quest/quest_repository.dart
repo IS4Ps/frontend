@@ -129,6 +129,30 @@ class QuestRepository {
     }
   }
 
+  // 미션 시작
+  Future<bool> startMission(int missionId, String token) async {
+    try {
+      final response = await _apiService.startMission(missionId, token);
+      print("[응답 코드] ${response.statusCode}");
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print("[Repository 에러] startMission: $e");
+      return false;
+    }
+  }
+
+  // 미션 완료
+  Future<bool> completeMission(int missionId, String token) async {
+    try {
+      final response = await _apiService.completeMission(missionId, token);
+      print("[응답 코드] ${response.statusCode}");
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print("[Repository 에러] completeMission: $e");
+      return false;
+    }
+  }
+
   // 현재 장착 아이템 조회 추가
   Future<List<EquippedItemModel>> getEquippedItems(int childId, String token) async {
     try {

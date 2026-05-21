@@ -261,6 +261,40 @@ class QuestViewModel extends ChangeNotifier {
     }
   }
 
+  // 미션 시작
+  Future<bool> startMission(int missionId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final String token = _getAccessToken();
+      print("[API 호출] 미션 시작 (missionId: $missionId)");
+      return await _repository.startMission(missionId, token);
+    } catch (e) {
+      debugPrint("Start Mission Error: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // 미션 완료
+  Future<bool> completeMission(int missionId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final String token = _getAccessToken();
+      print("[API 호출] 미션 완료 (missionId: $missionId)");
+      return await _repository.completeMission(missionId, token);
+    } catch (e) {
+      debugPrint("Complete Mission Error: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // 감정 저장
   Future<void> saveFeeling(String selectedEmotion) async {
     _isLoading = true;

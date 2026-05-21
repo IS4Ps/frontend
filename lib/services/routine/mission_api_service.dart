@@ -31,6 +31,9 @@ class MissionApiService {
 
   Future<http.Response> deleteMission(int missionId) async {
     final url = Uri.parse('$baseUrl/api/v1/missions/$missionId');
-    return await http.delete(url);
+    return await http.delete(
+      url,
+      headers: {'Authorization': 'Bearer ${_getToken()}'},
+    );
   }
 }

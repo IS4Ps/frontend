@@ -139,7 +139,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                 width: double.infinity,
                 height: 70,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(context, true),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6389E9),
                     shape: RoundedRectangleBorder(

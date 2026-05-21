@@ -62,6 +62,30 @@ class QuestApiService {
     );
   }
 
+  // 미션 시작
+  Future<http.Response> startMission(int missionId, String token) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/$missionId/start');
+    return await http.patch(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
+
+  // 미션 완료
+  Future<http.Response> completeMission(int missionId, String token) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/$missionId/complete');
+    return await http.patch(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
+
   // 현재 장착 아이템 조회 추가
   Future<http.Response> fetchEquippedItems(int childId, String token) async {
     // 백엔드 명세서의 URL: /api/v1/inventory/{childId}/equipped
