@@ -16,6 +16,8 @@ class RoutineScreen extends StatefulWidget {
 class _RoutineScreenState extends State<RoutineScreen> {
   bool isExpanded = true;
   int _selectedSubTaskIndex = 0;
+  List<bool> _doneList = [];
+  bool _isStarting = false;
 
   // 하위 태스크 (API 응답에 하위 목록이 없을 경우를 대비한 샘플 데이터)
   List<Map<String, dynamic>> get subTasks {
@@ -23,9 +25,13 @@ class _RoutineScreenState extends State<RoutineScreen> {
         ? context.read<QuestViewModel>().todayMissions.first
         : null;
     if (mission == null) return [];
-    return mission.smallTasks
+    final tasks = mission.smallTasks
         .map((e) => {"title": e.title, "isDone": false})
         .toList();
+    if (_doneList.length != tasks.length) {
+      _doneList = List.filled(tasks.length, false);
+    }
+    return tasks;
   }
 
   @override
@@ -225,8 +231,12 @@ class _RoutineScreenState extends State<RoutineScreen> {
             children: [
               Text(mission.bigTaskTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  if (_isStarting) return;
+                  _isStarting = true;
+                  final viewModel = context.read<QuestViewModel>();
+                  await viewModel.startMission(mission.missionId);
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => RoutineDetailScreen(
@@ -235,9 +245,17 @@ class _RoutineScreenState extends State<RoutineScreen> {
                       ),
                     ),
                   );
+                  if (result == true) {
+                    setState(() {
+                      _doneList[_selectedSubTaskIndex] = true;
+                    });
+                  }
+                  _isStarting = false;
                 },
                 child: _buildStatusLabel(
-                  mission.status == "PENDING" ? "퀘스트 시작하기" : "진행 중",
+                  _doneList.isNotEmpty && _doneList.every((done) => done)
+                      ? "퀘스트 완료하기"
+                      : mission.status == "PENDING" ? "퀘스트 시작하기" : "진행 중",
                   const Color(0xFF6389E9),
                   Colors.white,
                 ),
@@ -248,7 +266,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
             const SizedBox(height: 20),
             Column(
               children: subTasks.asMap().entries.map((entry) {
-                return _buildSubTask(entry.key, entry.value['title'], entry.value['isDone']);
+                return _buildSubTask(entry.key, entry.value['title'], _doneList[entry.key]);
               }).toList(),
             ),
           ],
@@ -263,7 +281,9 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
   Widget _buildSubTask(int index, String title, bool isDone) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedSubTaskIndex = index),
+      onTap: () => setState(() {
+        _selectedSubTaskIndex = index;
+      }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
