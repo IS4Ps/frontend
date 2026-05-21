@@ -93,6 +93,7 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
         // ✅ 403 에러 방지를 위해 부모 토큰을 미리 SharedPreferences에 저장
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('parentTokenBackup', parentToken);
+        await TokenManager().setParentToken(parentToken);
         debugPrint('✅ 부모 토큰 백업 완료');
       }
 

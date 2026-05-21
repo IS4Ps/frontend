@@ -63,7 +63,7 @@ class ProfileApiService {
 
     // ✅ 핵심: 매개변수로 받은 token보다 TokenManager의 최신 토큰을 우선시합니다.
     // 연동 직후라면 TokenManager().childToken에 '아이 토큰'이 들어있을 것입니다.
-    final String? activeToken = TokenManager().token ?? token;
+    final String? activeToken = TokenManager().parentToken ?? token;
 
     debugPrint('📡 [API Call] getChildInfo 호출 - 사용 토큰: ${activeToken?.substring(0, 15)}...');
 
