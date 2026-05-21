@@ -132,7 +132,6 @@ class QuestRepository {
   // 미션 시작
   Future<bool> startMission(int missionId, String token) async {
     try {
-      print("[API 호출] 미션 시작 (missionId: $missionId)");
       final response = await _apiService.startMission(missionId, token);
       print("[응답 코드] ${response.statusCode}");
       return response.statusCode == 200 || response.statusCode == 201;
@@ -145,7 +144,6 @@ class QuestRepository {
   // 미션 완료
   Future<bool> completeMission(int missionId, String token) async {
     try {
-      print("[API 호출] 미션 완료 (missionId: $missionId)");
       final response = await _apiService.completeMission(missionId, token);
       print("[응답 코드] ${response.statusCode}");
       return response.statusCode == 200 || response.statusCode == 201;

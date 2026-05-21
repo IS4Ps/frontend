@@ -233,8 +233,19 @@ class _RoutineScreenState extends State<RoutineScreen> {
               GestureDetector(
                 onTap: () async {
                   if (_isStarting) return;
-                  _isStarting = true;
+                  setState(() => _isStarting = true);
+
                   final viewModel = context.read<QuestViewModel>();
+
+                  // 퀘스트 완료하기일 때
+                  if (_doneList.isNotEmpty && _doneList.every((done) => done)) {
+                    await viewModel.completeMission(mission.missionId);
+                    await viewModel.fetchTodayMissions();
+                    setState(() => _isStarting = false);
+                    return;
+                  }
+
+                  // 퀘스트 시작하기일 때
                   await viewModel.startMission(mission.missionId);
                   final result = await Navigator.push(
                     context,
@@ -255,9 +266,15 @@ class _RoutineScreenState extends State<RoutineScreen> {
                 child: _buildStatusLabel(
                   _doneList.isNotEmpty && _doneList.every((done) => done)
                       ? "퀘스트 완료하기"
-                      : mission.status == "PENDING" ? "퀘스트 시작하기" : "진행 중",
-                  const Color(0xFF6389E9),
-                  Colors.white,
+                      : mission.status == "PENDING" ? "퀘스트 시작하기"
+                      : mission.status == "COMPLETED" ? "완료됨"
+                      : "퀘스트 시작하기",
+                  mission.status == "COMPLETED"
+                      ? const Color(0xFFE3E3E3)
+                      : const Color(0xFF6389E9),
+                  mission.status == "COMPLETED"
+                      ? Colors.grey
+                      : Colors.white,
                 ),
               ),
             ],
