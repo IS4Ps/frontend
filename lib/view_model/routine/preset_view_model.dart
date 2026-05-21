@@ -43,7 +43,8 @@ class PresetViewModel extends ChangeNotifier {
     final body = {
       "parentId": parentId,
       "childId": childId,
-      "date": date,
+      "startDate": date,
+      "endDate": date,
       "title": title,
       "description": "",
     };
