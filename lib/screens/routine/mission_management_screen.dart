@@ -128,9 +128,11 @@ class _MissionManagementScreenState extends State<MissionManagementScreen> {
                                     onTap: () async {
                                       final now = DateTime.now();
                                       final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}';
+                                      final prefs = await SharedPreferences.getInstance();
+                                      final childId = int.parse(prefs.getString('selectedChildId') ?? '0');
                                       await context.read<MissionViewModel>().deleteMission(
                                         mission['missionId'],
-                                        5,
+                                        childId,
                                         date,
                                       );
                                     },

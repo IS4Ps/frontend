@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/screens/quest/routine_detail_screen.dart';
@@ -14,39 +16,53 @@ class RoutineScreen extends StatefulWidget {
 }
 
 class _RoutineScreenState extends State<RoutineScreen> {
-  bool isExpanded = true;
-  int _selectedSubTaskIndex = 0;
-  List<bool> _doneList = [];
+  Map<int, bool> _expandedMap = {};
+  Map<int, int> _selectedSubTaskIndexMap = {};
+  Map<int, List<bool>> _doneLists = {};
   bool _isStarting = false;
 
   // 하위 태스크 (API 응답에 하위 목록이 없을 경우를 대비한 샘플 데이터)
-  List<Map<String, dynamic>> get subTasks {
-    final mission = context.read<QuestViewModel>().todayMissions.isNotEmpty
-        ? context.read<QuestViewModel>().todayMissions.first
-        : null;
-    if (mission == null) return [];
-    final tasks = mission.smallTasks
-        .map((e) => {"title": e.title, "isDone": false})
-        .toList();
-    if (_doneList.length != tasks.length) {
-      _doneList = List.filled(tasks.length, false);
+  List<bool> getDoneList(int missionId, int taskCount, String status) {
+    if (status == "COMPLETED") {
+      return List.filled(taskCount, true);
     }
-    return tasks;
+    if (!_doneLists.containsKey(missionId) || _doneLists[missionId]!.length != taskCount) {
+      _doneLists[missionId] = List.filled(taskCount, false);
+    }
+    return _doneLists[missionId]!;
+  }
+
+  Future<void> _saveDoneList(int missionId, List<bool> doneList) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('doneList_$missionId', jsonEncode(doneList));
+  }
+
+  Future<List<bool>> _loadDoneList(int missionId, int taskCount) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? saved = prefs.getString('doneList_$missionId');
+    if (saved != null) {
+      final List<dynamic> decoded = jsonDecode(saved);
+      return decoded.map((e) => e as bool).toList();
+    }
+    return List.filled(taskCount, false);
   }
 
   @override
   void initState() {
     super.initState();
     // 화면 진입 시 미션 목록 및 주간 통계 API 호출
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         final viewModel = context.read<QuestViewModel>();
+        await viewModel.fetchTodayMissions();
+        await viewModel.fetchWeeklyStats();
 
-        // 1. 오늘의 미션 불러오기
-        viewModel.fetchTodayMissions();
-
-        // 2. 주간 통계 및 보상 자격 불러오기
-        viewModel.fetchWeeklyStats();
+        for (final mission in viewModel.todayMissions) {
+          final saved = await _loadDoneList(mission.missionId, mission.smallTasks.length);
+          setState(() {
+            _doneLists[mission.missionId] = saved;
+          });
+        }
       }
     });
   }
@@ -89,6 +105,14 @@ class _RoutineScreenState extends State<RoutineScreen> {
                           if (idx == 0) {
                             return _buildMainQuestCard(mission);
                           } else {
+                            // 이전 미션이 완료됐으면 현재 미션도 시작 가능하게
+                            TodayMissionModel prevMission = viewModel.todayMissions[idx - 1];
+                            if (prevMission.status == "COMPLETED") {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 9),
+                                child: _buildMainQuestCard(mission),
+                              );
+                            }
                             return Padding(
                               padding: const EdgeInsets.only(top: 9),
                               child: _buildLockedQuestCard(mission.bigTaskTitle),
@@ -218,6 +242,10 @@ class _RoutineScreenState extends State<RoutineScreen> {
   }
 
   Widget _buildMainQuestCard(TodayMissionModel mission) {
+    final doneList = getDoneList(mission.missionId, mission.smallTasks.length, mission.status);
+    final tasks = mission.smallTasks.map((e) => {"title": e.title}).toList();
+    final selectedIndex = _selectedSubTaskIndexMap[mission.missionId] ?? 0;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
@@ -237,34 +265,33 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
                   final viewModel = context.read<QuestViewModel>();
 
-                  // 퀘스트 완료하기일 때
-                  if (_doneList.isNotEmpty && _doneList.every((done) => done)) {
+                  if (doneList.isNotEmpty && doneList.every((done) => done)) {
                     await viewModel.completeMission(mission.missionId);
                     await viewModel.fetchTodayMissions();
                     setState(() => _isStarting = false);
                     return;
                   }
 
-                  // 퀘스트 시작하기일 때
                   await viewModel.startMission(mission.missionId);
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => RoutineDetailScreen(
-                        taskTitle: subTasks[_selectedSubTaskIndex]['title'],
+                        taskTitle: tasks[selectedIndex]['title']!,
                         mainQuestTitle: mission.bigTaskTitle,
                       ),
                     ),
                   );
                   if (result == true) {
                     setState(() {
-                      _doneList[_selectedSubTaskIndex] = true;
+                      _doneLists[mission.missionId]![selectedIndex] = true;
                     });
+                    _saveDoneList(mission.missionId, _doneLists[mission.missionId]!);
                   }
-                  _isStarting = false;
+                  setState(() => _isStarting = false);
                 },
                 child: _buildStatusLabel(
-                  _doneList.isNotEmpty && _doneList.every((done) => done)
+                  doneList.isNotEmpty && doneList.every((done) => done)
                       ? "퀘스트 완료하기"
                       : mission.status == "PENDING" ? "퀘스트 시작하기"
                       : mission.status == "COMPLETED" ? "완료됨"
@@ -279,27 +306,35 @@ class _RoutineScreenState extends State<RoutineScreen> {
               ),
             ],
           ),
-          if (isExpanded) ...[
+          if (_expandedMap[mission.missionId] ?? true) ...[
             const SizedBox(height: 20),
             Column(
-              children: subTasks.asMap().entries.map((entry) {
-                return _buildSubTask(entry.key, entry.value['title'], _doneList[entry.key]);
+              children: tasks.asMap().entries.map((entry) {
+                return _buildSubTask(
+                  entry.key,
+                  entry.value['title']!,
+                  doneList[entry.key],
+                  mission.missionId,
+                  selectedIndex,
+                );
               }).toList(),
             ),
           ],
           IconButton(
-            onPressed: () => setState(() => isExpanded = !isExpanded),
-            icon: Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: Colors.grey, size: 28),
+            onPressed: () => setState(() {
+              _expandedMap[mission.missionId] = !(_expandedMap[mission.missionId] ?? true);
+            }),
+            icon: Icon((_expandedMap[mission.missionId] ?? true) ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: Colors.grey, size: 28),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSubTask(int index, String title, bool isDone) {
+  Widget _buildSubTask(int index, String title, bool isDone, int missionId, int selectedIndex) {
     return GestureDetector(
-      onTap: () => setState(() {
-        _selectedSubTaskIndex = index;
+      onTap: isDone ? null : () => setState(() {
+        _selectedSubTaskIndexMap[missionId] = index;
       }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -307,7 +342,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
         decoration: BoxDecoration(
           color: isDone ? const Color(0xFFC6FF8C) : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(35),
-          border: _selectedSubTaskIndex == index ? Border.all(color: const Color(0xFF6389E9), width: 1) : null,
+          border: (!isDone && selectedIndex == index) ? Border.all(color: const Color(0xFF6389E9), width: 1) : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
