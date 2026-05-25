@@ -27,6 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (childId != null && mounted) {
       final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
       await profileVM.fetchChildInformation(childId, deviceId);
+      // 🚀 [추가] 프로필 화면이 켜지거나 새로고침될 때 전체 직업 리스트 정보도 함께 로드해 줍니다.
+      await profileVM.fetchAvailableJobs();
     }
   }
 
@@ -41,12 +43,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     int level = info?.level ?? 1;
     int gold = info?.gold ?? 0;
 
-    // 🚀 [스탯 기반 동적 직업 매핑 통일]
+    // 🚀 [핵심 수정]: 화면 단의 꼬이기 쉬운 스탯 수치 비교 조건문을 완전히 걷어냅니다.
+    // 대신, 뷰모델이 서버 스탯을 파싱하여 안전하게 들고 있는 selectedJobId를 직접 매핑합니다.
     String jobTitle = "모험가";
-    if (info != null) {
-      if (info.statStrength == 10) jobTitle = "전사";
-      else if (info.statIntelligence == 8) jobTitle = "마법사";
-      else if (info.statCreativity == 6) jobTitle = "예술가";
+    if (profileVM.selectedJobId != null) {
+      if (profileVM.selectedJobId == 1) jobTitle = "전사";
+      else if (profileVM.selectedJobId == 2) jobTitle = "마법사";
+      else if (profileVM.selectedJobId == 3) jobTitle = "예술가";
     }
 
     int currentExp = info?.currentExp ?? 0;
@@ -109,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Text(nickname, style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 4),
-                                // 🚀 '모험가' 고정 텍스트를 동적 jobTitle 변수로 교체
+                                // 🚀 동적 jobTitle 변수를 사용해 '레벨 1 - 예술가' 형태로 정상 노출됩니다.
                                 Text('레벨 $level - $jobTitle', style: const TextStyle(color: Colors.black54, fontSize: 14)),
                               ],
                             ),
@@ -139,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Text('다음 레벨까지 $expPercent%', style: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 18),
 
-                        // 🚀 하단 요약 타이틀 연동
+                        // 🚀 하단 요약 타이틀 영역도 동적 연동 완료
                         Text(
                           jobTitle == "모험가" ? '현재 직업: 없음 (모험가)' : '현재 직업: $jobTitle',
                           style: const TextStyle(color: Color(0xFF1586E2), fontSize: 16, fontWeight: FontWeight.bold),
