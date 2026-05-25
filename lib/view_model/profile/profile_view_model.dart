@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../auth/token_manager.dart' as my_auth;
 import '../../models/profile/child_profile_request_model.dart';
 import '../../models/profile/child_information_response_model.dart';
 import '../../repository/profile/profile_respository.dart';
@@ -143,6 +144,40 @@ class ProfileViewModel extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('[ProfileViewModel] 정보 조회 에러: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // 이미 연동된 기기용 자동 로그인
+  Future<bool> fetchChildAutoInformation(String deviceId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      debugPrint('[ProfileViewModel] 기기 ID 기반 자동 로그인 시도...');
+
+      // 1. 자동 로그인 API 호출 (Body에 deviceId만 전송)
+      final loginResponse = await _repository.loginAsChildAuto(deviceId);
+
+      if (loginResponse != null && loginResponse['accessToken'] != null) {
+        final String childToken = loginResponse['accessToken'];
+
+        // 2. 아동 전용 토큰 저장
+        await my_auth.TokenManager().setChildToken(childToken);
+        debugPrint('[ProfileViewModel] 아동 전용 토큰 저장 및 아동 모드 활성화 완료');
+
+        // 3. 토큰 발급 완료 후 필요하다면 기존의 getChildInformation 등을 호출해
+        //    _childInfo 데이터를 마저 채워 넣을 수 있는 발판이 마련됩니다.
+        return true;
+      } else {
+        debugPrint('[ProfileViewModel] 자동 로그인 실패: 토큰이 없습니다.');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('[ProfileViewModel] 자동 로그인 프로세스 에러: $e');
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

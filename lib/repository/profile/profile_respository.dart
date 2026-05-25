@@ -110,4 +110,30 @@ class ProfileRepository {
       return null;
     }
   }
+
+  // 아이 기기 자동 로그인
+  Future<Map<String, dynamic>?> loginAsChildAuto(String deviceId) async {
+    try {
+      final response = await _apiService.loginAsChildAuto(deviceId);
+
+      if (response.statusCode == 200) {
+        String originalBody = utf8.decode(response.bodyBytes);
+        debugPrint("[Repository] 자동 로그인 성공 응답: $originalBody");
+
+        final Map<String, dynamic> body = jsonDecode(originalBody);
+
+        // 명세서 구조상 "data"안에 "accessToken"이 있으므로 data 맵을 리턴
+        if (body['data'] != null) {
+          return body['data'] as Map<String, dynamic>;
+        }
+        return body;
+      } else {
+        debugPrint("[Repository] 자동 로그인 실패 (상태코드: ${response.statusCode})");
+        return null;
+      }
+    } catch (e) {
+      debugPrint("[Repository 자동 로그인 에러]: $e");
+      return null;
+    }
+  }
 }
