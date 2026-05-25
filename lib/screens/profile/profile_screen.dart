@@ -41,13 +41,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     int level = info?.level ?? 1;
     int gold = info?.gold ?? 0;
 
-    // 경험치 관련 (서버 데이터가 null이면 0으로 처리)
-    int currentExp = info?.currentExp ?? 0;
-    int maxExp = 1000; // 레벨업 기준 (기획에 맞게 수정 가능)
+    // 🚀 [스탯 기반 동적 직업 매핑 통일]
+    String jobTitle = "모험가";
+    if (info != null) {
+      if (info.statStrength == 10) jobTitle = "전사";
+      else if (info.statIntelligence == 8) jobTitle = "마법사";
+      else if (info.statCreativity == 6) jobTitle = "예술가";
+    }
 
-    // 게이지 비율 (0.0 ~ 1.0)
+    int currentExp = info?.currentExp ?? 0;
+    int maxExp = 1000;
     double expFactor = (currentExp / maxExp).clamp(0.0, 1.0);
-    // 표시용 퍼센트 (정수)
     int expPercent = (expFactor * 100).toInt();
 
     return Scaffold(
@@ -56,7 +60,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         physics: const ClampingScrollPhysics(),
         child: Column(
           children: [
-            // 상단 파란 영역
             Container(
               width: double.infinity,
               padding: EdgeInsets.only(top: topPadding),
@@ -68,14 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '프로필',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        const Text('프로필', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w600)),
                         GestureDetector(
                           onTap: () async {
                             final prefs = await SharedPreferences.getInstance();
@@ -83,17 +79,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             if (mounted) Navigator.pushReplacementNamed(context, '/start');
                           },
                           child: Container(
-                            width: 100,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF75E5E),
-                              borderRadius: BorderRadius.circular(50),
-                            ),
+                            width: 100, height: 30,
+                            decoration: BoxDecoration(color: const Color(0xFFF75E5E), borderRadius: BorderRadius.circular(50)),
                             alignment: Alignment.center,
-                            child: const Text(
-                              '로그아웃',
-                              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
+                            child: const Text('로그아웃', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
@@ -104,86 +93,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     margin: const EdgeInsets.fromLTRB(16, 0, 16, 18),
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
                     child: Column(
                       children: [
                         Row(
                           children: [
                             Container(
-                              width: 60,
-                              height: 60,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE1F5FE),
-                                shape: BoxShape.circle,
-                              ),
+                              width: 60, height: 60,
+                              decoration: const BoxDecoration(color: Color(0xFFE1F5FE), shape: BoxShape.circle),
                               child: const Icon(Icons.person, color: Color(0xFF1586E2), size: 40),
                             ),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  nickname,
-                                  style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
+                                Text(nickname, style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 4),
-                                Text(
-                                  '레벨 $level - 모험가',
-                                  style: const TextStyle(color: Colors.black54, fontSize: 14),
-                                ),
+                                // 🚀 '모험가' 고정 텍스트를 동적 jobTitle 변수로 교체
+                                Text('레벨 $level - $jobTitle', style: const TextStyle(color: Colors.black54, fontSize: 14)),
                               ],
                             ),
                           ],
                         ),
                         const SizedBox(height: 18),
 
-                        // ✅ 수정된 경험치 바 디자인 (요청하신 이미지 반영)
                         LayoutBuilder(
                           builder: (context, constraints) {
                             return Stack(
                               children: [
-                                // 배경 바 (연회색)
                                 Container(
-                                  width: double.infinity,
-                                  height: 18,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE2E2E2),
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
+                                  width: double.infinity, height: 18,
+                                  decoration: BoxDecoration(color: const Color(0xFFE2E2E2), borderRadius: BorderRadius.circular(30)),
                                 ),
-                                // 실제 경험치 바 (연두색)
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 500),
                                   width: constraints.maxWidth * expFactor,
                                   height: 18,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFA1FF6F), // 사진 속 연두색
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
+                                  decoration: BoxDecoration(color: const Color(0xFFA1FF6F), borderRadius: BorderRadius.circular(30)),
                                 ),
                               ],
                             );
                           },
                         ),
-
                         const SizedBox(height: 10),
-                        // ✅ 수정된 경험치 텍스트 (다음 레벨까지 % 표시)
-                        Text(
-                          '다음 레벨까지 $expPercent%',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-
+                        Text('다음 레벨까지 $expPercent%', style: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 18),
-                        const Text(
-                          '예상 직업: 마법사',
-                          style: TextStyle(color: Color(0xFF1586E2), fontSize: 16, fontWeight: FontWeight.bold),
+
+                        // 🚀 하단 요약 타이틀 연동
+                        Text(
+                          jobTitle == "모험가" ? '현재 직업: 없음 (모험가)' : '현재 직업: $jobTitle',
+                          style: const TextStyle(color: Color(0xFF1586E2), fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

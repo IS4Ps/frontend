@@ -1,11 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../auth/token_manager.dart' as my_auth;
+import 'package:frontend/auth/token_manager.dart' as my_auth; // 프로젝트 경로 확인 필수
 import '../../models/profile/child_profile_request_model.dart';
 import '../../models/profile/child_information_response_model.dart';
+import '../../models/profile/job_list_response_model.dart';
 import '../../repository/profile/profile_respository.dart';
-import '../../auth/token_manager.dart'; // ✅ my_auth 별칭 없이 직접 사용 권장
+import '../../auth/token_manager.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
@@ -20,6 +20,14 @@ class ProfileViewModel extends ChangeNotifier {
   ChildInformationResponseModel? get childInfo => _childInfo;
 
   String? get currentNickname => _childInfo?.nickname;
+
+  // 🚀 [추가] 서버에서 받아온 전체 직업 목록을 저장할 리스트 변수
+  List<JobModel> _jobList = [];
+  List<JobModel> get jobList => _jobList;
+
+  // 🚀 [핵심 추가] 사용자가 선택 완료한 직업 ID를 뷰모델 레이어에서 영구 기억합니다.
+  int? _selectedJobId;
+  int? get selectedJobId => _selectedJobId;
 
   /// ✅ [보호자 전용] 1단계: 아이 프로필 생성
   Future<bool> createChildProfile({
@@ -74,31 +82,24 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   /// ✅ [자녀 전용] 3단계: QR 스캔 후 최종 기기 연동 및 아이 토큰 발급
-  /// 로그에서 발생하던 403 에러를 잡기 위해 토큰 저장 방식을 완전히 분리했습니다.
   Future<bool> linkDeviceAndLogin(String linkToken, String deviceId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 1. 서버 연동 요청 (/auth/child/register-by-qr)
       final result = await _repository.registerChildByQr(linkToken, deviceId);
 
       if (result != null && result['accessToken'] != null) {
         final String childToken = result['accessToken'];
-        // ✅ UUID(문자열) 대응을 위해 .toString() 사용
         final String childId = result['childId'].toString();
 
-        // 2. TokenManager에 아이 전용 토큰으로 저장 및 모드 전환
-        // 이제부터는 모든 API 호출 시 ROLE_CHILD 권한을 사용하게 됩니다.
         TokenManager().setChildToken(childToken);
 
-        // 3. 휴대폰 저장소(SharedPreferences)에도 영구 저장
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('childToken', childToken);
         await prefs.setString('selectedChildId', childId);
         await prefs.setBool('isChildMode', true);
 
-        // 4. 아이 정보 동기화 (새로 받은 아이 토큰을 사용하게 됨)
         await fetchChildInformation(childId, deviceId);
 
         debugPrint('[ProfileViewModel] 최종 연동 및 로그인 성공: $childId');
@@ -115,25 +116,17 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   /// ✅ [공통] 아이 정보 상세 조회
-  /// childId를 String으로 받아 UUID 파싱 에러(FormatException)를 방지합니다.
-  // ProfileViewModel.dart 내부 fetchChildInformation 함수
-
   Future<void> fetchChildInformation(String childId, String deviceId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // ✅ 핵심: 이 API는 '부모 토큰' 전용이므로 백업된 부모 토큰을 가져옵니다.
       String? parentToken = prefs.getString('parentTokenBackup');
-
-      // 만약 부모 토큰이 없다면 현재 활성화된 토큰(TokenManager)이라도 시도
       String? tokenToUse = parentToken ?? TokenManager().parentToken ?? TokenManager().childToken;
 
       debugPrint('📡 [API 요청] 아이 정보 조회 - 부모 토큰 사용 시도');
 
-      // API 호출 (부모 토큰 전달)
       final result = await _repository.getChildInformation(childId, tokenToUse ?? "");
 
       if (result != null) {
@@ -158,25 +151,79 @@ class ProfileViewModel extends ChangeNotifier {
     try {
       debugPrint('[ProfileViewModel] 기기 ID 기반 자동 로그인 시도...');
 
-      // 1. 자동 로그인 API 호출 (Body에 deviceId만 전송)
       final loginResponse = await _repository.loginAsChildAuto(deviceId);
 
       if (loginResponse != null && loginResponse['accessToken'] != null) {
         final String childToken = loginResponse['accessToken'];
 
-        // 2. 아동 전용 토큰 저장
         await my_auth.TokenManager().setChildToken(childToken);
         debugPrint('[ProfileViewModel] 아동 전용 토큰 저장 및 아동 모드 활성화 완료');
-
-        // 3. 토큰 발급 완료 후 필요하다면 기존의 getChildInformation 등을 호출해
-        //    _childInfo 데이터를 마저 채워 넣을 수 있는 발판이 마련됩니다.
         return true;
       } else {
-        debugPrint('[ProfileViewModel] 자동 로그인 실패: 토큰이 없습니다.');
+        debugPrint('[ProfileViewModel] 자동 로그인 실패: Token 이 없습니다.');
         return false;
       }
     } catch (e) {
       debugPrint('[ProfileViewModel] 자동 로그인 프로세스 에러: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // 🚀 직업 관련 API 연동 메서드 영역
+  // -----------------------------------------------------------------
+
+  /// ✅ 전체 직업 목록 가져오기 (인증 불필요)
+  Future<void> fetchAvailableJobs() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result = await _repository.fetchJobList();
+      if (result != null) {
+        _jobList = result;
+        debugPrint('[ProfileViewModel] 직업 목록 로드 완료 (${_jobList.length}개)');
+      }
+    } catch (e) {
+      debugPrint('[ProfileViewModel] 직업 목록 로드 중 예외 발생: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// ✅ 아이 캐릭터 직업 선택 및 변경 처리 (부모 권한 필요)
+  Future<bool> updateChildJob(String childId, int jobId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final String? parentToken = TokenManager().parentToken;
+
+      if (parentToken == null) {
+        debugPrint('[ProfileViewModel] 오류: 부모 토큰이 유효하지 않아 직업을 바꿀 수 없습니다.');
+        return false;
+      }
+
+      final result = await _repository.selectChildJob(childId, jobId, parentToken);
+
+      if (result != null) {
+        debugPrint('[ProfileViewModel] 캐릭터 직업 변경 성공! 전송한 jobId: $jobId');
+
+        // 🔥 [중요 수정] 서버 성공 통신이 완료되면 뷰모델 전역 메모리에 selectedJobId를 꽉 쥐어줍니다.
+        _selectedJobId = jobId;
+        notifyListeners(); // 1차 새로고침 알림 (QuestScreen이 캐치해서 바로 Ranger.glb로 교체)
+
+        // 이후 아이 정보 조회가 호출되어 화면이 흔들려도 변하지 않는 안정장치가 마련됩니다.
+        await fetchChildInformation(childId, parentToken);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('[ProfileViewModel] 직업 선택 프로세스 에러: $e');
       return false;
     } finally {
       _isLoading = false;
