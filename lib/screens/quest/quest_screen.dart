@@ -250,6 +250,7 @@ class _QuestScreenState extends State<QuestScreen> {
   }
 
   // --- 직업 선택 팝업창 연동 ---
+  // --- 직업 선택 팝업창 연동 ---
   void _showJobSelectionPopup(BuildContext context) {
     int selectedIndex = -1;
     final profileVM = context.read<ProfileViewModel>();
@@ -291,14 +292,12 @@ class _QuestScreenState extends State<QuestScreen> {
 
                         int targetJobId = selectedIndex + 1;
 
-                        // 🚀 [수정] 팝업 내부의 불필요한 이중 setState 구조를 제거하고 즉시 ViewModel을 호출합니다.
                         bool success = await profileVM.updateChildJob(childId, targetJobId);
 
                         if (success && mounted) {
+                          // 🚀 [수정 완료] 기존의 '직업 선택이 완료되었습니다! 🎉' 스낵바 코드를 지웠습니다.
+                          // 이제 토스트 없이 조용히 팝업창만 닫힙니다.
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('직업 선택이 완료되었습니다! 🎉')),
-                          );
                         } else if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('직업 선택 실패. 다시 시도해주세요.')),
