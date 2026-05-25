@@ -75,4 +75,24 @@ class ProfileApiService {
       },
     );
   }
+
+  // 아이 기기 자동 로그인 (이미 연동된 기기)
+  Future<http.Response> loginAsChildAuto(String deviceId) async {
+    final url = Uri.parse('$baseUrl/auth/child/login');
+
+    final bodyData = jsonEncode({
+      "deviceId": deviceId, // 오직 기기 고유 ID만 전송
+    });
+
+    debugPrint('🚀 [자동 로그인 요청] 전송 데이터: $bodyData');
+
+    return await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: bodyData,
+    );
+  }
 }
