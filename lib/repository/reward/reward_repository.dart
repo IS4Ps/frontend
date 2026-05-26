@@ -15,6 +15,7 @@ class RewardRepository {
 
       if (response.statusCode == 200) {
         print("[API 성공] 상태 코드: ${response.statusCode}");
+        print("[보상 데이터] ${utf8.decode(response.bodyBytes)}");
 
         // 한글 깨짐 방지 디코딩
         final body = jsonDecode(utf8.decode(response.bodyBytes));
