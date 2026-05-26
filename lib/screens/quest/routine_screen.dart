@@ -131,7 +131,15 @@ class _RoutineScreenState extends State<RoutineScreen> {
               children: [
                 _buildTopBar(),
                 const SizedBox(height: 10),
-                _buildAchievementCard(viewModel),
+                SizedBox(
+                  height: 147,
+                  child: PageView(
+                    children: [
+                      _buildAchievementCard(viewModel),
+                      _buildMonthlyCard(),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 19),
                 _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
                 const SizedBox(height: 20),
@@ -231,7 +239,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 18),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -248,7 +256,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
                 _buildStatusLabel("보상 획득!", const Color(0xFFFFEBEB), const Color(0xFFE9807B)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 0),
           SizedBox(
             height: 40,
             child: LayoutBuilder(
@@ -291,6 +299,42 @@ class _RoutineScreenState extends State<RoutineScreen> {
           ),
           const SizedBox(height: 8),
           Text(statusText, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("월간 퀘스트 달성률", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 0),
+          SizedBox(
+            height: 40,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: const LinearProgressIndicator(
+                  value: 0.0,
+                  minHeight: 18,
+                  backgroundColor: Color(0xFFE2E2E2),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text("0%", style: TextStyle(color: Colors.grey, fontSize: 16)),
         ],
       ),
     );
