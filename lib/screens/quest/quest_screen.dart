@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart'; // 3D 뷰어 패키지 추가
+import '../../models/profile/child_information_response_model.dart';
+import '../../models/profile/job_list_response_model.dart';
 import '../../view_model/profile/profile_view_model.dart';
 import '../../view_model/quest/quest_view_model.dart';
 import 'grow_screen.dart';
@@ -16,6 +18,8 @@ class QuestScreen extends StatefulWidget {
 }
 
 class _QuestScreenState extends State<QuestScreen> {
+  // ✅ 걷어냄: 리렌더링 때 날아가던 로컬 변수 _currentSelectedJobId를 삭제했습니다.
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +29,9 @@ class _QuestScreenState extends State<QuestScreen> {
         viewModel.loadTodayMood();
         viewModel.fetchTodayMissions();
         viewModel.fetchEquippedItems();
+
+        final profileVM = context.read<ProfileViewModel>();
+        profileVM.fetchAvailableJobs();
       }
     });
   }
@@ -70,17 +77,19 @@ class _QuestScreenState extends State<QuestScreen> {
   }
 
   Widget _buildLevelSection() {
-    // 1. ProfileViewModel의 데이터를 구독합니다.
     final profileVM = Provider.of<ProfileViewModel>(context);
     final info = profileVM.childInfo;
 
-    // 2. 서버 데이터 매핑 (null일 경우 기본값 설정)
     int level = info?.level ?? 1;
-
-    // 직업 판별 로직 (현재는 기본이 모험가, 스탯에 따라 동적 변경 가능)
     String jobTitle = "모험가";
 
-    // 경험치 계산 (1000 기준)
+    // 🚀 [수정] 이제 변하지 않는 ViewModel 전역 변수인 selectedJobId를 바라봅니다.
+    if (profileVM.selectedJobId != null) {
+      if (profileVM.selectedJobId == 1) jobTitle = "전사";
+      else if (profileVM.selectedJobId == 2) jobTitle = "마법사";
+      else if (profileVM.selectedJobId == 3) jobTitle = "예술가";
+    }
+
     int currentExp = info?.currentExp ?? 0;
     int maxExp = 1000;
     double expFactor = (currentExp / maxExp).clamp(0.0, 1.0);
@@ -91,74 +100,90 @@ class _QuestScreenState extends State<QuestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ 닉네임 없이 "Level X 직업명" 형식으로 깔끔하게 표시
-          Text(
-              "Level $level $jobTitle",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)
-          ),
+          Text("Level $level $jobTitle", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(30),
             child: LinearProgressIndicator(
-              value: expFactor, // ✅ 실제 서버 경험치 반영
+              value: expFactor,
               backgroundColor: const Color(0xFFE2E2E2),
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFA1FF6F)),
               minHeight: 18,
             ),
           ),
           const SizedBox(height: 10),
-          // ✅ 진행도를 퍼센트로 표시
-          Center(
-              child: Text(
-                  "$expPercent%",
-                  style: const TextStyle(color: Colors.black, fontSize: 22)
-              )
-          ),
+          Center(child: Text("$expPercent%", style: const TextStyle(color: Colors.black, fontSize: 22))),
         ],
       ),
     );
   }
 
-  // 1. 함수 찾기
   Widget _buildCharacterSection(BuildContext context, QuestViewModel viewModel) {
+    final profileVM = Provider.of<ProfileViewModel>(context);
+
+    // 🚀 1. 기본 캐릭터 외형 지정
+    String characterModelPath = 'assets/models/character/Rogue.glb';
+
+    // 🚀 2. [수정] 동일하게 profileVM.selectedJobId를 기준으로 에셋 경로 바인딩
+    if (profileVM.selectedJobId != null) {
+      if (profileVM.selectedJobId == 1) {
+        characterModelPath = 'assets/models/character/Knight.glb';
+      } else if (profileVM.selectedJobId == 2) {
+        characterModelPath = 'assets/models/character/Mage.glb';
+      } else if (profileVM.selectedJobId == 3) {
+        characterModelPath = 'assets/models/character/Ranger.glb';
+      }
+    }
+
+    // 🔥 [초강력 디버깅 로그] 경로 제대로 바인딩되는지 감시용 유지
+    debugPrint('I/flutter: 🚨🚨🚨 [CHARACTER BUILD LOG] 🚨🚨🚨');
+    debugPrint('I/flutter: 📌 현재 profileVM.selectedJobId 상태값: ${profileVM.selectedJobId}');
+    debugPrint('I/flutter: 🎬 최종 ModelViewer에 주입되는 에셋 경로: $characterModelPath');
+    debugPrint('I/flutter: ======================================================');
+
+    // 🚀 3. 하단 스탯 박스용 데이터 매칭도 영구 ID 기준으로 정렬
+    JobModel? currentJob;
+    if (profileVM.jobList.isNotEmpty && profileVM.selectedJobId != null) {
+      try {
+        currentJob = profileVM.jobList.firstWhere((job) => job.id == profileVM.selectedJobId);
+      } catch (_) {
+        currentJob = null;
+      }
+    }
+
     return Stack(
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 80),
           child: Center(
             child: Container(
-              width: 250,
-              height: 310,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDFDFD),
-                borderRadius: BorderRadius.circular(20),
-              ),
+              width: 250, height: 310,
+              decoration: BoxDecoration(color: const Color(0xFFFDFDFD), borderRadius: BorderRadius.circular(20)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Stack( // 모델들을 겹치기 위해 내부에서 다시 Stack 사용
+                child: Stack(
                   children: [
-                    // 1. 기본 캐릭터 모델
-                    const ModelViewer(
-                      src: 'assets/models/character/Rogue.glb',
+                    // 🔥 [핵심 수정] ValueKey를 강제로 때려 박아 웹뷰의 완고한 캐시 메커니즘을 파괴합니다.
+                    ModelViewer(
+                      key: ValueKey(characterModelPath), // 💡 경로가 변경될 때마다 3D 뷰어 인스턴스를 무조건 강제 새로고침 시킵니다.
+                      src: characterModelPath,
                       alt: "Base Character",
                       autoRotate: false,
                       cameraControls: true,
                       disableZoom: true,
                       autoPlay: true,
-                      backgroundColor: Color(0xFFFDFDFD),
+                      backgroundColor: const Color(0xFFFDFDFD),
                       loading: Loading.eager,
                     ),
-
-                    // 2. 장착된 아이템 리스트를 순회하며 위에 얹기
                     ...viewModel.equippedItems.map((item) {
                       return ModelViewer(
                         src: 'assets/models/item/${item.splineTriggerName}.glb',
                         alt: item.itemName,
                         autoRotate: false,
-                        cameraControls: false, // 아이템 모델은 컨트롤 비활성화 (캐릭터에 고정된 느낌)
+                        cameraControls: false,
                         disableZoom: true,
                         autoPlay: true,
-                        backgroundColor: Colors.transparent, // 배경을 투명하게 해서 캐릭터가 보이게 함
+                        backgroundColor: Colors.transparent,
                         loading: Loading.eager,
                       );
                     }).toList(),
@@ -169,7 +194,7 @@ class _QuestScreenState extends State<QuestScreen> {
           ),
         ),
 
-        // 말풍선 및 스태스 박스 (기존 코드 유지)
+        // 말풍선
         Positioned(
           top: 0,
           left: 30,
@@ -195,9 +220,10 @@ class _QuestScreenState extends State<QuestScreen> {
           ),
         ),
 
+        // 아이콘 버튼
         Positioned(
-          top: 0, // 말풍선 아래 적절한 높이
-          right: 40, // 오른쪽 여백
+          top: 0,
+          right: 40,
           child: GestureDetector(
             onTap: () => _showJobSelectionPopup(context),
             child: Container(
@@ -207,33 +233,28 @@ class _QuestScreenState extends State<QuestScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4)),
                 ],
                 border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
               ),
               child: const Center(
-                child: Icon(
-                  Icons.face,
-                  size: 30,
-                  color: Colors.black,
-                ),
+                child: Icon(Icons.face, size: 30, color: Colors.black),
               ),
             ),
           ),
         ),
 
-        Positioned(right: 30, bottom: 0, child: _buildStatBox()),
+        Positioned(right: 30, bottom: 0, child: _buildStatBox(currentJob)),
       ],
     );
   }
 
-  // 동그라미 사람 아이콘 선택 시
+  // --- 직업 선택 팝업창 연동 ---
+  // --- 직업 선택 팝업창 연동 ---
   void _showJobSelectionPopup(BuildContext context) {
     int selectedIndex = -1;
+    final profileVM = context.read<ProfileViewModel>();
+    final String? childId = profileVM.childInfo?.childId?.toString();
 
     showDialog(
       context: context,
@@ -250,7 +271,7 @@ class _QuestScreenState extends State<QuestScreen> {
                 width: MediaQuery.of(context).size.width * 0.9,
                 padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // 내용물에 맞게 높이 조절
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildJobItem(0, "전사", "강력한 힘을 자랑하는 전사\n운동을 통해 체력을 기르세요!", selectedIndex == 0, () => setState(() => selectedIndex = 0)),
                     const SizedBox(height: 16),
@@ -261,11 +282,32 @@ class _QuestScreenState extends State<QuestScreen> {
                     const SizedBox(height: 35),
 
                     GestureDetector(
-                      onTap: isSelected ? () => Navigator.pop(context) : null,
+                      onTap: isSelected ? () async {
+                        if (childId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('자녀 정보가 올바르지 않습니다.')),
+                          );
+                          return;
+                        }
+
+                        int targetJobId = selectedIndex + 1;
+
+                        bool success = await profileVM.updateChildJob(childId, targetJobId);
+
+                        if (success && mounted) {
+                          // 🚀 [수정 완료] 기존의 '직업 선택이 완료되었습니다! 🎉' 스낵바 코드를 지웠습니다.
+                          // 이제 토스트 없이 조용히 팝업창만 닫힙니다.
+                          Navigator.pop(context);
+                        } else if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('직업 선택 실패. 다시 시도해주세요.')),
+                          );
+                        }
+                      } : null,
                       child: Opacity(
                         opacity: isSelected ? 1.0 : 0.5,
                         child: Container(
-                          width: double.infinity, // 버튼도 팝업 너비에 맞춰 넓게
+                          width: double.infinity,
                           margin: const EdgeInsets.symmetric(horizontal: 80),
                           height: 55,
                           decoration: BoxDecoration(
@@ -275,8 +317,10 @@ class _QuestScreenState extends State<QuestScreen> {
                               BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
                             ] : [],
                           ),
-                          child: const Center(
-                            child: Text(
+                          child: Center(
+                            child: profileVM.isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
                                 "선택 완료",
                                 style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)
                             ),
@@ -342,28 +386,19 @@ class _QuestScreenState extends State<QuestScreen> {
         child: Row(
           children: [
             Container(
-              width: 90,
-              height: 90,
+              width: 90, height: 90,
               decoration: BoxDecoration(
                 color: const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: getBorderColor(),
-                  width: 1.0,
-                ),
+                border: Border.all(color: getBorderColor(), width: 1.0),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
                   getImagePath(),
                   fit: BoxFit.contain,
-                  // 사진 파일이 폴더에 없거나 경로가 틀리면 아래 에러 텍스트가 뜹니다.
                   errorBuilder: (context, error, stackTrace) => const Center(
-                    child: Text(
-                      "사진 없음",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 10, color: Colors.black54),
-                    ),
+                    child: Text("사진 없음", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.black54)),
                   ),
                 ),
               ),
@@ -375,24 +410,9 @@ class _QuestScreenState extends State<QuestScreen> {
                 children: [
                   Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black)),
                   const SizedBox(height: 6),
-                  Text(
-                    mainDesc,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  Text(mainDesc, style: const TextStyle(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 2),
-                  Text(
-                    subDesc,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.normal,
-                      height: 1.4,
-                    ),
-                  ),
+                  Text(subDesc, style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.normal, height: 1.4)),
                 ],
               ),
             ),
@@ -434,11 +454,7 @@ class _QuestScreenState extends State<QuestScreen> {
           color: const Color(0xFFFDFDFD),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
+            BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))
           ],
         ),
         child: Row(
@@ -449,10 +465,7 @@ class _QuestScreenState extends State<QuestScreen> {
               children: [
                 const Text("다음 퀘스트", style: TextStyle(color: Colors.grey, fontSize: 18)),
                 const SizedBox(height: 5),
-                Text(
-                  displayTitle,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
+                Text(displayTitle, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               ],
             ),
             const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
@@ -462,21 +475,35 @@ class _QuestScreenState extends State<QuestScreen> {
     );
   }
 
-  Widget _buildStatBox() {
+  // 🚀 [에러 교정 완료] JobModel의 base 스탯 값으로 채워지는 스탯 박스 컴포넌트
+  Widget _buildStatBox(JobModel? job) {
+    // 15 기준 비율 계산
+    double strengthRatio = ((job?.baseStrength ?? 1) / 15).clamp(0.1, 1.0);
+    double intelligenceRatio = ((job?.baseIntelligence ?? 1) / 15).clamp(0.1, 1.0);
+    double creativityRatio = ((job?.baseCreativity ?? 1) / 15).clamp(0.1, 1.0);
+
     return Container(
-      width: 104, height: 80,
+      width: 104,
+      height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFDFDFD),
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4)
+          )
+        ],
       ),
       child: Column(
+        // 💡 오타가 났던 Mainmathbf와 중복 지정되었던 mainAxisAlignment를 깔끔하게 정리했습니다.
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildMiniBar(const Color(0xFFFF7070), 0.8),
-          _buildMiniBar(const Color(0xFF54C517), 0.5),
-          _buildMiniBar(const Color(0xFF2194FF), 0.3),
+          _buildMiniBar(const Color(0xFFFF7070), strengthRatio),     // 힘 (빨강)
+          _buildMiniBar(const Color(0xFF54C517), intelligenceRatio), // 지혜 (초록)
+          _buildMiniBar(const Color(0xFF2194FF), creativityRatio),   // 창의력 (파랑)
         ],
       ),
     );

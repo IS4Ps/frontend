@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 // ✅ TokenManager를 직접 참조하여 최신 토큰을 가져옵니다.
 import 'package:frontend/auth/token_manager.dart';
 
+import '../../models/profile/child_job_reqeust_model.dart';
+
 class ProfileApiService {
   static const String baseUrl = "http://100.27.204.252:8080";
 
@@ -93,6 +95,49 @@ class ProfileApiService {
         'Accept': 'application/json',
       },
       body: bodyData,
+    );
+  }
+
+  // 직업 선택
+  // 직업 선택 (상세 로그 버전)
+  Future<http.Response> patchChildJob(
+      String childId,
+      ChildJobRequestModel requestModel,
+      String parentToken,
+      ) async {
+    final url = Uri.parse('$baseUrl/children/$childId/job');
+    final bodyString = jsonEncode(requestModel.toJson());
+
+    // 🔍 보낼 데이터 미리 콘솔에 찍기
+    debugPrint('================ [JOB PATCH REQUEST] ================');
+    debugPrint('🚀 URL: $url');
+    debugPrint('🔑 Token: Bearer ${parentToken.length > 15 ? parentToken.substring(0, 15) : parentToken}...');
+    debugPrint('📦 Body: $bodyString');
+    debugPrint('=====================================================');
+
+    return await http.patch(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $parentToken',
+      },
+      body: bodyString,
+    );
+  }
+
+  // 직업 목록 조회
+  Future<http.Response> getJobList() async {
+    // 명세서 상의 주소: /api/jobs
+    final url = Uri.parse('$baseUrl/api/jobs');
+
+    debugPrint('📡 [API Call] getJobList 호출 - 모든 직업 목록 요청');
+
+    return await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
     );
   }
 }
