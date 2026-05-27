@@ -5,8 +5,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/screens/quest/routine_detail_screen.dart';
+import '../../models/reward/offline_reward_list_model.dart';
 import '../../view_model/quest/quest_view_model.dart';
 import '../../models/quest/today_mission_model.dart';
+import '../../view_model/reward/reward_view_model.dart';
 
 class RoutineScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -96,6 +98,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
         final viewModel = context.read<QuestViewModel>();
         await viewModel.fetchTodayMissions();
         await viewModel.fetchWeeklyStats();
+        context.read<RewardViewModel>().fetchOfflineRewards();
 
         for (final mission in viewModel.todayMissions) {
           final saved = await _loadDoneList(mission.missionId, mission.smallTasks.length);
@@ -128,7 +131,15 @@ class _RoutineScreenState extends State<RoutineScreen> {
               children: [
                 _buildTopBar(),
                 const SizedBox(height: 10),
-                _buildAchievementCard(viewModel),
+                SizedBox(
+                  height: 147,
+                  child: PageView(
+                    children: [
+                      _buildAchievementCard(viewModel),
+                      _buildMonthlyCard(),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 19),
                 _buildActionButton("캐릭터 성장하기!!", const Color(0xFFE9807B), widget.onGrowTap),
                 const SizedBox(height: 20),
@@ -228,7 +239,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 18),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -245,18 +256,85 @@ class _RoutineScreenState extends State<RoutineScreen> {
                 _buildStatusLabel("보상 획득!", const Color(0xFFFFEBEB), const Color(0xFFE9807B)),
             ],
           ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progressValue,
-              minHeight: 18,
-              backgroundColor: const Color(0xFFE2E2E2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+          const SizedBox(height: 0),
+          SizedBox(
+            height: 40,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final barWidth = constraints.maxWidth;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: progressValue,
+                          minHeight: 18,
+                          backgroundColor: const Color(0xFFE2E2E2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+                        ),
+                      ),
+                    ),
+                    ...context.watch<RewardViewModel>().editingRewards
+                        .where((r) => r.rewardId != 0 && r.periodType == "WEEKLY")
+                        .map((reward) {
+                      final position = reward.targetDays / 7;
+                      return Positioned(
+                        left: (barWidth - 28) * position,
+                        top: 17,
+                        child: GestureDetector(
+                          onTap: () => _showRewardPopup(context, reward),
+                          child: Image.asset('assets/icons/box.png', width: 28, height: 28),
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 8),
           Text(statusText, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("월간 퀘스트 달성률", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 0),
+          SizedBox(
+            height: 40,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: const LinearProgressIndicator(
+                  value: 0.0,
+                  minHeight: 18,
+                  backgroundColor: Color(0xFFE2E2E2),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text("0%", style: TextStyle(color: Colors.grey, fontSize: 16)),
         ],
       ),
     );
@@ -333,6 +411,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
                     _missionTimers[mission.missionId]?.cancel();
                     await viewModel.completeMission(mission.missionId);
                     await viewModel.fetchTodayMissions();
+                    await viewModel.fetchWeeklyStats();
                     setState(() => _isStarting = false);
                     return;
                   }
@@ -458,6 +537,55 @@ class _RoutineScreenState extends State<RoutineScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
       child: Text(text, style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  void _showRewardPopup(BuildContext context, OfflineRewardListModel reward) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('보상 내용', style: TextStyle(fontWeight: FontWeight.bold)),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const Icon(Icons.close, color: Colors.black),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F6F6),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Image.asset('assets/icons/box.png', width: 24, height: 24),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${reward.targetDays}일 달성 시', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        Text(reward.rewardPromiseText, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
     );
   }
 }
