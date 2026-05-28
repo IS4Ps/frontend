@@ -324,6 +324,7 @@ class QuestRepository {
   }
 
   // stroop 정답 제출
+  // stroop 정답 제출 (안전한 방어 로직 적용 버전)
   Future<StroopSubmitResponseModel?> submitStroopGame(
       String token, StroopSubmitRequestModel request) async {
     try {
@@ -340,12 +341,13 @@ class QuestRepository {
 
         print("[Repository] Stroop 결과 분석 완료");
 
-        // ★ [수정 포인트] 명세서 구조에 맞춰 'data' 필드 내부를 꺼내서 모델로 변환합니다.
-        if (jsonData['data'] != null) {
+        // ✅ [해결] 맵 안에 'data' 키가 존재하고 비어있지 않은 경우에만 내부를 파싱합니다.
+        if (jsonData.containsKey('data') && jsonData['data'] != null) {
           return StroopSubmitResponseModel.fromJson(jsonData['data']);
         }
 
-        // 혹시 백엔드가 구조를 바꿨을 때를 대비한 예외 방어 코드
+        // 백엔드가 고친 것처럼 'data' 없이 알맹이만 통째로 왔을 땐,
+        // jsonData 전체를 그대로 모델 객체에 안전하게 맵핑합니다. (The method '[]' was called on null 원천 차단)
         return StroopSubmitResponseModel.fromJson(jsonData);
       } else {
         print("[Repository] Stroop 제출 실패 서버 에러: ${response.body}");

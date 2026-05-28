@@ -223,7 +223,14 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget _buildChildAccountSection(ProfileViewModel profileVM) {
     final String level = profileVM.childInfo?.level?.toString() ?? '1';
     final int? currentChildId = profileVM.childInfo?.childId;
-    const String job = '모험가';
+
+    // 🚀 [동적 직업 매핑]: ProfileScreen과 완전히 동일하게 selectedJobId를 반영합니다.
+    String jobTitle = "모험가";
+    if (profileVM.selectedJobId != null) {
+      if (profileVM.selectedJobId == 1) jobTitle = "전사";
+      else if (profileVM.selectedJobId == 2) jobTitle = "마법사";
+      else if (profileVM.selectedJobId == 3) jobTitle = "예술가";
+    }
 
     return _buildSectionCard(
       title: '자녀 계정',
@@ -238,7 +245,12 @@ class _SettingScreenState extends State<SettingScreen> {
             decoration: BoxDecoration(color: const Color(0xFFF8F8F8), borderRadius: BorderRadius.circular(12)),
             child: Row(
               children: [
-                const CircleAvatar(radius: 24, backgroundColor: Color(0XFFD9D9D9)),
+                // 🔄 [교체 포인트]: 밋밋했던 CircleAvatar를 원하셨던 ProfileScreen의 예쁜 컨테이너 구조로 완벽 교체!
+                Container(
+                  width: 60, height: 60,
+                  decoration: const BoxDecoration(color: Color(0xFFE1F5FE), shape: BoxShape.circle),
+                  child: const Icon(Icons.person, color: Color(0xFF1586E2), size: 40),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -246,7 +258,8 @@ class _SettingScreenState extends State<SettingScreen> {
                     children: [
                       Text(currentChildName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                       const SizedBox(height: 2),
-                      Text('레벨 $level - $job', style: const TextStyle(fontSize: 12, color: Color(0XFF7C7D7D))),
+                      // 🚀 고정된 '모험가' 대신 동적 jobTitle 변수를 적용해 싱크를 맞춥니다.
+                      Text('레벨 $level - $jobTitle', style: const TextStyle(fontSize: 12, color: Color(0XFF7C7D7D))),
                     ],
                   ),
                 ),

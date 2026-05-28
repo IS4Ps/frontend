@@ -1,20 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../view_model/dashboard/dashboard_view_model.dart'; // 📌 본인 프로젝트 경로에 맞게 수정 필수
 
-class MinigameScoreCard extends StatelessWidget {
+class MinigameScoreCard extends StatefulWidget {
   const MinigameScoreCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final dates = ['7/1', '7/2', '7/3', '7/4', '7/5', '7/6', '7/7'];
+  State<MinigameScoreCard> createState() => _MinigameScoreCardState();
+}
 
-    final nBackScores =   [250, 300, 450, 520, 680, 750, 880];
-    final goNoGoScores =  [400, 380, 550, 420, 610, 530, 720];
-    final stromScores =   [180, 260, 310, 390, 440, 500, 600];
+class _MinigameScoreCardState extends State<MinigameScoreCard> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = Provider.of<DashboardViewModel>(context);
+
+    // 1. 서버 통신 중일 때 보여줄 로딩 가드 (메인 화면 로딩과 싱크가 맞지만 방어용으로 유지)
+    if (viewModel.isLoading) {
+      return Container(
+        width: double.infinity,
+        height: 340,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.black),
+        ),
+      );
+    }
+
+    // 2. 📅 실시간 기기 날짜 기반으로 '최근 7일'의 [월/일] 배열 자동 동적 생성
+    final List<String> dates = List.generate(7, (index) {
+      final date = DateTime.now().subtract(Duration(days: 6 - index));
+      return "${date.month}/${date.day}";
+    });
+
+    // 3. 서버 로그 배열에서 점수(score) 알맹이만 List<int> 형태로 가공 추출
+    List<int> nBackScores = viewModel.nBackLogs.map<int>((log) => log.score as int).toList();
+    List<int> goNoGoScores = viewModel.goNoGoLogs.map<int>((log) => log.score as int).toList();
+    List<int> stromScores = viewModel.stroopLogs.map<int>((log) => log.score as int).toList();
+
+    // 4. 🛡️ 방어 코드: 기록 데이터가 7개 미만으로 부족할 때 빈 공간을 0점으로 안전하게 채우기
+    while (nBackScores.length < 7) { nBackScores.insert(0, 0); }
+    while (goNoGoScores.length < 7) { goNoGoScores.insert(0, 0); }
+    while (stromScores.length < 7) { stromScores.insert(0, 0); }
+
+    // 5. ✂️ 데이터가 일주일(7개)을 초과해 너무 많다면 최신순 데이터 7개만 딱 슬라이싱
+    if (nBackScores.length > 7) nBackScores = nBackScores.sublist(nBackScores.length - 7);
+    if (goNoGoScores.length > 7) goNoGoScores = goNoGoScores.sublist(goNoGoScores.length - 7);
+    if (stromScores.length > 7) stromScores = stromScores.sublist(stromScores.length - 7);
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -62,6 +107,10 @@ class MinigameScoreCard extends StatelessWidget {
     );
   }
 }
+
+// =========================================================================
+// 🎨 하단 페인터 클래스 및 레전드 위젯
+// =========================================================================
 
 class _LegendItem extends StatelessWidget {
   final Color color;
@@ -221,6 +270,7 @@ class LineChartPainter extends CustomPainter {
     drawLine(stromScores, const Color(0xFFF0A500));
   }
 
+  // 💡 [해결] 무한 루프가 끊겼으므로 불필요한 리페인트를 방지하여 리소스를 아끼기 위해 false로 되돌립니다.
   @override
   bool shouldRepaint(covariant LineChartPainter oldDelegate) => false;
 }

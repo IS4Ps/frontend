@@ -245,15 +245,36 @@ class QuestViewModel extends ChangeNotifier {
     try {
       final int childId = await _getChildId();
       final String token = _getAccessToken();
-      final request = StroopSubmitRequestModel(childId: childId, sessionId: _stroopData!.sessionId, answers: userAnswers);
+
+      // 1. 요청 객체 생성
+      final request = StroopSubmitRequestModel
+        (
+          childId: childId,
+          sessionId: _stroopData!.sessionId,
+          answers: userAnswers
+      );
+
+      print("=======================================================");
+      print("[Stroop Submit Debug] 백엔드 전달용 원본 로그 시작");
+      print("[Stroop Submit Debug] URL: POST /api/v1/minigames/stroop/submit");
+      try {
+        final String requestJson = jsonEncode(request.toJson());
+        print("[Stroop Submit Debug] Request Body JSON:\n$requestJson");
+      } catch (jsonError) {
+        print("[Stroop Submit Debug] JSON 인코딩 실패 (모델 구조 확인 필요): $jsonError");
+      }
+      print("=======================================================");
+
+      // 2. 서버에 API 호출
       final response = await _repository.submitStroopGame(token, request);
+
       if (response != null) {
         _stroopResult = response;
         return true;
       }
       return false;
     } catch (e) {
-      debugPrint("Stroop Submit Error: $e");
+      print("[Stroop Submit Debug] 🚨 프론트 자체 예외 발생: $e");
       return false;
     } finally {
       _isLoading = false;
