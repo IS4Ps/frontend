@@ -62,6 +62,19 @@ class QuestApiService {
     );
   }
 
+  // 월간 달성률 조회
+  Future<http.Response> fetchMonthlyStats(int childId, String token, int year, int month) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId/monthly?year=$year&month=$month');
+
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
+
   // 미션 시작
   Future<http.Response> startMission(int missionId, String token) async {
     final url = Uri.parse('$baseUrl/api/v1/missions/$missionId/start');

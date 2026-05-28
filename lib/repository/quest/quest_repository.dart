@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:frontend/models/quest/feeling_model.dart';
 import 'package:frontend/models/quest/feeling_request_model.dart';
 import 'package:frontend/models/quest/today_mission_model.dart'; // 모델 임포트 확인
+import '../../models/quest/monthly_stats_model.dart';
 import '../../services/quest/quest_api_service.dart';
 import 'package:frontend/models/quest/weekly_stats_model.dart';
 import 'package:frontend/models/quest/equipped_item_model.dart';
@@ -125,6 +126,28 @@ class QuestRepository {
       return null;
     } catch (e) {
       print("통계 API 레포지토리 에러: $e");
+      return null;
+    }
+  }
+
+  // 월간 달성률 조회
+  Future<MonthlyStatsModel?> getMonthlyStats(int childId, String token, int year, int month) async {
+    try {
+      print("[API 호출] 월간 달성률 조회 시작 (childId: $childId, year: $year, month: $month)");
+
+      final response = await _apiService.fetchMonthlyStats(childId, token, year, month);
+
+      if (response.statusCode == 200) {
+        print("[API 성공] 상태 코드: ${response.statusCode}");
+        print("[응답 데이터] ${response.body}");
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        return MonthlyStatsModel.fromJson(body);
+      } else {
+        print("[API 실패] 상태 코드: ${response.statusCode}, 내용: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("[Repository 에러] getMonthlyStats: $e");
       return null;
     }
   }
