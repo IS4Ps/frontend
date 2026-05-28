@@ -4,6 +4,7 @@ import 'package:frontend/view_model/store/store_view_model.dart';
 import 'package:frontend/view_model/store/inventory_view_model.dart';
 
 import '../../models/store/item_model.dart';
+import '../../view_model/profile/profile_view_model.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -23,7 +24,11 @@ class _StoreScreenState extends State<StoreScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StoreViewModel>(context, listen: false).loadStoreItems(1, 1);
+      final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+      final childInfo = profileVM.childInfo;
+      final level = childInfo?.level ?? 1;
+      final jobId = profileVM.selectedJobId ?? 1;
+      Provider.of<StoreViewModel>(context, listen: false).loadStoreItems(level, jobId);
 
       Provider.of<InventoryViewModel>(context, listen: false)
           .loadInventory()
@@ -93,6 +98,9 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Widget _buildShopGrid() {
+    final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+    final level = profileVM.childInfo?.level ?? 1;
+    final jobId = profileVM.selectedJobId ?? 1;
     return Consumer<StoreViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading) {
@@ -111,7 +119,7 @@ class _StoreScreenState extends State<StoreScreen> {
             ),
             itemBuilder: (context, index) {
               final item = viewModel.items[index];
-              return _itemCard(item, _activeIndex == index, () => setState(() => _activeIndex = index));
+              return _itemCard(item, _activeIndex == index, () => setState(() => _activeIndex = index), level, jobId);
             },
           ),
         );
@@ -308,7 +316,7 @@ class _StoreScreenState extends State<StoreScreen> {
     );
   }
 
-  Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap) {
+  Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap, int level, int jobId) {
     return Consumer<StoreViewModel>(
       builder: (context, viewModel, child) {
         final isPurchased = _purchasedItemIds.contains(item.itemId);
@@ -349,7 +357,7 @@ class _StoreScreenState extends State<StoreScreen> {
                         _activeIndex = null;
                       });
                       final childId = await viewModel.getChildId();
-                      await viewModel.purchaseItem(item.itemId, childId);
+                      await viewModel.purchaseItem(item.itemId, childId, level, jobId);
                       if (context.mounted) {
                         await Provider.of<InventoryViewModel>(context, listen: false).loadInventory();
                       }
