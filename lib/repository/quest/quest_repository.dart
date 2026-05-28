@@ -339,15 +339,50 @@ class QuestRepository {
         final Map<String, dynamic> jsonData = jsonDecode(decodedBody);
 
         print("[Repository] Stroop 결과 분석 완료");
+
+        // ★ [수정 포인트] 명세서 구조에 맞춰 'data' 필드 내부를 꺼내서 모델로 변환합니다.
+        if (jsonData['data'] != null) {
+          return StroopSubmitResponseModel.fromJson(jsonData['data']);
+        }
+
+        // 혹시 백엔드가 구조를 바꿨을 때를 대비한 예외 방어 코드
         return StroopSubmitResponseModel.fromJson(jsonData);
       } else {
         print("[Repository] Stroop 제출 실패 서버 에러: ${response.body}");
         return null;
       }
     } catch (e, stacktrace) {
-      print("[Repository 에러] submitStroopGame 상세: $e");
+      print("[Repository 에러] submitStroopGame 상세 예외: $e");
       print("[Repository 스택트레이스] $stacktrace");
       return null;
+    }
+  }
+
+  // 미니게임 결과 저장
+  Future<bool> saveMinigameLog(String token, Map<String, dynamic> requestBody) async {
+    try {
+      print("[Repository] 미니게임 공통 결과 저장 시작 (gameType: ${requestBody['gameType']})");
+
+      // 1. ApiService를 통해 백엔드 서버에 POST 요청 전달
+      final response = await _apiService.saveMinigameLog(token, requestBody);
+
+      print("[Repository] 응답 코드: ${response.statusCode}");
+
+      // 2. HTTP 상태 코드가 200번대 성공인지 판별
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("[Repository API 성공] 미니게임 통합 로그 저장 및 골드 자동 지급 완료");
+        return true;
+      } else {
+        // 백엔드 통신 오류 시 바디 출력 로그
+        print("[Repository API 실패] 저장 실패 서버 에러 상태코드: ${response.statusCode}");
+        print("[Repository API 실패] 에러 내용: ${response.body}");
+        return false;
+      }
+    } catch (e, stacktrace) {
+      // 런타임/네트워크 예외 발생 시 디버깅을 위한 로그 추적
+      print("[Repository 에러] saveMinigameLog 예외 발생 상세: $e");
+      print("[Repository 스택트레이스] $stacktrace");
+      return false;
     }
   }
 }

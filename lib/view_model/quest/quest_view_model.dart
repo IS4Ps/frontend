@@ -329,4 +329,49 @@ class QuestViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // 미니게임 결과 저장
+  Future<bool> saveMinigameLog({
+    required String gameType,
+    required int score,
+    required int rewardAmount,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // 1. 내부에 이미 구현되어 있는 안전한 기기 데이터 추출 헬퍼 활용
+      final int childId = await _getChildId();
+      final String token = _getAccessToken();
+
+      // 2. 명세서에 맞춘 Request Body 맵핑 생성
+      final Map<String, dynamic> requestBody = {
+        "childId": childId,
+        "gameType": gameType,
+        "score": score,
+        "rewardAmount": rewardAmount
+      };
+
+      debugPrint("[API 호출] 미니게임 결과 저장 요청: $requestBody");
+
+      // 3. Repository를 거쳐서 호출하도록 설계 (가장 권장하는 아키텍처)
+      // 만약 Repository에 아직 메서드가 없다면, 아래 주석을 풀고 임시로 직접 통신 처리 코드를 넣거나
+      // QuestRepository에 'Future<bool> saveMinigameLog(String token, Map<String, dynamic> data)'를 추가해 주세요.
+
+      final bool isSuccess = await _repository.saveMinigameLog(token, requestBody);
+
+      if (isSuccess) {
+        debugPrint("[API 성공] 미니게임 결과가 성공적으로 중앙 서버에 기록되었습니다.");
+        return true;
+      }
+      return false;
+
+    } catch (e) {
+      debugPrint("Minigame Log Save Error: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

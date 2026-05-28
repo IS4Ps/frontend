@@ -94,7 +94,19 @@ class _GoNogoGameScreenState extends State<GoNogoGameScreen> {
     if (isGameFinished) return;
 
     final viewModel = Provider.of<QuestViewModel>(context, listen: false);
-    await viewModel.submitGoNoGoGame(userAnswers);
+
+    // 1. 기존 고유 정답 제출
+    bool success = await viewModel.submitGoNoGoGame(userAnswers);
+
+    // 2. [추가] 제출 성공 시 공통 결과 로그 및 골드 저장 API 호출
+    if (success && viewModel.goNoGoResult != null) {
+      final result = viewModel.goNoGoResult!;
+      await viewModel.saveMinigameLog(
+        gameType: "GO_NO_GO",
+        score: result.score,
+        rewardAmount: result.rewardGold,
+      );
+    }
 
     if (mounted) {
       setState(() => isGameFinished = true);

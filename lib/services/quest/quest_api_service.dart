@@ -182,4 +182,18 @@ class QuestApiService {
       body: jsonEncode(request.toJson()),
     );
   }
+
+  // 미니게임 결과 저장
+  Future<http.Response> saveMinigameLog(String token, Map<String, dynamic> requestBody) async {
+    final url = Uri.parse('$baseUrl/api/v1/minigame-logs');
+
+    return await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(requestBody),
+    );
+  }
 }
