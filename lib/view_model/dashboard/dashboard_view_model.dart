@@ -101,4 +101,18 @@ class DashboardViewModel extends ChangeNotifier {
       debugPrint("[DashboardViewModel 통계 에러] $e");
     }
   }
+
+  List<int> _routineHeatmapData = [];
+  List<int> get routineHeatmapData => _routineHeatmapData;
+
+  Future<void> fetchRoutineHeatmap() async {
+    try {
+      final int childId = await _getChildId();
+      final String token = _getAccessToken();
+      _routineHeatmapData = await _repository.getRoutineHeatmapData(childId, token);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("[DashboardViewModel 에러] fetchRoutineHeatmap: $e");
+    }
+  }
 }

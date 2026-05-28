@@ -20,4 +20,15 @@ class DashboardApiService {
     final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId');
     return await http.get(url);
   }
+
+  Future<http.Response> fetchMonthlyStats(int childId, String token, int year, int month) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId/monthly?year=$year&month=$month');
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
 }

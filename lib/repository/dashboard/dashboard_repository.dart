@@ -53,4 +53,31 @@ class DashboardRepository {
       return null;
     }
   }
+
+  Future<List<int>> getRoutineHeatmapData(int childId, String token) async {
+    final now = DateTime.now();
+    List<int> result = [];
+
+    for (int i = 2; i >= 0; i--) {
+      final date = DateTime(now.year, now.month - i, 1);
+      try {
+        final response = await _apiService.fetchMonthlyStats(childId, token, date.year, date.month);
+        if (response.statusCode == 200) {
+          final body = jsonDecode(utf8.decode(response.bodyBytes));
+          final dailyList = body['data']['dailyList'] as List;
+          print("[히트맵] ${date.month}월 데이터 개수: ${dailyList.length}");  // 추가
+          for (final day in dailyList) {
+            final rate = (day['completionRate'] as num).toDouble();
+            if (rate == 0) result.add(0);
+            else if (rate <= 33) result.add(1);
+            else if (rate <= 66) result.add(2);
+            else result.add(3);
+          }
+        }
+      } catch (e) {
+        print("[Repository 에러] getRoutineHeatmapData: $e");
+      }
+    }
+    return result;
+  }
 }
