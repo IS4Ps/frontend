@@ -310,6 +310,9 @@ class _RoutineScreenState extends State<RoutineScreen> {
       builder: (context, viewModel, child) {
         final stats = viewModel.monthlyStats;
         final progressValue = stats != null ? stats.monthlySuccessRate / 100 : 0.0;
+        final daysInMonth = stats != null
+            ? DateTime(stats.year, stats.month + 1, 0).day
+            : 30;
         final statusText = stats != null
             ? "${stats.successDays}/${stats.totalDays}일 성공 (${stats.monthlySuccessRate.toInt()}%)"
             : "0%";
@@ -329,17 +332,42 @@ class _RoutineScreenState extends State<RoutineScreen> {
               const SizedBox(height: 0),
               SizedBox(
                 height: 40,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: progressValue,
-                      minHeight: 18,
-                      backgroundColor: const Color(0xFFE2E2E2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
-                    ),
-                  ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final barWidth = constraints.maxWidth;
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: progressValue,
+                              minHeight: 18,
+                              backgroundColor: const Color(0xFFE2E2E2),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+                            ),
+                          ),
+                        ),
+                        ...context.watch<RewardViewModel>().allOfflineRewards
+                            .where((r) => r.rewardId != 0 && r.periodType == "MONTHLY")
+                            .map((reward) {
+                          final position = reward.targetDays / daysInMonth;
+                          return Positioned(
+                            left: (barWidth - 28) * position,
+                            top: 17,
+                            child: GestureDetector(
+                              onTap: () => _showRewardPopup(context, reward),
+                              child: Image.asset('assets/icons/box.png', width: 28, height: 28),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 4),

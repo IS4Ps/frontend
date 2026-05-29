@@ -18,6 +18,7 @@ class RewardViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isWeekly => _isWeekly;
   List<OfflineRewardListModel> get editingRewards => _editingRewards;
+  List<OfflineRewardListModel> get allOfflineRewards => _allOfflineRewards;
 
   /// ✅ SharedPreferences에서 자녀 ID 가져오기
   Future<int> _getChildId() async {
