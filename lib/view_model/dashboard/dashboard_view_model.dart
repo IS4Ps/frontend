@@ -115,4 +115,51 @@ class DashboardViewModel extends ChangeNotifier {
       debugPrint("[DashboardViewModel 에러] fetchRoutineHeatmap: $e");
     }
   }
+
+  // 미니게임 결과 조회
+  // 미니게임 기록 관련 상태 변수들
+  List<dynamic> _nBackLogs = [];
+  List<dynamic> _goNoGoLogs = [];
+  List<dynamic> _stroopLogs = [];
+
+  List<dynamic> get nBackLogs => _nBackLogs;
+  List<dynamic> get goNoGoLogs => _goNoGoLogs;
+  List<dynamic> get stroopLogs => _stroopLogs;
+
+  Future<void> fetchAllMinigameLogs() async {
+    _isLoading = true;
+    _errorMessage = "";
+    notifyListeners();
+
+    try {
+      // 1. 기존 구현된 안전한 기기 데이터 및 토큰 추출 헬퍼 활용
+      final int childId = await _getChildId();
+      final String token = _getAccessToken();
+
+      debugPrint("[DashboardViewModel] 미니게임 3종 기록 일괄 로드 시작 (childId: $childId)");
+
+      // 2. 세 개의 API 요청을 비동기 병렬(Future.wait)로 동시에 처리하여 로딩 속도 최적화
+      // ※ DashboardRepository에 getMinigameLogs 메서드가 구현되어 있어야 합니다.
+      final results = await Future.wait([
+        _repository.getMinigameLogs(childId, "N_BACK", token),
+        _repository.getMinigameLogs(childId, "GO_NO_GO", token),
+        _repository.getMinigameLogs(childId, "STROOP", token),
+      ]);
+
+      // 3. 각각의 리스트 결과 담기
+      _nBackLogs = results[0];
+      _goNoGoLogs = results[1];
+      _stroopLogs = results[2];
+
+      debugPrint("[Dashboard API 성공] 미니게임 로그 묶음 로드 완료 "
+          "(N-Back: ${_nBackLogs.length}개, GoNoGo: ${_goNoGoLogs.length}개, Stroop: ${_stroopLogs.length}개)");
+
+    } catch (e) {
+      debugPrint("[DashboardViewModel 미니게임 로그 에러] $e");
+      _errorMessage = "미니게임 점수 기록을 불러오는 중 오류가 발생했습니다.";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

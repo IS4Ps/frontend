@@ -104,7 +104,18 @@ class _StroopGameScreenState extends State<StroopGameScreen> {
     _countdownTimer?.cancel();
     final viewModel = Provider.of<QuestViewModel>(context, listen: false);
 
+    // 1. 기존 고유 정답 제출
     bool success = await viewModel.submitStroopGame(_userAnswers);
+
+    // 2. [추가] 제출 성공 시 공통 결과 로그 및 골드 저장 API 호출
+    if (success && viewModel.stroopResult != null) {
+      final result = viewModel.stroopResult!;
+      await viewModel.saveMinigameLog(
+        gameType: "STROOP",
+        score: result.score,
+        rewardAmount: result.rewardGold,
+      );
+    }
 
     if (mounted) {
       if (success) {

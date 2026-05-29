@@ -22,16 +22,20 @@ class StroopSubmitResponseModel {
   });
 
   factory StroopSubmitResponseModel.fromJson(Map<String, dynamic> json) {
-    final data = json['data'];
+    final Map<String, dynamic> targetJson = (json.containsKey('data') && json['data'] != null)
+        ? json['data'] as Map<String, dynamic>
+        : json;
+
     return StroopSubmitResponseModel(
-      correctCount: data['correctCount'],
-      wrongCount: data['wrongCount'],
-      totalCount: data['totalCount'],
-      accuracy: (data['accuracy'] as num).toDouble(),
-      avgResponseTime: (data['avgResponseTime'] as num).toDouble(),
-      score: data['score'],
-      rewardGold: data['rewardGold'],
-      statCreativityGain: data['statCreativityGain'],
+      // null 값이 혹시 섞여 들어오더라도 앱이 터지지 않게 디폴트 값을 안전하게 매핑
+      correctCount: targetJson['correctCount'] ?? 0,
+      wrongCount: targetJson['wrongCount'] ?? 0,
+      totalCount: targetJson['totalCount'] ?? 20,
+      accuracy: (targetJson['accuracy'] as num?)?.toDouble() ?? 0.0,
+      avgResponseTime: (targetJson['avgResponseTime'] as num?)?.toDouble() ?? 0.0,
+      score: targetJson['score'] ?? 0,
+      rewardGold: targetJson['rewardGold'] ?? 0,
+      statCreativityGain: targetJson['statCreativityGain'] ?? 0,
     );
   }
 }
