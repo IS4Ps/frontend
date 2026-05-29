@@ -26,7 +26,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  // ✅ 데이터를 불러오는 공통 함수
   Future<void> _loadDashboardData() async {
     final dashboardVM = context.read<DashboardViewModel>();
     final profileVM = context.read<ProfileViewModel>();
@@ -44,6 +43,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // 2. 대시보드 통계 및 감정 캘린더 로드
       await dashboardVM.fetchMonthlyMood();
       await dashboardVM.fetchWeeklyStats();
+
+      //  미니게임 기록도 이 길목에서 딱 한 번만 일괄 로드합니다.
+      await dashboardVM.fetchAllMinigameLogs();
+
     } else {
       debugPrint('[Dashboard] 저장된 아이 ID가 없습니다.');
     }

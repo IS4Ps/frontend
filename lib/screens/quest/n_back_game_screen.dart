@@ -67,6 +67,14 @@ class _NBackGameScreenState extends State<NBackGameScreen> {
       bool success = await viewModel.submitNBackGame(finalAnswers);
 
       if (success) {
+        // [추가] 제출 성공 시 공통 결과 로그 및 골드 저장 API 호출
+        if (viewModel.nBackResult != null) {
+          await viewModel.saveMinigameLog(
+            gameType: "N_BACK",
+            score: viewModel.nBackResult!.correctCount * 10, // 맞춘 개수당 10점 예시
+            rewardAmount: viewModel.nBackResult!.rewardGold,
+          );
+        }
         setState(() => isGameFinished = true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

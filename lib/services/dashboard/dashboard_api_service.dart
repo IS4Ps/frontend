@@ -20,4 +20,18 @@ class DashboardApiService {
     final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId');
     return await http.get(url);
   }
+
+  // 미니게임 기록 목록 조회 (gameType별)
+  Future<http.Response> fetchMinigameLogs(int childId, String gameType, String token) async {
+    // URL 매핑: /api/v1/minigame-logs/{childId}?gameType={gameType}
+    final url = Uri.parse('$baseUrl/api/v1/minigame-logs/$childId?gameType=$gameType');
+
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+  }
 }
