@@ -102,6 +102,20 @@ class DashboardViewModel extends ChangeNotifier {
     }
   }
 
+  List<int> _routineHeatmapData = [];
+  List<int> get routineHeatmapData => _routineHeatmapData;
+
+  Future<void> fetchRoutineHeatmap() async {
+    try {
+      final int childId = await _getChildId();
+      final String token = _getAccessToken();
+      _routineHeatmapData = await _repository.getRoutineHeatmapData(childId, token);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("[DashboardViewModel 에러] fetchRoutineHeatmap: $e");
+    }
+  }
+
   // 미니게임 결과 조회
   // 미니게임 기록 관련 상태 변수들
   List<dynamic> _nBackLogs = [];

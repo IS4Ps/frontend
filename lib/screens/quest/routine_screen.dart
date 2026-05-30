@@ -98,6 +98,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
         final viewModel = context.read<QuestViewModel>();
         await viewModel.fetchTodayMissions();
         await viewModel.fetchWeeklyStats();
+        await viewModel.fetchMonthlyStats();
         context.read<RewardViewModel>().fetchOfflineRewards();
 
         for (final mission in viewModel.todayMissions) {
@@ -305,38 +306,76 @@ class _RoutineScreenState extends State<RoutineScreen> {
   }
 
   Widget _buildMonthlyCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 18),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("월간 퀘스트 달성률", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 0),
-          SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: const LinearProgressIndicator(
-                  value: 0.0,
-                  minHeight: 18,
-                  backgroundColor: Color(0xFFE2E2E2),
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+    return Consumer<QuestViewModel>(
+      builder: (context, viewModel, child) {
+        final stats = viewModel.monthlyStats;
+        final progressValue = stats != null ? stats.monthlySuccessRate / 100 : 0.0;
+        final daysInMonth = stats != null
+            ? DateTime(stats.year, stats.month + 1, 0).day
+            : 30;
+        final statusText = stats != null
+            ? "${stats.successDays}/${stats.totalDays}일 성공 (${stats.monthlySuccessRate.toInt()}%)"
+            : "0%";
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 18),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("월간 퀘스트 달성률", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 0),
+              SizedBox(
+                height: 40,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final barWidth = constraints.maxWidth;
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: progressValue,
+                              minHeight: 18,
+                              backgroundColor: const Color(0xFFE2E2E2),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6389E9)),
+                            ),
+                          ),
+                        ),
+                        ...context.watch<RewardViewModel>().allOfflineRewards
+                            .where((r) => r.rewardId != 0 && r.periodType == "MONTHLY")
+                            .map((reward) {
+                          final position = reward.targetDays / daysInMonth;
+                          return Positioned(
+                            left: (barWidth - 28) * position,
+                            top: 17,
+                            child: GestureDetector(
+                              onTap: () => _showRewardPopup(context, reward),
+                              child: Image.asset('assets/icons/box.png', width: 28, height: 28),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    );
+                  },
                 ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(statusText, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            ],
           ),
-          const SizedBox(height: 8),
-          const Text("0%", style: TextStyle(color: Colors.grey, fontSize: 16)),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -412,6 +451,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
                     await viewModel.completeMission(mission.missionId);
                     await viewModel.fetchTodayMissions();
                     await viewModel.fetchWeeklyStats();
+                    await viewModel.fetchMonthlyStats();
                     setState(() => _isStarting = false);
                     return;
                   }

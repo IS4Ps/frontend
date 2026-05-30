@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/auth/token_manager.dart' as my_auth; // 프로젝트 경로 확인 필수
+import '../../models/quest/monthly_stats_model.dart';
 import '../../repository/quest/quest_repository.dart';
 
 // 모델 임포트
@@ -32,6 +33,7 @@ class QuestViewModel extends ChangeNotifier {
   FeelingModel? _feelingData;
   List<TodayMissionModel> _todayMissions = [];
   WeeklyStatsModel? _weeklyStats;
+  MonthlyStatsModel? _monthlyStats;
   List<EquippedItemModel> _equippedItems = [];
 
   // 게임 세션 및 결과 데이터 저장 변수
@@ -51,6 +53,7 @@ class QuestViewModel extends ChangeNotifier {
   FeelingModel? get feelingData => _feelingData;
   List<TodayMissionModel> get todayMissions => _todayMissions;
   WeeklyStatsModel? get weeklyStats => _weeklyStats;
+  MonthlyStatsModel? get monthlyStats => _monthlyStats;
   List<EquippedItemModel> get equippedItems => _equippedItems;
 
   // 게임 관련 Getters (UI에서 이 이름을 사용합니다)
@@ -132,6 +135,22 @@ class QuestViewModel extends ChangeNotifier {
       _weeklyStats = await _repository.getWeeklyStats(childId, token);
     } catch (e) {
       debugPrint("Weekly Stats Error: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchMonthlyStats() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final int childId = await _getChildId();
+      final String token = _getAccessToken();
+      final now = DateTime.now();
+      _monthlyStats = await _repository.getMonthlyStats(childId, token, now.year, now.month);
+    } catch (e) {
+      debugPrint("Monthly Stats Error: $e");
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -43,10 +43,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // 2. 대시보드 통계 및 감정 캘린더 로드
       await dashboardVM.fetchMonthlyMood();
       await dashboardVM.fetchWeeklyStats();
-
-      //  미니게임 기록도 이 길목에서 딱 한 번만 일괄 로드합니다.
+      await dashboardVM.fetchRoutineHeatmap();
       await dashboardVM.fetchAllMinigameLogs();
-
     } else {
       debugPrint('[Dashboard] 저장된 아이 ID가 없습니다.');
     }
@@ -87,10 +85,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 24),
                     _buildEmotionCard(dashboardVM.monthlyMoodData),
                     const SizedBox(height: 24),
-                    const HeatmapCard(
+                    HeatmapCard(
                       title: '루틴 습관 히트맵',
                       subtitle: '3개월 일관성',
-                      data: [2,1,0,2,3,3,0,1,1,0,2,3,2, 2,2,2,0,3,2,1,2,1,0,0,2,3, 1,3,2,0,0,3,1,2,2,2,2,3,1, 2,1,0,2,2,0,0,2,2,0,3,2,2, 2,3,0,3,2,3,0,2,3,1,3,2,3, 3,2,2,0,1,3,3,1,0,1,3,0,0, 3,2,2,3,0,3,0,1,0,1,2,2,2],
+                      data: dashboardVM.routineHeatmapData.isEmpty
+                          ? List.filled(91, 0)
+                          : dashboardVM.routineHeatmapData,
                     ),
                     const SizedBox(height: 24),
                     const HeatmapCard(
