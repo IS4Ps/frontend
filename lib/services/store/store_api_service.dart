@@ -5,7 +5,7 @@ class StoreApiService {
 
   // 상점 아이템 조회
   Future<http.Response> fetchStoreItems(int childLevel, int childJobId, String token) async {
-    final url = Uri.parse('$baseUrl/api/v1/items?childLevel=$childLevel&childJobId=$childJobId');
+    final url = Uri.parse('$baseUrl/api/v1/items?childJobId=$childJobId');
     return await http.get(
       url,
       headers: {

@@ -339,13 +339,20 @@ class _StoreScreenState extends State<StoreScreen> {
               children: [
                 Expanded(
                   child: Center(
-                    child: Container(
+                    child: Image.asset(
+                      'assets/models/item/${item.splineTriggerName}.png',
                       width: 75,
                       height: 75,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD9D9D9),
-                        shape: BoxShape.circle,
-                      ),
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 75,
+                          height: 75,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD9D9D9),
+                            shape: BoxShape.circle,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
