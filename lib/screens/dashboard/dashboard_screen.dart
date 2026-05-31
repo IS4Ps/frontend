@@ -350,9 +350,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Expanded(
-                  child: CustomPaint(
-                    size: const Size(double.infinity, 100),
-                    painter: EmotionLineChartPainter(),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 100,
+                    child: CustomPaint(
+                      painter: EmotionLineChartPainter(
+                        scores: moodData == null ? const [] : (moodData.moodMap.values.toList()
+                          ..sort((a, b) => a.date.compareTo(b.date)))
+                            .map((e) => e.score.toDouble())
+                            .toList(),
+                      )
+                    ),
                   ),
                 ),
               ],
@@ -407,9 +415,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                hasEmoji ? log.emotionEmoji : '',
-                style: const TextStyle(fontSize: 18),
+              Padding(
+                padding: const EdgeInsets.only(left: 3),
+                child: Text(
+                  hasEmoji ? log.emotionEmoji : '',
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
             ],
           ),
@@ -488,13 +499,47 @@ class PieChartPainter extends CustomPainter {
 }
 
 class EmotionLineChartPainter extends CustomPainter {
-  @override void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()..color = const Color(0xFF1586E2)..strokeWidth = 3..style = PaintingStyle.stroke;
+  final List<double> scores;
+  const EmotionLineChartPainter({this.scores = const []});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = const Color(0xFF1586E2)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    if (scores.isEmpty) {
+      final path = Path();
+      path.moveTo(0, size.height * 0.8);
+      path.cubicTo(size.width * 0.2, size.height * 0.9, size.width * 0.4, size.height * 0.1, size.width * 0.6, size.height * 0.5);
+      path.cubicTo(size.width * 0.8, size.height * 0.8, size.width * 0.9, size.height * 0.2, size.width, size.height * 0.4);
+      canvas.drawPath(path, linePaint);
+      return;
+    }
+
+    if (scores.length == 1) {
+      final y = size.height * 0.85 * (1 - (scores[0] - 1) / 4) + size.height * 0.05;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+      return;
+    }
+
     final path = Path();
-    path.moveTo(0, size.height * 0.8);
-    path.cubicTo(size.width * 0.2, size.height * 0.9, size.width * 0.4, size.height * 0.1, size.width * 0.6, size.height * 0.5);
-    path.cubicTo(size.width * 0.8, size.height * 0.8, size.width * 0.9, size.height * 0.2, size.width, size.height * 0.4);
+    for (int i = 0; i < scores.length; i++) {
+      final x = size.width * i / (scores.length - 1);
+      final y = size.height * 0.85 * (1 - (scores[i] - 1) / 4) + size.height * 0.05;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        final prevX = size.width * (i - 1) / (scores.length - 1);
+        final prevY = size.height * (1 - (scores[i - 1] - 1) / 4);
+        final cpX = (prevX + x) / 2;
+        path.cubicTo(cpX, prevY, cpX, y, x, y);
+      }
+    }
     canvas.drawPath(path, linePaint);
   }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+
+  @override
+  bool shouldRepaint(covariant EmotionLineChartPainter oldDelegate) => oldDelegate.scores != scores;
 }
