@@ -509,6 +509,16 @@ class EmotionLineChartPainter extends CustomPainter {
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
+    // 회색 가이드 라인 4개
+    final guidePaint = Paint()
+      ..color = Colors.grey.withOpacity(0.3)
+      ..strokeWidth = 1;
+
+    for (int i = 0; i <= 3; i++) {
+      final y = size.height * i / 3.22;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), guidePaint);
+    }
+
     if (scores.isEmpty) {
       final path = Path();
       path.moveTo(0, size.height * 0.8);
@@ -527,7 +537,7 @@ class EmotionLineChartPainter extends CustomPainter {
     final path = Path();
     for (int i = 0; i < scores.length; i++) {
       final x = size.width * i / (scores.length - 1);
-      final y = size.height * 0.85 * (1 - (scores[i] - 1) / 4) + size.height * 0.05;
+      final y = size.height * 0.85 * (1 - (scores[i] - 1) / 4) + size.height * 0.035;
       if (i == 0) {
         path.moveTo(x, y);
       } else {
