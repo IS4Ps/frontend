@@ -81,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _buildProgressCard(dashboardVM),
                     const SizedBox(height: 24),
-                    _buildActivityCard(),
+                    _buildActivityCard(profileVM),
                     const SizedBox(height: 24),
                     _buildEmotionCard(dashboardVM.monthlyMoodData),
                     const SizedBox(height: 24),
@@ -205,7 +205,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActivityCard() {
+  Widget _buildActivityCard(ProfileViewModel profileVM) {
+    final info = profileVM.childInfo;
+    final strength = (info?.statStrength ?? 0).toDouble();
+    final intelligence = (info?.statIntelligence ?? 0).toDouble();
+    final creativity = (info?.statCreativity ?? 0).toDouble();
+    final total = strength + intelligence + creativity;
+
+    final sections = total == 0
+        ? [
+      const PieSection(value: 1.0, color: Color(0xFFE2E2E2), label: '없음'),
+    ]
+        : [
+      PieSection(value: strength / total, color: const Color(0xFFE05555), label: '운동'),
+      PieSection(value: intelligence / total, color: const Color(0xFF1586E2), label: '공부'),
+      PieSection(value: creativity / total, color: const Color(0xFF4CAF50), label: '예술'),
+    ];
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -224,13 +240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 180,
               height: 170,
               child: CustomPaint(
-                painter: PieChartPainter(
-                  sections: const [
-                    PieSection(value: 0.53, color: Color(0xFFE05555), label: '운동'),
-                    PieSection(value: 0.13, color: Color(0xFF1586E2), label: '예술'),
-                    PieSection(value: 0.34, color: Color(0xFF4CAF50), label: '공부'),
-                  ],
-                ),
+                painter: PieChartPainter(sections: sections),
               ),
             ),
           ),
@@ -260,13 +270,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Text('상위 3개 감정', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           ),
           const SizedBox(height: 12),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _TopEmotionItem(emoji: '😆', label: '행복'),
-              _TopEmotionItem(emoji: '😊', label: '신남'),
-              _TopEmotionItem(emoji: '😐', label: '평온'),
-            ],
+          Builder(
+            builder: (context) {
+              if (moodData == null || moodData.moodMap.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 22),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: const [
+                      _TopEmotionItem(emoji: '😆', label: '행복'),
+                      SizedBox(width: 55),
+                      _TopEmotionItem(emoji: '😊', label: '신남'),
+                      SizedBox(width: 55),
+                      _TopEmotionItem(emoji: '😐', label: '평온'),
+                    ],
+                  ),
+                );
+              }
+
+              // 감정별 개수 세기
+              final Map<String, int> emotionCount = {};
+              for (final log in moodData.moodMap.values) {
+                final emoji = log.emotionEmoji;
+                if (emoji.isNotEmpty) {
+                  emotionCount[emoji] = (emotionCount[emoji] ?? 0) + 1;
+                }
+              }
+
+              // 개수 기준 내림차순 정렬 후 상위 3개
+              final sorted = emotionCount.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+              final top3 = sorted.take(3).toList();
+
+              final emojiLabelMap = {
+                '😆': '매우 좋음',
+                '😊': '좋음',
+                '😐': '보통',
+                '😟': '나쁨',
+                '😭': '매우 나쁨',
+              };
+
+              return Padding(
+                padding: const EdgeInsets.only(left: 22),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    for (int i = 0; i < top3.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 55),
+                      _TopEmotionItem(
+                        emoji: top3[i].key,
+                        label: emojiLabelMap[top3[i].key] ?? top3[i].key,
+                      ),
+                    ]
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 20),
           const Padding(
@@ -393,13 +452,35 @@ class PieSection { final double value; final Color color; final String label; co
 class PieChartPainter extends CustomPainter {
   final List<PieSection> sections;
   const PieChartPainter({required this.sections});
-  @override void paint(Canvas canvas, Size size) {
+  @override
+  void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     double startAngle = pi / 2;
     for (final section in sections) {
       final sweepAngle = 2 * pi * section.value;
       canvas.drawArc(Rect.fromCircle(center: center, radius: radius), startAngle, sweepAngle, true, Paint()..color = section.color);
+
+      // 레이블 텍스트 추가
+      final midAngle = startAngle + sweepAngle / 2;
+      final labelRadius = radius * 0.50;
+      final labelX = center.dx + labelRadius * cos(midAngle);
+      final labelY = center.dy + labelRadius * sin(midAngle);
+
+      final percent = (section.value * 100).toInt();
+      if (percent > 5) {
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: '${section.label}\n$percent%',
+            style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        textPainter.paint(canvas, Offset(labelX - textPainter.width / 2, labelY - textPainter.height / 2));
+      }
+
       startAngle += sweepAngle;
     }
   }
