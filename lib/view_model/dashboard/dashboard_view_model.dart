@@ -73,6 +73,9 @@ class DashboardViewModel extends ChangeNotifier {
       if (data != null) {
         _monthlyMoodData = data;
         debugPrint("[Dashboard API 성공] 기록 발견: ${data.totalCount}개");
+        data.moodMap.forEach((date, log) {
+          debugPrint("[감정 로그] $date: ${log.primaryEmotion}, score: ${log.score}");
+        });
       } else {
         _errorMessage = "데이터를 불러오지 못했습니다.";
       }

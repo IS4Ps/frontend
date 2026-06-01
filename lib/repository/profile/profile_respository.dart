@@ -95,6 +95,7 @@ class ProfileRepository {
       if (response.statusCode == 200) {
         String originalBody = utf8.decode(response.bodyBytes);
         debugPrint("[Repository] 아이 정보 조회 성공");
+        debugPrint("[Repository] 응답 데이터: $originalBody");
 
         final Map<String, dynamic> body = jsonDecode(originalBody);
         return ChildInformationResponseModel.fromJson(body);
