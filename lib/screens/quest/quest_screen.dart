@@ -5,6 +5,7 @@ import '../../models/profile/child_information_response_model.dart';
 import '../../models/profile/job_list_response_model.dart';
 import '../../view_model/profile/profile_view_model.dart';
 import '../../view_model/quest/quest_view_model.dart';
+import '../../view_model/store/inventory_view_model.dart';
 import 'grow_screen.dart';
 import 'speech_bubble.dart';
 import 'routine_screen.dart';
@@ -256,10 +257,11 @@ class _QuestScreenState extends State<QuestScreen> {
   }
 
   // --- 직업 선택 팝업창 연동 ---
-  // --- 직업 선택 팝업창 연동 ---
   void _showJobSelectionPopup(BuildContext context) {
     int selectedIndex = -1;
     final profileVM = context.read<ProfileViewModel>();
+    final questVM = context.read<QuestViewModel>();
+    final inventoryVM = Provider.of<InventoryViewModel>(context, listen: false);  // 추가
     final String? childId = profileVM.childInfo?.childId?.toString();
 
     showDialog(
@@ -301,8 +303,11 @@ class _QuestScreenState extends State<QuestScreen> {
                         bool success = await profileVM.updateChildJob(childId, targetJobId);
 
                         if (success && mounted) {
-                          // 🚀 [수정 완료] 기존의 '직업 선택이 완료되었습니다! 🎉' 스낵바 코드를 지웠습니다.
-                          // 이제 토스트 없이 조용히 팝업창만 닫힙니다.
+                          await inventoryVM.loadInventory();
+                          for (final item in inventoryVM.items.where((i) => i.isEquipped)) {
+                            await inventoryVM.equipItem(item.inventoryId);
+                          }
+                          await questVM.fetchEquippedItems();
                           Navigator.pop(context);
                         } else if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
