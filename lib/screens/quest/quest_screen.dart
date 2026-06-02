@@ -121,10 +121,7 @@ class _QuestScreenState extends State<QuestScreen> {
   Widget _buildCharacterSection(BuildContext context, QuestViewModel viewModel) {
     final profileVM = Provider.of<ProfileViewModel>(context);
 
-    // 🚀 1. 기본 캐릭터 외형 지정
     String characterModelPath = 'assets/models/character/Rogue.glb';
-
-    // 🚀 2. [수정] 동일하게 profileVM.selectedJobId를 기준으로 에셋 경로 바인딩
     if (profileVM.selectedJobId != null) {
       if (profileVM.selectedJobId == 1) {
         characterModelPath = 'assets/models/character/Knight.glb';
@@ -135,13 +132,11 @@ class _QuestScreenState extends State<QuestScreen> {
       }
     }
 
-    // 🔥 [초강력 디버깅 로그] 경로 제대로 바인딩되는지 감시용 유지
     debugPrint('I/flutter: 🚨🚨🚨 [CHARACTER BUILD LOG] 🚨🚨🚨');
     debugPrint('I/flutter: 📌 현재 profileVM.selectedJobId 상태값: ${profileVM.selectedJobId}');
     debugPrint('I/flutter: 🎬 최종 ModelViewer에 주입되는 에셋 경로: $characterModelPath');
     debugPrint('I/flutter: ======================================================');
 
-    // 🚀 3. 하단 스탯 박스용 데이터 매칭도 영구 ID 기준으로 정렬
     JobModel? currentJob;
     if (profileVM.jobList.isNotEmpty && profileVM.selectedJobId != null) {
       try {
@@ -152,47 +147,58 @@ class _QuestScreenState extends State<QuestScreen> {
     }
 
     return Stack(
+      clipBehavior: Clip.none,
       children: [
+        // 캐릭터
         Padding(
           padding: const EdgeInsets.only(top: 80),
           child: Center(
             child: Container(
-              width: 250, height: 310,
-              decoration: BoxDecoration(color: const Color(0xFFFDFDFD), borderRadius: BorderRadius.circular(20)),
+              width: 250,
+              height: 310,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDFDFD),
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Stack(
-                  children: [
-                    // 🔥 [핵심 수정] ValueKey를 강제로 때려 박아 웹뷰의 완고한 캐시 메커니즘을 파괴합니다.
-                    ModelViewer(
-                      key: ValueKey(characterModelPath), // 💡 경로가 변경될 때마다 3D 뷰어 인스턴스를 무조건 강제 새로고침 시킵니다.
-                      src: characterModelPath,
-                      alt: "Base Character",
-                      autoRotate: false,
-                      cameraControls: true,
-                      disableZoom: true,
-                      autoPlay: true,
-                      backgroundColor: const Color(0xFFFDFDFD),
-                      loading: Loading.eager,
-                    ),
-                    ...viewModel.equippedItems.map((item) {
-                      return ModelViewer(
-                        src: 'assets/models/item/${item.splineTriggerName}.glb',
-                        alt: item.itemName,
-                        autoRotate: false,
-                        cameraControls: false,
-                        disableZoom: true,
-                        autoPlay: true,
-                        backgroundColor: Colors.transparent,
-                        loading: Loading.eager,
-                      );
-                    }).toList(),
-                  ],
+                child: ModelViewer(
+                  key: ValueKey(characterModelPath),
+                  src: characterModelPath,
+                  alt: "Base Character",
+                  autoRotate: false,
+                  cameraControls: true,
+                  disableZoom: true,
+                  autoPlay: true,
+                  backgroundColor: const Color(0xFFFDFDFD),
+                  loading: Loading.eager,
                 ),
               ),
             ),
           ),
         ),
+
+        // ✅ 장착 아이템 (ClipRRect 밖)
+        ...viewModel.equippedItems.map((item) {
+          return Positioned(
+            left: 30,
+            bottom: 0,
+            child: SizedBox(
+              width: 105,
+              height: 120,
+              child: ModelViewer(
+                src: 'assets/models/item/${item.splineTriggerName}.glb',
+                alt: item.itemName,
+                autoRotate: false,
+                cameraControls: true,
+                disableZoom: true,
+                autoPlay: true,
+                backgroundColor: Colors.transparent,
+                loading: Loading.eager,
+              ),
+            ),
+          );
+        }).toList(),
 
         // 말풍선
         Positioned(

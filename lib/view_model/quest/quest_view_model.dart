@@ -314,6 +314,7 @@ class QuestViewModel extends ChangeNotifier {
 
   // 장착 아이템 조회
   Future<void> fetchEquippedItems() async {
+    print("[QuestViewModel] fetchEquippedItems 호출됨");
     _isLoading = true;
     notifyListeners();
     try {

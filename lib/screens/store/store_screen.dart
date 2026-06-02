@@ -5,6 +5,7 @@ import 'package:frontend/view_model/store/inventory_view_model.dart';
 
 import '../../models/store/item_model.dart';
 import '../../view_model/profile/profile_view_model.dart';
+import '../../view_model/quest/quest_view_model.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -128,16 +129,26 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Widget _buildEquipmentGrid() {
+    final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+    final jobId = profileVM.selectedJobId ?? 1;
     return Consumer<InventoryViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
+        final filteredItems = viewModel.items.where((item) {
+          final name = item.splineTriggerName?.toLowerCase() ?? '';
+          if (jobId == 1) return name.contains('dagger') || name.contains('spear') || name.contains('sword') || name.contains('hammer');
+          if (jobId == 2) return name.contains('wand') || name.contains('staff');
+          if (jobId == 3) return name.contains('bow');
+          return true;
+        }).toList();
+
         return GestureDetector(
           onTap: () => setState(() => _activeIndex = null),
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: viewModel.items.length,
+            itemCount: filteredItems.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 30,
@@ -145,16 +156,19 @@ class _StoreScreenState extends State<StoreScreen> {
               childAspectRatio: 0.7,
             ),
             itemBuilder: (context, index) {
-              final item = viewModel.items[index];
+              final item = filteredItems[index];
               return _equipmentCard(
                 item.itemName,
+                item.splineTriggerName,
                 item.isEquipped,
                 _activeIndex == index,
                     () => setState(() => _activeIndex = index),
                     () async {
+                  final questVM = Provider.of<QuestViewModel>(context, listen: false);
+                  setState(() => _activeIndex = null);
                   await Provider.of<InventoryViewModel>(context, listen: false)
                       .equipItem(item.inventoryId);
-                  setState(() => _activeIndex = null);
+                  await questVM.fetchEquippedItems();
                 },
               );
             },
@@ -164,7 +178,7 @@ class _StoreScreenState extends State<StoreScreen> {
     );
   }
 
-  Widget _equipmentCard(String label, bool isEquipped, bool isActive, VoidCallback onTap, VoidCallback onUnequip) {
+  Widget _equipmentCard(String label, String? splineTriggerName, bool isEquipped, bool isActive, VoidCallback onTap, VoidCallback onUnequip) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -185,7 +199,23 @@ class _StoreScreenState extends State<StoreScreen> {
               child: Stack(
                 children: [
                   Center(
-                    child: Container(
+                    child: splineTriggerName != null
+                        ? Image.asset(
+                      'assets/models/item/$splineTriggerName.png',
+                      width: 75,
+                      height: 75,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 75,
+                          height: 75,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD9D9D9),
+                            shape: BoxShape.circle,
+                          ),
+                        );
+                      },
+                    )
+                        : Container(
                       width: 75,
                       height: 75,
                       decoration: const BoxDecoration(
