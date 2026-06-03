@@ -166,4 +166,27 @@ class DashboardViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  List<int> get minigameHeatmapData {
+    final now = DateTime.now();
+    final months = [
+      DateTime(now.year, now.month - 2, 1),
+      DateTime(now.year, now.month - 1, 1),
+      DateTime(now.year, now.month, 1),
+    ];
+
+    List<int> result = [];
+    for (final monthStart in months) {
+      final daysInMonth = DateTime(monthStart.year, monthStart.month + 1, 0).day;
+      for (int d = 1; d <= daysInMonth; d++) {
+        final date = DateTime(monthStart.year, monthStart.month, d);
+        int count = 0;
+        if (_nBackLogs.any((log) => log.createdAt != null && log.createdAt!.year == date.year && log.createdAt!.month == date.month && log.createdAt!.day == date.day)) count++;
+        if (_goNoGoLogs.any((log) => log.createdAt != null && log.createdAt!.year == date.year && log.createdAt!.month == date.month && log.createdAt!.day == date.day)) count++;
+        if (_stroopLogs.any((log) => log.createdAt != null && log.createdAt!.year == date.year && log.createdAt!.month == date.month && log.createdAt!.day == date.day)) count++;
+        result.add(count);
+      }
+    }
+    return result;
+  }
 }

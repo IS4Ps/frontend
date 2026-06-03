@@ -94,7 +94,7 @@ class HeatmapCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text('${months[0].month}월', style: const TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
-                const SizedBox(width: 76),
+                const SizedBox(width: 58),
                 Text('${months[1].month}월', style: const TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),
                 const SizedBox(width: 60),
                 Text('${months[2].month}월', style: const TextStyle(fontSize: 12, color: Color(0xFF3D3D3D))),

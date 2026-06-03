@@ -93,10 +93,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           : dashboardVM.routineHeatmapData,
                     ),
                     const SizedBox(height: 24),
-                    const HeatmapCard(
+                    HeatmapCard(
                       title: '미니게임 히트맵',
                       subtitle: '3개월 일관성',
-                      data: [2,1,0,2,3,3,0,1,1,0,2,3,2, 2,2,2,0,3,2,1,2,1,0,0,2,3, 1,3,2,0,0,3,1,2,2,2,2,3,1, 2,1,0,2,2,0,0,2,2,0,3,2,2, 2,3,0,3,2,3,0,2,3,1,3,2,3, 3,2,2,0,1,3,3,1,0,1,3,0,0, 3,2,2,3,0,3,0,1,0,1,2,2,2],
+                      data: dashboardVM.minigameHeatmapData,
                     ),
                     const SizedBox(height: 24),
                     const MinigameScoreCard(),
