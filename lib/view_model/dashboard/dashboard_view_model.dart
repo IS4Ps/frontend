@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ✅ 카카오 SDK와 이름 충돌 방지를 위해 별칭 추가
 import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'package:frontend/models/dashboard/monthly_mood_model.dart';
+import '../../models/dashboard/minigame_log_response_model.dart';
 import '../../repository/dashboard/dashboard_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
@@ -121,13 +122,13 @@ class DashboardViewModel extends ChangeNotifier {
 
   // 미니게임 결과 조회
   // 미니게임 기록 관련 상태 변수들
-  List<dynamic> _nBackLogs = [];
-  List<dynamic> _goNoGoLogs = [];
-  List<dynamic> _stroopLogs = [];
+  List<MinigameLogResponseModel> _nBackLogs = [];
+  List<MinigameLogResponseModel> _goNoGoLogs = [];
+  List<MinigameLogResponseModel> _stroopLogs = [];
 
-  List<dynamic> get nBackLogs => _nBackLogs;
-  List<dynamic> get goNoGoLogs => _goNoGoLogs;
-  List<dynamic> get stroopLogs => _stroopLogs;
+  List<MinigameLogResponseModel> get nBackLogs => _nBackLogs;
+  List<MinigameLogResponseModel> get goNoGoLogs => _goNoGoLogs;
+  List<MinigameLogResponseModel> get stroopLogs => _stroopLogs;
 
   Future<void> fetchAllMinigameLogs() async {
     _isLoading = true;
