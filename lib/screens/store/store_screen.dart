@@ -4,6 +4,8 @@ import 'package:frontend/view_model/store/store_view_model.dart';
 import 'package:frontend/view_model/store/inventory_view_model.dart';
 
 import '../../models/store/item_model.dart';
+import '../../view_model/profile/profile_view_model.dart';
+import '../../view_model/quest/quest_view_model.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -23,7 +25,11 @@ class _StoreScreenState extends State<StoreScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StoreViewModel>(context, listen: false).loadStoreItems(1, 1);
+      final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+      final childInfo = profileVM.childInfo;
+      final level = childInfo?.level ?? 1;
+      final jobId = profileVM.selectedJobId ?? 1;
+      Provider.of<StoreViewModel>(context, listen: false).loadStoreItems(level, jobId);
 
       Provider.of<InventoryViewModel>(context, listen: false)
           .loadInventory()
@@ -93,6 +99,9 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Widget _buildShopGrid() {
+    final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+    final level = profileVM.childInfo?.level ?? 1;
+    final jobId = profileVM.selectedJobId ?? 1;
     return Consumer<StoreViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading) {
@@ -111,7 +120,7 @@ class _StoreScreenState extends State<StoreScreen> {
             ),
             itemBuilder: (context, index) {
               final item = viewModel.items[index];
-              return _itemCard(item, _activeIndex == index, () => setState(() => _activeIndex = index));
+              return _itemCard(item, _activeIndex == index, () => setState(() => _activeIndex = index), level, jobId);
             },
           ),
         );
@@ -120,16 +129,26 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   Widget _buildEquipmentGrid() {
+    final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+    final jobId = profileVM.selectedJobId ?? 1;
     return Consumer<InventoryViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
+        final filteredItems = viewModel.items.where((item) {
+          final name = item.splineTriggerName?.toLowerCase() ?? '';
+          if (jobId == 1) return name.contains('dagger') || name.contains('spear') || name.contains('sword') || name.contains('hammer');
+          if (jobId == 2) return name.contains('wand') || name.contains('staff');
+          if (jobId == 3) return name.contains('bow');
+          return true;
+        }).toList();
+
         return GestureDetector(
           onTap: () => setState(() => _activeIndex = null),
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: viewModel.items.length,
+            itemCount: filteredItems.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 30,
@@ -137,16 +156,19 @@ class _StoreScreenState extends State<StoreScreen> {
               childAspectRatio: 0.7,
             ),
             itemBuilder: (context, index) {
-              final item = viewModel.items[index];
+              final item = filteredItems[index];
               return _equipmentCard(
                 item.itemName,
+                item.splineTriggerName,
                 item.isEquipped,
                 _activeIndex == index,
                     () => setState(() => _activeIndex = index),
                     () async {
+                  final questVM = Provider.of<QuestViewModel>(context, listen: false);
+                  setState(() => _activeIndex = null);
                   await Provider.of<InventoryViewModel>(context, listen: false)
                       .equipItem(item.inventoryId);
-                  setState(() => _activeIndex = null);
+                  await questVM.fetchEquippedItems();
                 },
               );
             },
@@ -156,7 +178,7 @@ class _StoreScreenState extends State<StoreScreen> {
     );
   }
 
-  Widget _equipmentCard(String label, bool isEquipped, bool isActive, VoidCallback onTap, VoidCallback onUnequip) {
+  Widget _equipmentCard(String label, String? splineTriggerName, bool isEquipped, bool isActive, VoidCallback onTap, VoidCallback onUnequip) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -177,7 +199,23 @@ class _StoreScreenState extends State<StoreScreen> {
               child: Stack(
                 children: [
                   Center(
-                    child: Container(
+                    child: splineTriggerName != null
+                        ? Image.asset(
+                      'assets/models/item/$splineTriggerName.png',
+                      width: 75,
+                      height: 75,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 75,
+                          height: 75,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD9D9D9),
+                            shape: BoxShape.circle,
+                          ),
+                        );
+                      },
+                    )
+                        : Container(
                       width: 75,
                       height: 75,
                       decoration: const BoxDecoration(
@@ -308,7 +346,7 @@ class _StoreScreenState extends State<StoreScreen> {
     );
   }
 
-  Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap) {
+  Widget _itemCard(ItemModel item, bool isActive, VoidCallback onTap, int level, int jobId) {
     return Consumer<StoreViewModel>(
       builder: (context, viewModel, child) {
         final isPurchased = _purchasedItemIds.contains(item.itemId);
@@ -331,13 +369,20 @@ class _StoreScreenState extends State<StoreScreen> {
               children: [
                 Expanded(
                   child: Center(
-                    child: Container(
+                    child: Image.asset(
+                      'assets/models/item/${item.splineTriggerName}.png',
                       width: 75,
                       height: 75,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD9D9D9),
-                        shape: BoxShape.circle,
-                      ),
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 75,
+                          height: 75,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD9D9D9),
+                            shape: BoxShape.circle,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -349,7 +394,7 @@ class _StoreScreenState extends State<StoreScreen> {
                         _activeIndex = null;
                       });
                       final childId = await viewModel.getChildId();
-                      await viewModel.purchaseItem(item.itemId, childId);
+                      await viewModel.purchaseItem(item.itemId, childId, level, jobId);
                       if (context.mounted) {
                         await Provider.of<InventoryViewModel>(context, listen: false).loadInventory();
                       }

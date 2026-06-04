@@ -39,7 +39,7 @@ class StoreViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> purchaseItem(int itemId, int childId) async {
+  Future<void> purchaseItem(int itemId, int childId, int childLevel, int childJobId) async {
     _isLoading = true;
     notifyListeners();
 
@@ -48,7 +48,7 @@ class StoreViewModel extends ChangeNotifier {
 
     if (isSuccess) {
       print("[구매 성공] 아이템 구매 완료");
-      await loadStoreItems(1, 1);
+      await loadStoreItems(childLevel, childJobId);
     } else {
       print("[구매 실패] 아이템 구매 실패");
     }
