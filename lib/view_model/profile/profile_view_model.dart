@@ -230,4 +230,51 @@ class ProfileViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // 완료한 퀘스트 수, 연속 달성 일수
+  int _completedQuestCount = 0;
+  int _streakDays = 0;
+
+  int get completedQuestCount => _completedQuestCount;
+  int get streakDays => _streakDays;
+
+  Future<void> fetchMonthlyStats(String childId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? parentToken = prefs.getString('parentTokenBackup');
+      String? tokenToUse = parentToken ?? TokenManager().parentToken ?? TokenManager().childToken;
+
+      final now = DateTime.now();
+      final result = await _repository.getMonthlyStats(childId, tokenToUse ?? "", now.year, now.month);
+
+      if (result != null) {
+        final dailyList = result['dailyList'] as List;
+        debugPrint('[ProfileViewModel] dailyList: $dailyList');
+
+        // 완료한 퀘스트 수 합산
+        _completedQuestCount = dailyList.fold(0, (sum, day) => sum + (day['completedCount'] as int));
+
+        // 연속 달성 일수 계산
+        final today = DateTime.now();
+        final pastList = dailyList.where((day) {
+          final date = DateTime.parse(day['date']);
+          return !date.isAfter(today);
+        }).toList().reversed.toList();
+
+        int streak = 0;
+        for (final day in pastList) {
+          if (day['isSuccess'] == true) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        _streakDays = streak;
+
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[ProfileViewModel] fetchMonthlyStats 에러: $e');
+    }
+  }
 }

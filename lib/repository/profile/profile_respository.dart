@@ -183,4 +183,22 @@ class ProfileRepository {
       return null;
     }
   }
+
+  // --- [8. 월간 stats 조회] ---
+  Future<Map<String, dynamic>?> getMonthlyStats(String childId, String token, int year, int month) async {
+    try {
+      final response = await _apiService.getMonthlyStats(childId, token, year, month);
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        return body['data'];
+      } else {
+        debugPrint("[Repository] 월간 stats 조회 실패 (상태코드: ${response.statusCode})");
+        return null;
+      }
+    } catch (e) {
+      debugPrint("[Repository] 월간 stats 조회 에러: $e");
+      return null;
+    }
+  }
 }

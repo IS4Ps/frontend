@@ -27,8 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (childId != null && mounted) {
       final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
       await profileVM.fetchChildInformation(childId, deviceId);
-      // 🚀 [추가] 프로필 화면이 켜지거나 새로고침될 때 전체 직업 리스트 정보도 함께 로드해 줍니다.
       await profileVM.fetchAvailableJobs();
+      await profileVM.fetchMonthlyStats(childId);
     }
   }
 
@@ -160,11 +160,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const _StatCard(value: '47', label: '완료한 퀘스트'),
+                  _StatCard(value: '${profileVM.completedQuestCount}', label: '완료한 퀘스트'),
                   const SizedBox(width: 12),
                   _StatCard(value: '$gold', label: '보유한 골드'),
                   const SizedBox(width: 12),
-                  const _StatCard(value: '5일', label: '연속 달성'),
+                  _StatCard(value: '${profileVM.streakDays}일', label: '연속 달성'),
                 ],
               ),
             ),
@@ -188,30 +188,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 childAspectRatio: 1,
                 children: const [
                   _AchievementCard(title: '첫 퀘스트 완료'),
-                  _AchievementCard(title: '일주일 달성'),
-                  _AchievementCard(title: '백만장자'),
-                  _AchievementCard(title: '전설의 시작'),
+                  _AchievementCard(title: '일주일 달성', disabled: true),
+                  _AchievementCard(title: '백만장자', disabled: true),
+                  _AchievementCard(title: '전설의 시작', disabled: true),
                   _AchievementCard(title: '한 달 달성', disabled: true),
                   _AchievementCard(title: '위대한 모험', disabled: true),
                 ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 40),
-              child: Center(
-                child: SizedBox(
-                  width: 290,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () => showDialog(context: context, builder: (context) => const ParentLink()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1586E2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                    ),
-                    child: const Text('보호자 연동하기', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  ),
-                ),
               ),
             ),
           ],
