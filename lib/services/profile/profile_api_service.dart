@@ -140,4 +140,17 @@ class ProfileApiService {
       },
     );
   }
+
+  // 월간 stats 조회
+  Future<http.Response> getMonthlyStats(String childId, String token, int year, int month) async {
+    final url = Uri.parse('$baseUrl/api/v1/missions/stats/$childId/monthly?year=$year&month=$month');
+
+    return await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
 }
