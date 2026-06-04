@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ✅ 카카오 SDK와 이름 충돌 방지를 위해 별칭 추가
 import 'package:frontend/auth/token_manager.dart' as my_auth;
 import 'package:frontend/models/dashboard/monthly_mood_model.dart';
+import '../../models/dashboard/minigame_log_response_model.dart';
 import '../../repository/dashboard/dashboard_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
@@ -121,13 +122,13 @@ class DashboardViewModel extends ChangeNotifier {
 
   // 미니게임 결과 조회
   // 미니게임 기록 관련 상태 변수들
-  List<dynamic> _nBackLogs = [];
-  List<dynamic> _goNoGoLogs = [];
-  List<dynamic> _stroopLogs = [];
+  List<MinigameLogResponseModel> _nBackLogs = [];
+  List<MinigameLogResponseModel> _goNoGoLogs = [];
+  List<MinigameLogResponseModel> _stroopLogs = [];
 
-  List<dynamic> get nBackLogs => _nBackLogs;
-  List<dynamic> get goNoGoLogs => _goNoGoLogs;
-  List<dynamic> get stroopLogs => _stroopLogs;
+  List<MinigameLogResponseModel> get nBackLogs => _nBackLogs;
+  List<MinigameLogResponseModel> get goNoGoLogs => _goNoGoLogs;
+  List<MinigameLogResponseModel> get stroopLogs => _stroopLogs;
 
   Future<void> fetchAllMinigameLogs() async {
     _isLoading = true;
@@ -164,5 +165,28 @@ class DashboardViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  List<int> get minigameHeatmapData {
+    final now = DateTime.now();
+    final months = [
+      DateTime(now.year, now.month - 2, 1),
+      DateTime(now.year, now.month - 1, 1),
+      DateTime(now.year, now.month, 1),
+    ];
+
+    List<int> result = [];
+    for (final monthStart in months) {
+      final daysInMonth = DateTime(monthStart.year, monthStart.month + 1, 0).day;
+      for (int d = 1; d <= daysInMonth; d++) {
+        final date = DateTime(monthStart.year, monthStart.month, d);
+        int count = 0;
+        if (_nBackLogs.any((log) => log.createdAt != null && log.createdAt!.year == date.year && log.createdAt!.month == date.month && log.createdAt!.day == date.day)) count++;
+        if (_goNoGoLogs.any((log) => log.createdAt != null && log.createdAt!.year == date.year && log.createdAt!.month == date.month && log.createdAt!.day == date.day)) count++;
+        if (_stroopLogs.any((log) => log.createdAt != null && log.createdAt!.year == date.year && log.createdAt!.month == date.month && log.createdAt!.day == date.day)) count++;
+        result.add(count);
+      }
+    }
+    return result;
   }
 }

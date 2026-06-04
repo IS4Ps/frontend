@@ -19,6 +19,10 @@ class _MinigameScoreCardState extends State<MinigameScoreCard> {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
 
+    debugPrint('nBackLogs createdAt: ${viewModel.nBackLogs.map((e) => e.createdAt).toList()}');
+    debugPrint('goNoGoLogs createdAt: ${viewModel.goNoGoLogs.map((e) => e.createdAt).toList()}');
+    debugPrint('stroopLogs createdAt: ${viewModel.stroopLogs.map((e) => e.createdAt).toList()}');
+
     // 1. 서버 통신 중일 때 보여줄 로딩 가드 (메인 화면 로딩과 싱크가 맞지만 방어용으로 유지)
     if (viewModel.isLoading) {
       return Container(
@@ -42,9 +46,38 @@ class _MinigameScoreCardState extends State<MinigameScoreCard> {
     });
 
     // 3. 서버 로그 배열에서 점수(score) 알맹이만 List<int> 형태로 가공 추출
-    List<int> nBackScores = viewModel.nBackLogs.map<int>((log) => log.score as int).toList();
-    List<int> goNoGoScores = viewModel.goNoGoLogs.map<int>((log) => log.score as int).toList();
-    List<int> stromScores = viewModel.stroopLogs.map<int>((log) => log.score as int).toList();
+    List<int> nBackScores = List.generate(7, (index) {
+      final date = DateTime.now().subtract(Duration(days: 6 - index));
+      final match = viewModel.nBackLogs.where((log) =>
+      log.createdAt != null &&
+          log.createdAt!.year == date.year &&
+          log.createdAt!.month == date.month &&
+          log.createdAt!.day == date.day
+      );
+      return match.isEmpty ? 0 : match.last.score;
+    });
+
+    List<int> goNoGoScores = List.generate(7, (index) {
+      final date = DateTime.now().subtract(Duration(days: 6 - index));
+      final match = viewModel.goNoGoLogs.where((log) =>
+      log.createdAt != null &&
+          log.createdAt!.year == date.year &&
+          log.createdAt!.month == date.month &&
+          log.createdAt!.day == date.day
+      );
+      return match.isEmpty ? 0 : match.last.score;
+    });
+
+    List<int> stromScores = List.generate(7, (index) {
+      final date = DateTime.now().subtract(Duration(days: 6 - index));
+      final match = viewModel.stroopLogs.where((log) =>
+      log.createdAt != null &&
+          log.createdAt!.year == date.year &&
+          log.createdAt!.month == date.month &&
+          log.createdAt!.day == date.day
+      );
+      return match.isEmpty ? 0 : match.last.score;
+    });
 
     // 4. 🛡️ 방어 코드: 기록 데이터가 7개 미만으로 부족할 때 빈 공간을 0점으로 안전하게 채우기
     while (nBackScores.length < 7) { nBackScores.insert(0, 0); }
@@ -272,5 +305,5 @@ class LineChartPainter extends CustomPainter {
 
   // 💡 [해결] 무한 루프가 끊겼으므로 불필요한 리페인트를 방지하여 리소스를 아끼기 위해 false로 되돌립니다.
   @override
-  bool shouldRepaint(covariant LineChartPainter oldDelegate) => false;
+  bool shouldRepaint(covariant LineChartPainter oldDelegate) => true;
 }
