@@ -31,6 +31,27 @@ Future<void> main() async {
     sound: true,
   );
 
+  // 1. 포그라운드 알림 수신 (앱 켜져 있을 때)
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    debugPrint('🔔 포그라운드 알림 수신: ${message.notification?.title}');
+    debugPrint('📦 알림 내용: ${message.notification?.body}');
+    // 여기서 필요한 경우 로컬 알림(flutter_local_notifications)을 띄울 수 있습니다.
+  });
+
+  // 2. 백그라운드에서 알림 탭했을 때 (앱이 완전히 꺼져있지 않을 때)
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    debugPrint('📩 백그라운드 알림 탭: ${message.notification?.title}');
+    // 여기서 특정 페이지로 이동하는 로직을 추가할 수 있습니다.
+  });
+
+  // 3. 앱 완전 종료 상태에서 알림 탭했을 때
+  FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    if (message != null) {
+      debugPrint('🏁 종료 상태에서 알림으로 앱 시작: ${message.notification?.title}');
+      // 앱이 켜진 후 해당 데이터에 맞는 페이지로 이동 처리가 필요합니다.
+    }
+  });
+
   // ✅ 1. TokenManager 초기화 (로컬에 저장된 토큰/ID 복구)
   // 이 코드가 있어야 앱 재실행 시에도 데이터가 유지됩니다.
   await my_auth.TokenManager().init();
