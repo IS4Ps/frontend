@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+// import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart'; // Provider 추가
 import 'package:shared_preferences/shared_preferences.dart';
 import '../view_model/profile/profile_view_model.dart'; // ViewModel 경로 확인
@@ -27,23 +27,11 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            onDetect: (capture) {
-              if (isScanned) return;
-
-              final List<Barcode> barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                if (barcode.rawValue != null) {
-                  setState(() => isScanned = true);
-                  final String scannedData = barcode.rawValue!;
-                  debugPrint('스캔된 데이터: $scannedData');
-
-                  // ✅ 수정된 연동 로직 호출
-                  _handleQrSuccess(scannedData);
-                  break;
-                }
-              }
-            },
+          const Center(
+            child: Text(
+              '에뮬레이터에서는 QR 스캔 불가',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           // 가이드 라인 디자인
           Center(

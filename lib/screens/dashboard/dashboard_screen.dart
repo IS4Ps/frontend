@@ -354,12 +354,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: double.infinity,
                     height: 100,
                     child: CustomPaint(
-                      painter: EmotionLineChartPainter(
-                        scores: moodData == null ? const [] : (moodData.moodMap.values.toList()
-                          ..sort((a, b) => a.date.compareTo(b.date)))
-                            .map((e) => e.score.toDouble())
-                            .toList(),
-                      )
+                        painter: EmotionLineChartPainter(
+                          scores: moodData == null ? const [] : (moodData.moodMap.values.toList()
+                            ..sort((a, b) => a.date.compareTo(b.date)))
+                              .map((e) {
+                            switch (e.emotionEmoji) {
+                              case '😆': return 5.0;
+                              case '😊': return 4.0;
+                              case '😐': return 3.0;
+                              case '😟': return 2.0;
+                              case '😭': return 1.0;
+                              default: return 3.0;
+                            }
+                          })
+                              .toList(),
+                        )
                     ),
                   ),
                 ),
