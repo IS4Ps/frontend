@@ -31,7 +31,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
   Map<int, int> _totalSecondsMap = {};
 
   List<bool> getDoneList(int missionId, int taskCount, String status) {
-    if (status == "COMPLETED") {
+    if (status == "COMPLETED" || status == "APPROVED") {
       return List.filled(taskCount, true);
     }
     if (!_doneLists.containsKey(missionId) || _doneLists[missionId]!.length != taskCount) {
@@ -163,7 +163,7 @@ class _RoutineScreenState extends State<RoutineScreen> {
                             return _buildMainQuestCard(mission);
                           } else {
                             TodayMissionModel prevMission = viewModel.todayMissions[idx - 1];
-                            if (prevMission.status == "COMPLETED") {
+                            if (prevMission.status == "COMPLETED" || prevMission.status == "APPROVED") {
                               return Padding(
                                 padding: const EdgeInsets.only(top: 9),
                                 child: _buildMainQuestCard(mission),
@@ -497,12 +497,12 @@ class _RoutineScreenState extends State<RoutineScreen> {
                   doneList.isNotEmpty && doneList.every((done) => done)
                       ? "퀘스트 완료하기"
                       : mission.status == "PENDING" ? "퀘스트 시작하기"
-                      : mission.status == "COMPLETED" ? "완료됨"
+                      : (mission.status == "COMPLETED" || mission.status == "APPROVED") ? "완료됨"
                       : "계속하기",
-                  mission.status == "COMPLETED"
+                  (mission.status == "COMPLETED" || mission.status == "APPROVED")
                       ? const Color(0xFFE3E3E3)
                       : const Color(0xFF6389E9),
-                  mission.status == "COMPLETED"
+                  (mission.status == "COMPLETED" || mission.status == "APPROVED")
                       ? Colors.grey
                       : Colors.white,
                 ),

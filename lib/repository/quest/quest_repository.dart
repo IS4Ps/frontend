@@ -92,6 +92,7 @@ class QuestRepository {
 
         // 응답 본문 디코딩 (한글 깨짐 방지)
         final body = jsonDecode(utf8.decode(response.bodyBytes));
+        print("[미션 응답 데이터] $body");
 
         if (body['data'] != null && body['data'] is List) {
           final List<dynamic> dataList = body['data'];

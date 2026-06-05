@@ -38,7 +38,8 @@ class QuestApiService {
 
   // 오늘의 미션 목록 조회
   Future<http.Response> fetchTodayMissions(int childId, String token) async {
-    final url = Uri.parse('$baseUrl/api/v1/missions/today/$childId');
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    final url = Uri.parse('$baseUrl/api/v1/missions?childId=$childId&date=$today');
 
     return await http.get(
       url,

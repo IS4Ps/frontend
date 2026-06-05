@@ -26,6 +26,7 @@ Future<void> main() async {
   // 카카오 SDK 초기화
   KakaoSdk.init(
     nativeAppKey: 'b83532b20b25865de4745d49050ecc79',
+    javaScriptAppKey: '여기에_JavaScript_키_입력',
   );
 
   // Android에서는 키 해시, iOS에서는 origin 확인용으로 출력됨
@@ -37,7 +38,9 @@ Future<void> main() async {
     WebViewPlatform.instance = AndroidWebViewPlatform();
   }
 
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (_) {}
 
   runApp(
     MultiProvider(
