@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "344580400447",
+    "project_id": "routine-mate",
+    "storage_bucket": "routine-mate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:344580400447:android:eab6987688969a4991df8a",
+        "android_client_info": {
+          "package_name": "com.example.client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg4ZUZr5cCzVdt2xS2AYcKCn6jKMTPqtc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:344580400447:android:6091c26fe5a5303991df8a",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg4ZUZr5cCzVdt2xS2AYcKCn6jKMTPqtc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
