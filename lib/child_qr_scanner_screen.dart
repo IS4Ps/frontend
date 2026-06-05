@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart'; // Provider 추가
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../view_model/profile/profile_view_model.dart'; // ViewModel 경로 확인
 import '../child_main_screen.dart';
 import 'auth/token_manager.dart';
@@ -80,7 +81,13 @@ class _ChildQrScannerScreenState extends State<ChildQrScannerScreen> {
 
   Future<void> _handleQrSuccess(String combinedData) async {
     final profileVM = context.read<ProfileViewModel>();
-    const String deviceId = "device-001";
+    
+    // ✅ [FCM 토큰 추출] 가짜 ID 대신 진짜 토큰을 가져옵니다.
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    
+    // 토큰을 못 가져올 경우를 대비한 기본값
+    final String deviceId = fcmToken ?? "unknown_child_device_${DateTime.now().millisecondsSinceEpoch}";
+    debugPrint('🚀 발급된 아이 FCM 토큰: $deviceId');
 
     try {
       // ✅ 쉼표로 데이터 분리 (linkToken, parentToken)
