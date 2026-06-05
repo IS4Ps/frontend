@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // QR 패키지 추가
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../start_screen.dart';
@@ -120,7 +122,13 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Future<void> _registerChildAction(String nickname) async {
     final profileVM = context.read<ProfileViewModel>();
-    bool success = await profileVM.createChildProfile(nickname: nickname, deviceId: "device-001");
+    
+    // ✅ [FCM 토큰 추출] 가짜 ID 대신 진짜 토큰을 가져옵니다.
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    String deviceId = fcmToken ?? "parent_device_${DateTime.now().millisecondsSinceEpoch}";
+    debugPrint('🚀 발급된 부모 FCM 토큰: $deviceId');
+
+    bool success = await profileVM.createChildProfile(nickname: nickname, deviceId: deviceId);
 
     if (success && mounted) {
       final int? newChildId = profileVM.lastCreatedChildId;
