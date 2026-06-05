@@ -54,6 +54,23 @@ Future<void> main() async {
     await dotenv.load(fileName: ".env");
   } catch (_) {}
 
+  // 1. 포그라운드 알림 수신 (앱 켜져 있을 때)
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print('포그라운드 알림: ${message.notification?.title}');
+  });
+
+  // 2. 백그라운드에서 알림 탭했을 때
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    print('백그라운드 알림 탭: ${message.notification?.title}');
+  });
+
+  // 3. 앱 완전 종료 상태에서 알림 탭했을 때
+  RemoteMessage? initialMessage =
+      await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    // 페이지 이동 처리
+  }
+
   runApp(
     MultiProvider(
       providers: [
